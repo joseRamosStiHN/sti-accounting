@@ -1,11 +1,15 @@
 package com.sti.accounting.entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "Account")
+@Table(name = "cuentas")
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 public class AccountEntity {
@@ -23,4 +27,9 @@ public class AccountEntity {
     private String saldoTipico;
     private boolean hasRegistros;
 
+
+    //constructors
+    public AccountEntity(Long id){
+        this.Id = id;
+    }
 }
