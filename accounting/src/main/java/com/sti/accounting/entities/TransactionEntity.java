@@ -44,5 +44,7 @@ public class TransactionEntity {
     @Column(name = "tasa_cambio")
     private BigDecimal exchangeRate;
 
+    @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TransactionDetailEntity> transactionDetail;
+
 }

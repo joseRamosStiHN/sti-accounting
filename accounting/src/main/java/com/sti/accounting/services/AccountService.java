@@ -1,6 +1,8 @@
 package com.sti.accounting.services;
 
 import com.sti.accounting.entities.AccountEntity;
+import com.sti.accounting.entities.BalancesEntity;
+import com.sti.accounting.models.AccountRequest;
 import com.sti.accounting.repositories.IAccountRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,72 +11,136 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 
-import java.util.Arrays;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /*
-* NOTA: por ahora para simplificar no vamos a utilizar interfaces
-*       pero los metodos deberan estar relacionados solo con las acciones de las cuentas
-* ejemplo: crear cuenta, eliminar cuenta, actualizar cuenta, obtener la cuenta
-*  para efectos de ejemplo voy a utilizar object pero se debe crear una clase que cumpla las necesidades
-*
-* */
+ * NOTA: por ahora para simplificar no vamos a utilizar interfaces
+ *       pero los metodos deberan estar relacionados solo con las acciones de las cuentas
+ * ejemplo: crear cuenta, eliminar cuenta, actualizar cuenta, obtener la cuenta
+ *  para efectos de ejemplo voy a utilizar object pero se debe crear una clase que cumpla las necesidades
+ *
+ * */
 
 @Service
 public class AccountService {
-    //utilice el logger para saber que esta haciendo el servicio en cada metodo que se llama
     private static final Logger logger = LoggerFactory.getLogger(AccountService.class);
-    //Injectar la dependecia de repositorio
     private final IAccountRepository iAccountRepository;
 
-
-    //se agrega al constructor de la clase.
-    //si necesita una accion de saldos puede inyectar un repositorio de saldos o si realiza un service
-    //ya que ve la necesidad de reutilizar la funcionalidad puede inyectar un service(es la mejor opcion)
     public AccountService(IAccountRepository iAccountRepository) {
-
         this.iAccountRepository = iAccountRepository;
     }
-
-    // creamos los metodos por ejemplo un getAll
-
-    public List<Object> getAll(){
-        // este get All obtiene todas las cuentas usando los metods del repositorio
-//        List<AccountEntity> all = iAccountRepository.findAll().stream().map(x->{
-//            // aqui puede hacer la transformacion a un nuevo objeto
-//        }).collect(Collectors.toSet());
-        logger.info("getAll");
-        return Arrays.asList(iAccountRepository.findAll().toArray());
+    public List<AccountRequest> getAllAccount() {
+        List<AccountEntity> entities = this.iAccountRepository.findAll();
+        return entities.stream().map(AccountEntity::entityToRequest).collect(Collectors.toList());
     }
 
-    //Ejemplo con un getById
-    public Object getById(Long id){
-        logger.trace("peticion de cuenta con id {} ", id);
-
-        //vamos a validar si existe el id
-        //lo que hace esta linea es que si no existe lanza una excepcion y no continua con el codigo
-        //esto despues sera obtenido en una exception global
+    public AccountRequest getById(Long id) {
+        logger.trace("account request with id {}", id);
         AccountEntity accountEntity = iAccountRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("No se encontro cuenta con id %s", id))
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("No account were found with the id %s", id))
         );
-        // aqui hace la transformacion a un nuevo objeto
-
-        return accountEntity;
+        return accountEntity.entityToRequest();
     }
 
-    //el caso de un post seria similar
-    public Object createAccount(Object object){
-        //aqui podria comenzar las validaciones
-        logger.info("creando cuenta");
-        //lanzar una excepcion en caso que no cumpla algo
-        logger.error("no se pudo crear la cuenta error en ...");
-        //en caso de todo Ok puede guardar
-        //debe crear el entity que recibira el metodo save
-       // iAccountRepository.save(accountEntity);
+    public AccountEntity createAccount(AccountRequest accountRequest) {
+        logger.info("creating account");
+        try {
+            AccountEntity newAccount = new AccountEntity();
+            newAccount.setCode(accountRequest.getCode());
+            newAccount.setDescription(accountRequest.getDescription());
+            newAccount.setFinancialStatementType(accountRequest.getFinancialStatementType());
+            newAccount.setParentId(accountRequest.getParentId());
+            newAccount.setCurrency(accountRequest.getCurrency());
+            newAccount.setCategory(accountRequest.getCategory());
+            newAccount.setAccountType(accountRequest.getAccountType());
+            newAccount.setTypicalBalance(accountRequest.getTypicalBalance());
+            newAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
+            newAccount.setInitialBalance(accountRequest.getInitialBalance());
 
+            List<BalancesEntity> balancesEntities = new ArrayList<>();
+            if (accountRequest.getBalances() != null) {
+                for (BalancesEntity balancesRequest : accountRequest.getBalances()) {
+                    BalancesEntity balancesEntity = new BalancesEntity();
+                    balancesEntity.setInitialBalance(balancesRequest.getInitialBalance());
+                    balancesEntity.setCreateAtDate(LocalDateTime.now());
+                    balancesEntity.setIsActual(balancesRequest.getIsActual());
+                    balancesEntity.setAccount(newAccount);
+                    balancesEntities.add(balancesEntity);
+                }
+            }
+            newAccount.setBalances(balancesEntities);
 
-        return null;
+            return iAccountRepository.save(newAccount);
+        } catch (Exception e) {
+            logger.error("Error creating account: {}", e.getMessage());
+            throw new RuntimeException("Error creating account", e);
+        }
     }
+
+    public AccountEntity updateAccount(Long id, AccountRequest accountRequest) {
+        logger.info("Updating account with ID: {}", id);
+        try {
+            AccountEntity existingAccount = iAccountRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            String.format("No account found with ID: %d", id)));
+
+            existingAccount.setCode(accountRequest.getCode());
+            existingAccount.setDescription(accountRequest.getDescription());
+            existingAccount.setFinancialStatementType(accountRequest.getFinancialStatementType());
+            existingAccount.setParentId(accountRequest.getParentId());
+            existingAccount.setCurrency(accountRequest.getCurrency());
+            existingAccount.setCategory(accountRequest.getCategory());
+            existingAccount.setAccountType(accountRequest.getAccountType());
+            existingAccount.setTypicalBalance(accountRequest.getTypicalBalance());
+            existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
+            existingAccount.setInitialBalance(accountRequest.getInitialBalance());
+
+            List<BalancesEntity> balancesEntities = new ArrayList<>();
+            if (accountRequest.getBalances() != null) {
+                for (BalancesEntity balancesRequest : accountRequest.getBalances()) {
+                    if (balancesRequest.getId() != null) {
+                        BalancesEntity existingBalancesEntity = existingAccount.getBalances().stream()
+                                .filter(b -> b.getId().equals(balancesRequest.getId()))
+                                .findFirst()
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                        String.format("No balance entity found with ID: %d", balancesRequest.getId())));
+
+                        existingBalancesEntity.setInitialBalance(balancesRequest.getInitialBalance());
+                        existingBalancesEntity.setIsActual(balancesRequest.getIsActual());
+                        balancesEntities.add(existingBalancesEntity);
+                    } else {
+                        BalancesEntity newBalancesEntity = new BalancesEntity();
+                        newBalancesEntity.setInitialBalance(balancesRequest.getInitialBalance());
+                        newBalancesEntity.setCreateAtDate(LocalDateTime.now());
+                        newBalancesEntity.setIsActual(balancesRequest.getIsActual());
+                        newBalancesEntity.setAccount(existingAccount);
+
+                        balancesEntities.add(newBalancesEntity);
+                    }
+                }
+            }
+            existingAccount.getBalances().clear();
+            existingAccount.getBalances().addAll(balancesEntities);
+
+            return iAccountRepository.save(existingAccount);
+        } catch (Exception e) {
+            logger.error("Error updating account: {}", e.getMessage());
+            throw new RuntimeException("Error updating account", e);
+        }
+    }
+
+    public void deleteAccount(Long id) {
+        logger.info("delete account");
+        AccountEntity existingAccount = iAccountRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        String.format("No account found with ID: %d", id)));
+
+        iAccountRepository.deleteById(id);
+    }
+
 
 }

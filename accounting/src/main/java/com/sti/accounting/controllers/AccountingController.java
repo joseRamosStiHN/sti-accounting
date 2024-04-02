@@ -1,16 +1,24 @@
 package com.sti.accounting.controllers;
 
 
+import com.sti.accounting.entities.AccountEntity;
+import com.sti.accounting.entities.BalancesEntity;
+import com.sti.accounting.models.AccountRequest;
+import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.services.AccountService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 
 
 @RestController
-@RequestMapping("/api/v1/accounting")
+@RequestMapping("/api/v1/accounts")
 public class AccountingController {
 
-    //inyectamos el servicio
     private final AccountService accountService;
 
     public AccountingController(AccountService accountService) {
@@ -19,30 +27,42 @@ public class AccountingController {
 
 
     @GetMapping()
-    public List<Object> getAccounts(){
-        // el utilizarlos es facil solo debemos llamarlos segun la firma que tenga
-        return accountService.getAll();
+    public ResponseEntity<Object> getAccounts() {
+        List<AccountRequest> accounts = accountService.getAllAccount();
+        return ResponseEntity.ok(accounts);
     }
 
     @GetMapping("/{id}")
-    public Object getAccountById(@PathVariable("id") Long id){
-        return accountService.getById(id);
+    public ResponseEntity<AccountRequest> getAccountById(@PathVariable Long id) {
+        AccountRequest accountRequest;
+        try {
+            accountRequest = accountService.getById(id);
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(null);
+        }
+        return ResponseEntity.ok(accountRequest);
     }
 
-    @PostMapping()
-    public Object createAccount(@RequestBody Object object){
-        return accountService.createAccount(object);
+    @PostMapping
+    public ResponseEntity<Object> createAccount(@Valid @RequestBody AccountRequest accountRequest) {
+        AccountEntity newAccount = accountService.createAccount(accountRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newAccount);
     }
-
 
     @PutMapping("/{id}")
-    public Object updateAccount(@PathVariable("id") Long id, @RequestBody Object object){
-        return null;
+    public ResponseEntity<Object> updateAccount(@PathVariable("id") Long id, @Valid @RequestBody AccountRequest accountRequest) {
+        AccountEntity updateAccount = accountService.updateAccount(id, accountRequest);
+        if (updateAccount != null) {
+            return ResponseEntity.ok(updateAccount);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteAccount(@PathVariable("id") Long id){
-
+    public ResponseEntity<Object> deleteAccount(@PathVariable("id") Long id) {
+        accountService.deleteAccount(id);
+        return ResponseEntity.noContent().build();
     }
 
 }
