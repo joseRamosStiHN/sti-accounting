@@ -4,6 +4,7 @@ import com.sti.accounting.entities.AccountEntity;
 import com.sti.accounting.entities.BalancesEntity;
 import com.sti.accounting.models.AccountRequest;
 import com.sti.accounting.repositories.IAccountRepository;
+import jakarta.ws.rs.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,7 @@ public class AccountService {
     public AccountService(IAccountRepository iAccountRepository) {
         this.iAccountRepository = iAccountRepository;
     }
+
     public List<AccountRequest> getAllAccount() {
         List<AccountEntity> entities = this.iAccountRepository.findAll();
         return entities.stream().map(AccountEntity::entityToRequest).collect(Collectors.toList());
@@ -41,7 +43,7 @@ public class AccountService {
     public AccountRequest getById(Long id) {
         logger.trace("account request with id {}", id);
         AccountEntity accountEntity = iAccountRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("No account were found with the id %s", id))
+                () -> new BadRequestException(String.format("No account were found with the id %s", id))
         );
         return accountEntity.entityToRequest();
     }
@@ -77,7 +79,7 @@ public class AccountService {
             return iAccountRepository.save(newAccount);
         } catch (Exception e) {
             logger.error("Error creating account: {}", e.getMessage());
-            throw new RuntimeException("Error creating account", e);
+            throw new RuntimeException("Error creating account: " + e.getMessage());
         }
     }
 
@@ -85,7 +87,7 @@ public class AccountService {
         logger.info("Updating account with ID: {}", id);
         try {
             AccountEntity existingAccount = iAccountRepository.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    .orElseThrow(() -> new BadRequestException(
                             String.format("No account found with ID: %d", id)));
 
             existingAccount.setCode(accountRequest.getCode());
@@ -106,7 +108,7 @@ public class AccountService {
                         BalancesEntity existingBalancesEntity = existingAccount.getBalances().stream()
                                 .filter(b -> b.getId().equals(balancesRequest.getId()))
                                 .findFirst()
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                .orElseThrow(() -> new BadRequestException(
                                         String.format("No balance entity found with ID: %d", balancesRequest.getId())));
 
                         existingBalancesEntity.setInitialBalance(balancesRequest.getInitialBalance());
@@ -127,9 +129,12 @@ public class AccountService {
             existingAccount.getBalances().addAll(balancesEntities);
 
             return iAccountRepository.save(existingAccount);
+
+        } catch (BadRequestException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Error updating account: {}", e.getMessage());
-            throw new RuntimeException("Error updating account", e);
+            throw new RuntimeException("Error updating account: " + e.getMessage());
         }
     }
 

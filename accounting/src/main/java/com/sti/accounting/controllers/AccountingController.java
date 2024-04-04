@@ -6,7 +6,9 @@ import com.sti.accounting.entities.BalancesEntity;
 import com.sti.accounting.models.AccountRequest;
 import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.services.AccountService;
+import com.sti.accounting.utils.Util;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,49 +22,61 @@ import java.util.List;
 public class AccountingController {
 
     private final AccountService accountService;
+    private final Util util;
 
     public AccountingController(AccountService accountService) {
         this.accountService = accountService;
+        this.util = new Util();
     }
 
 
     @GetMapping()
     public ResponseEntity<Object> getAccounts() {
         List<AccountRequest> accounts = accountService.getAllAccount();
-        return ResponseEntity.ok(accounts);
+        return ResponseEntity.status(HttpStatus.OK).body(this.util.setSuccessResponse(accounts, HttpStatus.OK));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AccountRequest> getAccountById(@PathVariable Long id) {
-        AccountRequest accountRequest;
+    public ResponseEntity<Object> getAccountById(@PathVariable Long id) {
         try {
-            accountRequest = accountService.getById(id);
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(null);
+            AccountRequest accountRequest = accountService.getById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(this.util.setSuccessResponse(accountRequest, HttpStatus.OK));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(this.util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error retrieving account data"));
         }
-        return ResponseEntity.ok(accountRequest);
     }
 
     @PostMapping
     public ResponseEntity<Object> createAccount(@Valid @RequestBody AccountRequest accountRequest) {
-        AccountEntity newAccount = accountService.createAccount(accountRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newAccount);
+        try {
+            AccountEntity newAccount = accountService.createAccount(accountRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(this.util.setSuccessResponse(newAccount, HttpStatus.CREATED));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(this.util.setError(HttpStatus.INTERNAL_SERVER_ERROR, "Error creating account", e.getMessage()));
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateAccount(@PathVariable("id") Long id, @Valid @RequestBody AccountRequest accountRequest) {
-        AccountEntity updateAccount = accountService.updateAccount(id, accountRequest);
-        if (updateAccount != null) {
-            return ResponseEntity.ok(updateAccount);
-        } else {
-            return ResponseEntity.notFound().build();
+        try {
+            AccountEntity updateAccount = accountService.updateAccount(id, accountRequest);
+            return ResponseEntity.status(HttpStatus.OK).body(this.util.setSuccessResponse(updateAccount, HttpStatus.OK));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(this.util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error create account"));
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteAccount(@PathVariable("id") Long id) {
-        accountService.deleteAccount(id);
-        return ResponseEntity.noContent().build();
+        try {
+            accountService.deleteAccount(id);
+            return ResponseEntity.noContent().build();
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(this.util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error updating account"));
+        }
     }
 
 }
