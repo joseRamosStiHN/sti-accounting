@@ -3,6 +3,7 @@ package com.sti.accounting.utils;
 import com.sti.accounting.models.GeneralError;
 import com.sti.accounting.models.GeneralResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.BindingResult;
 
 public class Util {
 
@@ -21,6 +22,23 @@ public class Util {
         GeneralResponse gr = new GeneralResponse();
         gr.setCode(1L);
         gr.setDescription("Operation Successful");
+        return gr;
+    }
+
+    public GeneralResponse setValidationError(BindingResult bindingResult) {
+        GeneralResponse gr = new GeneralResponse();
+        gr.setCode((long) HttpStatus.BAD_REQUEST.value());
+        gr.setDescription("Validation Error");
+
+        bindingResult.getFieldErrors().forEach(error -> {
+            GeneralError validationError = new GeneralError();
+            validationError.setCode(String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            validationError.setUserMessage(error.getDefaultMessage());
+            validationError.setMoreInfo("Validation Error");
+            validationError.setInternalMessage(error.getField());
+            gr.getErrors().add(validationError);
+        });
+
         return gr;
     }
 

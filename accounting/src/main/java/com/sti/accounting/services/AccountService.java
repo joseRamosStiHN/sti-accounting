@@ -2,6 +2,7 @@ package com.sti.accounting.services;
 
 import com.sti.accounting.entities.AccountEntity;
 import com.sti.accounting.entities.BalancesEntity;
+import com.sti.accounting.entities.TransactionDetailEntity;
 import com.sti.accounting.models.AccountRequest;
 import com.sti.accounting.repositories.IAccountRepository;
 import jakarta.ws.rs.BadRequestException;
@@ -17,14 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
-/*
- * NOTA: por ahora para simplificar no vamos a utilizar interfaces
- *       pero los metodos deberan estar relacionados solo con las acciones de las cuentas
- * ejemplo: crear cuenta, eliminar cuenta, actualizar cuenta, obtener la cuenta
- *  para efectos de ejemplo voy a utilizar object pero se debe crear una clase que cumpla las necesidades
- *
- * */
 
 @Service
 public class AccountService {
@@ -63,18 +56,16 @@ public class AccountService {
             newAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
             newAccount.setInitialBalance(accountRequest.getInitialBalance());
 
-            List<BalancesEntity> balancesEntities = new ArrayList<>();
-            if (accountRequest.getBalances() != null) {
-                for (BalancesEntity balancesRequest : accountRequest.getBalances()) {
-                    BalancesEntity balancesEntity = new BalancesEntity();
-                    balancesEntity.setInitialBalance(balancesRequest.getInitialBalance());
-                    balancesEntity.setCreateAtDate(LocalDateTime.now());
-                    balancesEntity.setIsActual(balancesRequest.getIsActual());
-                    balancesEntity.setAccount(newAccount);
-                    balancesEntities.add(balancesEntity);
-                }
-            }
-            newAccount.setBalances(balancesEntities);
+            List<BalancesEntity> balances = accountRequest.getBalances().parallelStream().map(x -> {
+
+                BalancesEntity balancesEntity = new BalancesEntity();
+                balancesEntity.setInitialBalance(x.getInitialBalance());
+                balancesEntity.setIsActual(x.getIsActual());
+                balancesEntity.setAccount(newAccount);
+                return balancesEntity;
+            }).toList();
+
+            newAccount.setBalances(balances);
 
             return iAccountRepository.save(newAccount);
         } catch (Exception e) {

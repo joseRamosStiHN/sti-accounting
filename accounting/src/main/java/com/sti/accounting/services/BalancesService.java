@@ -55,7 +55,6 @@ public class BalancesService {
             BalancesEntity newBalance = new BalancesEntity();
             newBalance.setAccount(account);
             newBalance.setInitialBalance(balancesRequest.getInitialBalance());
-            newBalance.setCreateAtDate(LocalDateTime.now());
             newBalance.setIsActual(balancesRequest.getIsActual());
             return iBalancesRepository.save(newBalance);
 

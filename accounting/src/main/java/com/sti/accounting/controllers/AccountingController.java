@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -42,29 +43,39 @@ public class AccountingController {
             AccountRequest accountRequest = accountService.getById(id);
             return ResponseEntity.status(HttpStatus.OK).body(this.util.setSuccessResponse(accountRequest, HttpStatus.OK));
         } catch (BadRequestException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(this.util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error retrieving account data"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error get Account by Id"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(util.setError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", e.getMessage()));
         }
     }
 
     @PostMapping
-    public ResponseEntity<Object> createAccount(@Valid @RequestBody AccountRequest accountRequest) {
+    public ResponseEntity<Object> createAccount(@Valid @RequestBody AccountRequest accountRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setValidationError(bindingResult));
+        }
         try {
             AccountEntity newAccount = accountService.createAccount(accountRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(this.util.setSuccessResponse(newAccount, HttpStatus.CREATED));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(this.util.setError(HttpStatus.INTERNAL_SERVER_ERROR, "Error creating account", e.getMessage()));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error creating account"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(util.setError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", e.getMessage()));
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Object> updateAccount(@PathVariable("id") Long id, @Valid @RequestBody AccountRequest accountRequest) {
+    public ResponseEntity<Object> updateAccount(@PathVariable("id") Long id, @Valid @RequestBody AccountRequest accountRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setValidationError(bindingResult));
+        }
         try {
             AccountEntity updateAccount = accountService.updateAccount(id, accountRequest);
             return ResponseEntity.status(HttpStatus.OK).body(this.util.setSuccessResponse(updateAccount, HttpStatus.OK));
         } catch (BadRequestException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(this.util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error create account"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error updating account"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(util.setError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", e.getMessage()));
         }
     }
 

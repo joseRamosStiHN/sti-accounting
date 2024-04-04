@@ -38,7 +38,7 @@ public class AccountRequest {
 
     private boolean supportsRegistration;
 
-    @PositiveOrZero(message = "Initial Balance must be positive or 0")
+    @Positive(message = "Initial Balance must be positive")
     private BigDecimal initialBalance;
 
     private List<BalancesEntity> balances;

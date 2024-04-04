@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import jakarta.validation.constraints.*;
 
 @Getter
 @Setter
@@ -17,7 +18,7 @@ public class BalancesRequest {
     private Long accountId;
 
     @NotNull(message = "Initial Balance is required")
-    @PositiveOrZero(message = "Initial Balance must be positive or 0")
+    @Positive(message = "Initial Balance must be positive")
     private BigDecimal initialBalance;
 
     private LocalDateTime createAtDate;

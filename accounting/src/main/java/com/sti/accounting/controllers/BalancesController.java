@@ -5,9 +5,12 @@ import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.services.BalancesService;
 import com.sti.accounting.utils.Util;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -31,22 +34,44 @@ public class BalancesController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Object> getBalanceById(@PathVariable Long id) {
-        BalancesRequest balancesRequest = balancesService.getById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(this.util.setSuccessResponse(balancesRequest, HttpStatus.OK));
-
+        try {
+            BalancesRequest balancesRequest = balancesService.getById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(this.util.setSuccessResponse(balancesRequest, HttpStatus.OK));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error get Balance by Id"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(util.setError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", e.getMessage()));
+        }
     }
 
     @PostMapping
-    public ResponseEntity<Object> createBalance(@Valid @RequestBody BalancesRequest balancesRequest) {
-        BalancesEntity newBalance = balancesService.createBalances(balancesRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.util.setSuccessResponse(newBalance, HttpStatus.CREATED));
+    public ResponseEntity<Object> createBalance(@Valid @RequestBody BalancesRequest balancesRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setValidationError(bindingResult));
+        }
+        try {
+            BalancesEntity newBalance = balancesService.createBalances(balancesRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(this.util.setSuccessResponse(newBalance, HttpStatus.CREATED));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error creating balance"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(util.setError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", e.getMessage()));
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Object> updateBalance(@PathVariable("id") Long id, @Valid @RequestBody BalancesRequest balancesRequest) {
-        BalancesEntity updatedBalance = balancesService.updateBalance(id, balancesRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(this.util.setSuccessResponse(updatedBalance, HttpStatus.OK));
-
+    public ResponseEntity<Object> updateBalance(@PathVariable("id") Long id, @Valid @RequestBody BalancesRequest balancesRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setValidationError(bindingResult));
+        }
+        try {
+            BalancesEntity updatedBalance = balancesService.updateBalance(id, balancesRequest);
+            return ResponseEntity.status(HttpStatus.OK).body(this.util.setSuccessResponse(updatedBalance, HttpStatus.OK));
+        } catch (BadRequestException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error updating balance"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(util.setError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{id}")

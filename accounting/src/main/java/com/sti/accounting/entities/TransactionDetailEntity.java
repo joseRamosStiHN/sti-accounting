@@ -1,6 +1,7 @@
 package com.sti.accounting.entities;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,9 +25,9 @@ public class TransactionDetailEntity {
     @JoinColumn(name = "id_transaccion", nullable = false)
     private TransactionEntity transaction;
 
-
     @ManyToOne
     @JoinColumn(name = "id_cuenta", nullable = false)
+    @JsonIgnore
     private AccountEntity account;
 
     @Column(name = "monto")

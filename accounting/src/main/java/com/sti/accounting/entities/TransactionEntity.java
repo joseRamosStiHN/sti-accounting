@@ -1,5 +1,6 @@
 package com.sti.accounting.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,9 +22,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @CreationTimestamp
     @Column(name = "fecha_creacion")
@@ -34,10 +36,11 @@ public class TransactionEntity {
     private LocalDate createAtDate;
 
     @Column(name = "estado")
-    private String status;
+    private Long status;
 
     @Column(name = "referencia")
     private String reference;
+
     @Column(name = "tipo_documento")
     private Long documentType;
 
@@ -45,6 +48,7 @@ public class TransactionEntity {
     private BigDecimal exchangeRate;
 
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<TransactionDetailEntity> transactionDetail;
 
 }
