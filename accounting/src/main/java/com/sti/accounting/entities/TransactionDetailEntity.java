@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class TransactionDetailEntity {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
