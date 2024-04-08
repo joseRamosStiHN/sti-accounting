@@ -14,8 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.stream.Collectors;
-
 import java.util.List;
 
 @Service
@@ -36,17 +34,21 @@ public class TransactionService {
     //otras validaciones que se pueden realizar, es antes de ingresar al controller validar que existen las cuentas
     //o realizar la validacion dentro del Stream y rechazar toda la operacion
     @Transactional
-    public TransactionEntity addTransaction(TransactionRequest model) {
+    public TransactionEntity createTransaction(TransactionRequest transactionRequest) {
         logger.info("creating transaction");
         try {
             TransactionEntity transactionEntity = new TransactionEntity();
 
+            transactionEntity.setCreateAtDate(transactionRequest.getCreateAtDate());
             transactionEntity.setStatus(0L);
-            transactionEntity.setReference(model.getReference());
-            transactionEntity.setDocumentType(model.getDocumentType());
-            transactionEntity.setExchangeRate(model.getExchangeRate());
+            transactionEntity.setReference(transactionRequest.getReference());
+            transactionEntity.setDocumentType(transactionRequest.getDocumentType());
+            transactionEntity.setExchangeRate(transactionRequest.getExchangeRate());
+            transactionEntity.setDescriptionPda(transactionRequest.getDescriptionPda());
+            transactionEntity.setNumberPda(transactionRequest.getNumberPda());
+            transactionEntity.setCurrency(transactionRequest.getCurrency());
 
-            List<TransactionDetailEntity> detail = model.getDetail().parallelStream().map(x -> {
+            List<TransactionDetailEntity> detail = transactionRequest.getDetail().parallelStream().map(x -> {
                 AccountEntity account = iAccountRepository.findById(x.getAccountId()).orElseThrow(
                         () -> new BadRequestException("Account with id " + x.getAccountId() + " not found"));
 
@@ -54,6 +56,7 @@ public class TransactionService {
                 dto.setTransaction(transactionEntity);
                 dto.setAccount(account);
                 dto.setAmount(x.getAmount());
+                dto.setMotion(x.getMotion());
                 return dto;
             }).toList();
 
@@ -67,20 +70,24 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionEntity updateTransaction(Long id, TransactionRequest model) {
+    public TransactionEntity updateTransaction(Long id, TransactionRequest transactionRequest) {
         logger.info("Updating transaction with ID: {}", id);
         try {
             TransactionEntity existingTransaction = transactionRepository.findById(id)
                     .orElseThrow(() -> new BadRequestException(
                             String.format("No transaction found with ID: %d", id)));
 
-            existingTransaction.setReference(model.getReference());
-            existingTransaction.setDocumentType(model.getDocumentType());
-            existingTransaction.setExchangeRate(model.getExchangeRate());
+            existingTransaction.setCreateAtDate(transactionRequest.getCreateAtDate());
+            existingTransaction.setReference(transactionRequest.getReference());
+            existingTransaction.setDocumentType(transactionRequest.getDocumentType());
+            existingTransaction.setExchangeRate(transactionRequest.getExchangeRate());
+            existingTransaction.setDescriptionPda(transactionRequest.getDescriptionPda());
+            existingTransaction.setNumberPda(transactionRequest.getNumberPda());
+            existingTransaction.setCurrency(transactionRequest.getCurrency());
 
             List<TransactionDetailEntity> updatedDetails = new ArrayList<>();
-            if (model.getDetail() != null) {
-                for (TransactionDetailRequest detailRequest : model.getDetail()) {
+            if (transactionRequest.getDetail() != null) {
+                for (TransactionDetailRequest detailRequest : transactionRequest.getDetail()) {
                     if (detailRequest.getId() != null) {
                         TransactionDetailEntity existingDetail = existingTransaction.getTransactionDetail().stream()
                                 .filter(detail -> detail.getId().equals(detailRequest.getId()))
@@ -94,6 +101,7 @@ public class TransactionService {
 
                         existingDetail.setAccount(account);
                         existingDetail.setAmount(detailRequest.getAmount());
+                        existingDetail.setMotion(detailRequest.getMotion());
                         updatedDetails.add(existingDetail);
                     } else {
                         AccountEntity account = iAccountRepository.findById(detailRequest.getAccountId())
@@ -104,6 +112,7 @@ public class TransactionService {
                         newDetail.setTransaction(existingTransaction);
                         newDetail.setAccount(account);
                         newDetail.setAmount(detailRequest.getAmount());
+                        newDetail.setMotion(detailRequest.getMotion());
                         updatedDetails.add(newDetail);
                     }
                 }

@@ -29,7 +29,7 @@ public class TransactionController {
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void addTransaction(@RequestBody TransactionRequest model) {
-        transactionService.addTransaction(model);
+        transactionService.createTransaction(model);
     }
 
     @PostMapping
@@ -38,7 +38,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setValidationError(bindingResult));
         }
         try {
-            TransactionEntity newTransaction = transactionService.addTransaction(transactionRequest);
+            TransactionEntity newTransaction = transactionService.createTransaction(transactionRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(util.setSuccessResponse(newTransaction, HttpStatus.CREATED));
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error creating transaction"));

@@ -1,6 +1,7 @@
 package com.sti.accounting.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.sti.accounting.utils.Currency;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,6 +11,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,7 +33,6 @@ public class TransactionEntity {
     @Column(name = "fecha_creacion")
     private LocalDateTime createAtTime;
 
-    @CreatedDate
     @Column(name = "fecha")
     private LocalDate createAtDate;
 
@@ -42,10 +43,20 @@ public class TransactionEntity {
     private String reference;
 
     @Column(name = "tipo_documento")
-    private Long documentType;
+    private BigInteger documentType;
 
     @Column(name = "tasa_cambio")
     private BigDecimal exchangeRate;
+
+    @Column(name = "descripcion_pda")
+    private String descriptionPda;
+
+    @Column(name = "numero_partida")
+    private BigInteger numberPda;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "moneda")
+    private Currency currency;
 
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference

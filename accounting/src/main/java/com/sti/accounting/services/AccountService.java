@@ -2,7 +2,6 @@ package com.sti.accounting.services;
 
 import com.sti.accounting.entities.AccountEntity;
 import com.sti.accounting.entities.BalancesEntity;
-import com.sti.accounting.entities.TransactionDetailEntity;
 import com.sti.accounting.models.AccountRequest;
 import com.sti.accounting.repositories.IAccountRepository;
 import jakarta.ws.rs.BadRequestException;
@@ -47,14 +46,18 @@ public class AccountService {
             AccountEntity newAccount = new AccountEntity();
             newAccount.setCode(accountRequest.getCode());
             newAccount.setDescription(accountRequest.getDescription());
-            newAccount.setFinancialStatementType(accountRequest.getFinancialStatementType());
             newAccount.setParentId(accountRequest.getParentId());
-            newAccount.setCurrency(accountRequest.getCurrency());
             newAccount.setCategory(accountRequest.getCategory());
-            newAccount.setAccountType(accountRequest.getAccountType());
             newAccount.setTypicalBalance(accountRequest.getTypicalBalance());
             newAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
-            newAccount.setInitialBalance(accountRequest.getInitialBalance());
+
+
+            long actualBalancesCount = accountRequest.getBalances().stream()
+                    .filter(BalancesEntity::getIsActual)
+                    .count();
+            if (actualBalancesCount > 1) {
+                throw new BadRequestException("There can only be one current balance per account.");
+            }
 
             List<BalancesEntity> balances = accountRequest.getBalances().parallelStream().map(x -> {
 
@@ -83,14 +86,17 @@ public class AccountService {
 
             existingAccount.setCode(accountRequest.getCode());
             existingAccount.setDescription(accountRequest.getDescription());
-            existingAccount.setFinancialStatementType(accountRequest.getFinancialStatementType());
             existingAccount.setParentId(accountRequest.getParentId());
-            existingAccount.setCurrency(accountRequest.getCurrency());
             existingAccount.setCategory(accountRequest.getCategory());
-            existingAccount.setAccountType(accountRequest.getAccountType());
             existingAccount.setTypicalBalance(accountRequest.getTypicalBalance());
             existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
-            existingAccount.setInitialBalance(accountRequest.getInitialBalance());
+
+            long actualBalancesCount = accountRequest.getBalances().stream()
+                    .filter(BalancesEntity::getIsActual)
+                    .count();
+            if (actualBalancesCount > 1) {
+                throw new BadRequestException("There can only be one current balance per account.");
+            }
 
             List<BalancesEntity> balancesEntities = new ArrayList<>();
             if (accountRequest.getBalances() != null) {

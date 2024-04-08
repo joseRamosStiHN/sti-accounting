@@ -2,6 +2,7 @@ package com.sti.accounting.entities;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sti.accounting.utils.Motion;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionDetailEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,4 +34,8 @@ public class TransactionDetailEntity {
 
     @Column(name = "monto")
     private BigDecimal amount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "movimiento")
+    private Motion motion;
 }
