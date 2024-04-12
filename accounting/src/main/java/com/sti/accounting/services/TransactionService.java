@@ -7,14 +7,17 @@ import com.sti.accounting.models.TransactionDetailRequest;
 import com.sti.accounting.models.TransactionRequest;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.ITransactionRepository;
+import com.sti.accounting.utils.Motion;
 import jakarta.ws.rs.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionService {
@@ -48,17 +51,33 @@ public class TransactionService {
             transactionEntity.setNumberPda(transactionRequest.getNumberPda());
             transactionEntity.setCurrency(transactionRequest.getCurrency());
 
-            List<TransactionDetailEntity> detail = transactionRequest.getDetail().parallelStream().map(x -> {
-                AccountEntity account = iAccountRepository.findById(x.getAccountId()).orElseThrow(
-                        () -> new BadRequestException("Account with id " + x.getAccountId() + " not found"));
+            BigDecimal totalCredits = BigDecimal.ZERO;
+            BigDecimal totalDebits = BigDecimal.ZERO;
 
+            for (TransactionDetailRequest detailRequest : transactionRequest.getDetail()) {
+
+                BigDecimal amount = detailRequest.getAmount();
+                if (Motion.C.equals(detailRequest.getMotion())) {
+                    totalCredits = totalCredits.add(amount);
+                } else if (Motion.D.equals(detailRequest.getMotion())) {
+                    totalDebits = totalDebits.add(amount);
+                }
+            }
+
+            if (!totalCredits.equals(totalDebits)) {
+                throw new BadRequestException("The values entered for the Pda "  + transactionRequest.getNumberPda() +  " do not match");
+            }
+
+            List<TransactionDetailEntity> detail = transactionRequest.getDetail().stream().map(detailRequest -> {
+                AccountEntity account = iAccountRepository.findById(detailRequest.getAccountId())
+                        .orElseThrow(() -> new BadRequestException("Account with id " + detailRequest.getAccountId() + " not found"));
                 TransactionDetailEntity dto = new TransactionDetailEntity();
                 dto.setTransaction(transactionEntity);
                 dto.setAccount(account);
-                dto.setAmount(x.getAmount());
-                dto.setMotion(x.getMotion());
+                dto.setAmount(detailRequest.getAmount());
+                dto.setMotion(detailRequest.getMotion());
                 return dto;
-            }).toList();
+            }).collect(Collectors.toList());
 
             transactionEntity.setTransactionDetail(detail);
 
@@ -68,6 +87,7 @@ public class TransactionService {
             throw new RuntimeException("Error transaction account: " + e.getMessage());
         }
     }
+
 
     @Transactional
     public TransactionEntity updateTransaction(Long id, TransactionRequest transactionRequest) {
