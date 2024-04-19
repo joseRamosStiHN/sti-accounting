@@ -21,8 +21,6 @@ public class AccountRequest {
     @NotBlank(message = "Description is required")
     private String description;
 
-    @NotNull(message = "Parent Id is required")
-    @DecimalMin(value = "0", inclusive = false, message = "Parent ID must be greater than 0")
     private BigDecimal parentId;
 
     @NotNull(message = "Category is required")
@@ -37,4 +35,9 @@ public class AccountRequest {
     private Status status;
 
     private List<BalancesEntity> balances;
+
+    @AssertTrue(message = "Parent Id is required")
+    private boolean isValidParentId() {
+        return !supportsRegistration || parentId != null;
+    }
 }
