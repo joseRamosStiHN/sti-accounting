@@ -1,9 +1,10 @@
 package com.sti.accounting.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sti.accounting.models.AccountRequest;
 import com.sti.accounting.models.BalancesRequest;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "saldos")
+@Table(name = "balances")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -26,18 +27,20 @@ public class BalancesEntity {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "id_cuenta", nullable = false)
+    @JoinColumn(name = "ACCOUNT_ID", nullable = false)
     @JsonIgnore
     private AccountEntity account;
 
-    @Column(name = "saldo_inicial")
+    @Column(name = "INITIAL BALANCE")
+    @NotNull(message = "Initial Balance is required")
+    @Positive(message = "Initial Balance must be positive")
     private BigDecimal initialBalance;
 
     @CreationTimestamp
-    @Column(name = "fecha")
+    @Column(name = "DATE")
     private LocalDateTime createAtDate;
 
-    @Column(name = "is_actual")
+    @Column(name = "IS_ACTUAL")
     private Boolean isActual;
 
     public BalancesRequest entityToRequest(){

@@ -7,4 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface IAccountRepository extends ListCrudRepository<AccountEntity, Long> {
+
+    boolean existsByCode(String code);
+
 }

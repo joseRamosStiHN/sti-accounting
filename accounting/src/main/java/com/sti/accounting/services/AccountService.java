@@ -7,13 +7,11 @@ import com.sti.accounting.repositories.IAccountRepository;
 import jakarta.ws.rs.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +41,10 @@ public class AccountService {
     public AccountEntity createAccount(AccountRequest accountRequest) {
         logger.info("creating account");
         try {
+            if (iAccountRepository.existsByCode(accountRequest.getCode())) {
+                throw new BadRequestException("Account with code " + accountRequest.getCode() + " already exists.");
+            }
+
             AccountEntity newAccount = new AccountEntity();
             newAccount.setCode(accountRequest.getCode());
             newAccount.setDescription(accountRequest.getDescription());
@@ -50,25 +52,25 @@ public class AccountService {
             newAccount.setCategory(accountRequest.getCategory());
             newAccount.setTypicalBalance(accountRequest.getTypicalBalance());
             newAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
+            newAccount.setStatus(accountRequest.getStatus());
 
+            if (!accountRequest.isSupportsRegistration()) {
+                newAccount.setBalances(Collections.emptyList());
+            } else {
+                if (accountRequest.getBalances().size() != 1) {
+                    throw new BadRequestException("Only one balance allowed per account.");
+                }
 
-            long actualBalancesCount = accountRequest.getBalances().stream()
-                    .filter(BalancesEntity::getIsActual)
-                    .count();
-            if (actualBalancesCount > 1) {
-                throw new BadRequestException("There can only be one current balance per account.");
+                List<BalancesEntity> balances = accountRequest.getBalances().stream().map(balanceRequest -> {
+                    BalancesEntity balancesEntity = new BalancesEntity();
+                    balancesEntity.setInitialBalance(balanceRequest.getInitialBalance());
+                    balancesEntity.setIsActual(balanceRequest.getIsActual());
+                    balancesEntity.setAccount(newAccount);
+                    return balancesEntity;
+                }).collect(Collectors.toList());
+
+                newAccount.setBalances(balances);
             }
-
-            List<BalancesEntity> balances = accountRequest.getBalances().parallelStream().map(x -> {
-
-                BalancesEntity balancesEntity = new BalancesEntity();
-                balancesEntity.setInitialBalance(x.getInitialBalance());
-                balancesEntity.setIsActual(x.getIsActual());
-                balancesEntity.setAccount(newAccount);
-                return balancesEntity;
-            }).toList();
-
-            newAccount.setBalances(balances);
 
             return iAccountRepository.save(newAccount);
         } catch (Exception e) {
@@ -84,46 +86,51 @@ public class AccountService {
                     .orElseThrow(() -> new BadRequestException(
                             String.format("No account found with ID: %d", id)));
 
+            if (!existingAccount.getCode().equals(accountRequest.getCode())) {
+                if (iAccountRepository.existsByCode(accountRequest.getCode())) {
+                    throw new BadRequestException("Account with code " + accountRequest.getCode() + " already exists.");
+                }
+            }
+
             existingAccount.setCode(accountRequest.getCode());
             existingAccount.setDescription(accountRequest.getDescription());
             existingAccount.setParentId(accountRequest.getParentId());
             existingAccount.setCategory(accountRequest.getCategory());
             existingAccount.setTypicalBalance(accountRequest.getTypicalBalance());
             existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
+            existingAccount.setStatus(accountRequest.getStatus());
 
-            long actualBalancesCount = accountRequest.getBalances().stream()
-                    .filter(BalancesEntity::getIsActual)
-                    .count();
-            if (actualBalancesCount > 1) {
-                throw new BadRequestException("There can only be one current balance per account.");
-            }
+            if (!accountRequest.isSupportsRegistration()) {
+                existingAccount.getBalances().clear();
+            } else {
+                if (accountRequest.getBalances().size() != 1) {
+                    throw new BadRequestException("Only one balance allowed per account.");
+                }
 
-            List<BalancesEntity> balancesEntities = new ArrayList<>();
-            if (accountRequest.getBalances() != null) {
-                for (BalancesEntity balancesRequest : accountRequest.getBalances()) {
-                    if (balancesRequest.getId() != null) {
+                List<BalancesEntity> balances = accountRequest.getBalances().stream().map(balanceRequest -> {
+                    if (balanceRequest.getId() != null) {
                         BalancesEntity existingBalancesEntity = existingAccount.getBalances().stream()
-                                .filter(b -> b.getId().equals(balancesRequest.getId()))
+                                .filter(b -> b.getId().equals(balanceRequest.getId()))
                                 .findFirst()
                                 .orElseThrow(() -> new BadRequestException(
-                                        String.format("No balance entity found with ID: %d", balancesRequest.getId())));
+                                        String.format("No balance entity found with ID: %d", balanceRequest.getId())));
 
-                        existingBalancesEntity.setInitialBalance(balancesRequest.getInitialBalance());
-                        existingBalancesEntity.setIsActual(balancesRequest.getIsActual());
-                        balancesEntities.add(existingBalancesEntity);
+                        existingBalancesEntity.setInitialBalance(balanceRequest.getInitialBalance());
+                        existingBalancesEntity.setIsActual(balanceRequest.getIsActual());
+                        return existingBalancesEntity;
                     } else {
                         BalancesEntity newBalancesEntity = new BalancesEntity();
-                        newBalancesEntity.setInitialBalance(balancesRequest.getInitialBalance());
+                        newBalancesEntity.setInitialBalance(balanceRequest.getInitialBalance());
                         newBalancesEntity.setCreateAtDate(LocalDateTime.now());
-                        newBalancesEntity.setIsActual(balancesRequest.getIsActual());
+                        newBalancesEntity.setIsActual(balanceRequest.getIsActual());
                         newBalancesEntity.setAccount(existingAccount);
-
-                        balancesEntities.add(newBalancesEntity);
+                        return newBalancesEntity;
                     }
-                }
+                }).toList();
+
+                existingAccount.getBalances().clear();
+                existingAccount.getBalances().addAll(balances);
             }
-            existingAccount.getBalances().clear();
-            existingAccount.getBalances().addAll(balancesEntities);
 
             return iAccountRepository.save(existingAccount);
 
@@ -133,15 +140,6 @@ public class AccountService {
             logger.error("Error updating account: {}", e.getMessage());
             throw new RuntimeException("Error updating account: " + e.getMessage());
         }
-    }
-
-    public void deleteAccount(Long id) {
-        logger.info("delete account");
-        AccountEntity existingAccount = iAccountRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        String.format("No account found with ID: %d", id)));
-
-        iAccountRepository.deleteById(id);
     }
 
 

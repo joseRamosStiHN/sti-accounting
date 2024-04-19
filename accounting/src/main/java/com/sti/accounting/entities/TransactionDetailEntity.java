@@ -12,7 +12,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "detalle_transaccion")
+@Table(name = "transaction_detail")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -25,18 +25,18 @@ public class TransactionDetailEntity {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "id_transaccion", nullable = false)
+    @JoinColumn(name = "TRANSACTION_ID", nullable = false)
     private TransactionEntity transaction;
 
     @ManyToOne
-    @JoinColumn(name = "id_cuenta", nullable = false)
+    @JoinColumn(name = "ACCOUNT_ID", nullable = false)
     @JsonIgnore
     private AccountEntity account;
 
-    @Column(name = "monto")
+    @Column(name = "AMOUNT")
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "movimiento")
+    @Column(name = "MOTION")
     private Motion motion;
 }

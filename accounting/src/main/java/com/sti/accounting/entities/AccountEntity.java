@@ -2,6 +2,7 @@ package com.sti.accounting.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.sti.accounting.models.AccountRequest;
+import com.sti.accounting.utils.Status;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,7 +10,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
-@Table(name = "cuentas")
+@Table(name = "accounts")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -20,23 +21,27 @@ public class AccountEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "codigo")
+    @Column(name = "CODE")
     private String code;
 
-    @Column(name = "descripcion")
+    @Column(name = "DESCRIPTION")
     private String description;
 
-    @Column(name = "parent_id")
+    @Column(name = "PARENT_ID")
     private BigDecimal parentId;
 
-    @Column(name = "categoria")
+    @Column(name = "CATEGORY")
     private BigDecimal category;
 
-    @Column(name = "saldo_tipico")
+    @Column(name = "TYPICAL_BALANCE")
     private String typicalBalance;
 
-    @Column(name = "admite_registro")
+    @Column(name = "SUPPORTS_REGISTRATION")
     private boolean supportsRegistration;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS")
+    private Status status;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference
@@ -51,6 +56,7 @@ public class AccountEntity {
         request.setCategory(this.getCategory());
         request.setTypicalBalance(this.getTypicalBalance());
         request.setSupportsRegistration(this.supportsRegistration);
+        request.setStatus(this.getStatus());
         request.setBalances(this.getBalances());
         return request;
     }

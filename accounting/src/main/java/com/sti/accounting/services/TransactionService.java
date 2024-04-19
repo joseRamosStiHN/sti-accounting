@@ -33,13 +33,11 @@ public class TransactionService {
 
     }
 
-    //operacion basica para agregar una transaccion
-    //otras validaciones que se pueden realizar, es antes de ingresar al controller validar que existen las cuentas
-    //o realizar la validacion dentro del Stream y rechazar toda la operacion
     @Transactional
     public TransactionEntity createTransaction(TransactionRequest transactionRequest) {
         logger.info("creating transaction");
         try {
+
             TransactionEntity transactionEntity = new TransactionEntity();
 
             transactionEntity.setCreateAtDate(transactionRequest.getCreateAtDate());
@@ -48,24 +46,21 @@ public class TransactionService {
             transactionEntity.setDocumentType(transactionRequest.getDocumentType());
             transactionEntity.setExchangeRate(transactionRequest.getExchangeRate());
             transactionEntity.setDescriptionPda(transactionRequest.getDescriptionPda());
-            transactionEntity.setNumberPda(transactionRequest.getNumberPda());
             transactionEntity.setCurrency(transactionRequest.getCurrency());
 
-            BigDecimal totalCredits = BigDecimal.ZERO;
-            BigDecimal totalDebits = BigDecimal.ZERO;
 
-            for (TransactionDetailRequest detailRequest : transactionRequest.getDetail()) {
+            BigDecimal totalCredits = transactionRequest.getDetail().stream()
+                    .filter(detail -> Motion.C.equals(detail.getMotion()))
+                    .map(TransactionDetailRequest::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                BigDecimal amount = detailRequest.getAmount();
-                if (Motion.C.equals(detailRequest.getMotion())) {
-                    totalCredits = totalCredits.add(amount);
-                } else if (Motion.D.equals(detailRequest.getMotion())) {
-                    totalDebits = totalDebits.add(amount);
-                }
-            }
+            BigDecimal totalDebits = transactionRequest.getDetail().stream()
+                    .filter(detail -> Motion.D.equals(detail.getMotion()))
+                    .map(TransactionDetailRequest::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             if (!totalCredits.equals(totalDebits)) {
-                throw new BadRequestException("The values entered for the Pda "  + transactionRequest.getNumberPda() +  " do not match");
+                throw new BadRequestException("The values entered in the detail are not balanced");
             }
 
             List<TransactionDetailEntity> detail = transactionRequest.getDetail().stream().map(detailRequest -> {
@@ -78,6 +73,7 @@ public class TransactionService {
                 dto.setMotion(detailRequest.getMotion());
                 return dto;
             }).collect(Collectors.toList());
+
 
             transactionEntity.setTransactionDetail(detail);
 

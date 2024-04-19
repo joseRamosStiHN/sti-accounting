@@ -79,15 +79,5 @@ public class AccountingController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteAccount(@PathVariable("id") Long id) {
-        try {
-            accountService.deleteAccount(id);
-            return ResponseEntity.noContent().build();
-        } catch (BadRequestException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(this.util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error updating account"));
-        }
-    }
 
 }

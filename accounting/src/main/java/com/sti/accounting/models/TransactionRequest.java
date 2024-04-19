@@ -38,8 +38,6 @@ public class TransactionRequest {
     @NotNull(message = "Description Pda is required")
     private String descriptionPda;
 
-    @NotNull(message = "Number Pda is required")
-    @Positive(message = "Number Pda must be positive")
     private BigInteger numberPda;
 
     private Currency currency;

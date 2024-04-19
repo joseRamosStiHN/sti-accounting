@@ -1,6 +1,7 @@
 package com.sti.accounting.models;
 
 import com.sti.accounting.entities.BalancesEntity;
+import com.sti.accounting.utils.Status;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -32,6 +33,8 @@ public class AccountRequest {
     private String typicalBalance;
 
     private boolean supportsRegistration;
+
+    private Status status;
 
     private List<BalancesEntity> balances;
 }

@@ -8,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.annotation.CreatedDate;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -18,7 +17,7 @@ import java.util.List;
 
 
 @Entity
-@Table(name = "transacciones")
+@Table(name = "transactions")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -30,32 +29,32 @@ public class TransactionEntity {
     private Long id;
 
     @CreationTimestamp
-    @Column(name = "fecha_creacion")
+    @Column(name = "CREATION_DATE")
     private LocalDateTime createAtTime;
 
-    @Column(name = "fecha")
+    @Column(name = "DATE")
     private LocalDate createAtDate;
 
-    @Column(name = "estado")
+    @Column(name = "STATUS")
     private Long status;
 
-    @Column(name = "referencia")
+    @Column(name = "REFERENCE")
     private String reference;
 
-    @Column(name = "tipo_documento")
+    @Column(name = "DOCUMENT_TYPE")
     private BigInteger documentType;
 
-    @Column(name = "tasa_cambio")
+    @Column(name = "EXCHANGE_RATE")
     private BigDecimal exchangeRate;
 
-    @Column(name = "descripcion_pda")
+    @Column(name = "DESCRIPTION_PDA")
     private String descriptionPda;
 
-    @Column(name = "numero_partida")
+    @Column(name = "NUMBER_PDA")
     private BigInteger numberPda;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "moneda")
+    @Column(name = "CURRENCY")
     private Currency currency;
 
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
