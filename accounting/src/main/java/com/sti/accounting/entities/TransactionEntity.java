@@ -1,6 +1,7 @@
 package com.sti.accounting.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.sti.accounting.models.StatusTransaction;
 import com.sti.accounting.utils.Currency;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -35,8 +36,9 @@ public class TransactionEntity {
     @Column(name = "DATE")
     private LocalDate createAtDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "STATUS")
-    private Long status;
+    private StatusTransaction status;
 
     @Column(name = "REFERENCE")
     private String reference;
@@ -56,6 +58,8 @@ public class TransactionEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "CURRENCY")
     private Currency currency;
+
+
 
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference

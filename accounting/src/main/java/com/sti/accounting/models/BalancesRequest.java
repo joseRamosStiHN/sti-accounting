@@ -1,8 +1,6 @@
 package com.sti.accounting.models;
 
-import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.NotNull;
-
 import lombok.*;
 
 import java.math.BigDecimal;

@@ -74,7 +74,6 @@ public class AccountService {
 
             return iAccountRepository.save(newAccount);
         } catch (Exception e) {
-            logger.error("Error creating account: {}", e.getMessage());
             throw new RuntimeException("Error creating account: " + e.getMessage());
         }
     }
@@ -86,10 +85,8 @@ public class AccountService {
                     .orElseThrow(() -> new BadRequestException(
                             String.format("No account found with ID: %d", id)));
 
-            if (!existingAccount.getCode().equals(accountRequest.getCode())) {
-                if (iAccountRepository.existsByCode(accountRequest.getCode())) {
+            if (!existingAccount.getCode().equals(accountRequest.getCode()) && iAccountRepository.existsByCode(accountRequest.getCode())) {
                     throw new BadRequestException("Account with code " + accountRequest.getCode() + " already exists.");
-                }
             }
 
             existingAccount.setCode(accountRequest.getCode());
@@ -137,7 +134,6 @@ public class AccountService {
         } catch (BadRequestException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("Error updating account: {}", e.getMessage());
             throw new RuntimeException("Error updating account: " + e.getMessage());
         }
     }

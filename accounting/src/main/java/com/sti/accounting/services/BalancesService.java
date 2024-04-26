@@ -2,6 +2,7 @@ package com.sti.accounting.services;
 
 import com.sti.accounting.entities.AccountEntity;
 import com.sti.accounting.entities.BalancesEntity;
+import com.sti.accounting.entities.Constant;
 import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IBalancesRepository;
@@ -39,7 +40,7 @@ public class BalancesService {
     public BalancesRequest getById(Long id) {
         logger.trace("balance request with id {}", id);
         BalancesEntity balancesEntity = this.iBalancesRepository.findById(id).orElseThrow(
-                () -> new BadRequestException(String.format("No balances were found with the id %s", id))
+                () -> new BadRequestException(String.format(Constant.NOT_BALANCE, id))
         );
         return balancesEntity.entityToRequest();
     }
@@ -61,7 +62,6 @@ public class BalancesService {
         } catch (BadRequestException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("Error creating balance: {}", e.getMessage());
             throw new RuntimeException("Error creating balance: " + e.getMessage());
         }
     }
@@ -70,7 +70,7 @@ public class BalancesService {
         logger.info("Updating balance with ID: {}", id);
         try {
             BalancesEntity existingBalance = this.iBalancesRepository.findById(id).orElseThrow(
-                    () -> new BadRequestException(String.format("No balances were found with the id %s", id))
+                    () -> new BadRequestException(String.format(Constant.NOT_BALANCE, id))
             );
 
             AccountEntity account = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
@@ -87,7 +87,6 @@ public class BalancesService {
         } catch (BadRequestException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("Error updating balance: {}", e.getMessage());
             throw new RuntimeException("Error updating balance: " + e.getMessage());
         }
     }
@@ -95,7 +94,7 @@ public class BalancesService {
     public void deleteBalance(Long id) {
         logger.info("delete balance");
         BalancesEntity existingBalance = this.iBalancesRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("No balances were found with the id %s", id))
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format(Constant.NOT_BALANCE, id))
         );
 
         iBalancesRepository.deleteById(id);
