@@ -32,7 +32,6 @@ public class TransactionRequest {
     private BigInteger documentType;
 
     @NotNull(message = "Exchange Rate is required")
-    @Positive(message = "Exchange Rate must be positive")
     private BigDecimal exchangeRate;
 
     @NotNull(message = "Description Pda is required")

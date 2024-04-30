@@ -2,7 +2,7 @@ package com.sti.accounting.services;
 
 import com.sti.accounting.entities.AccountEntity;
 import com.sti.accounting.entities.BalancesEntity;
-import com.sti.accounting.entities.Constant;
+import com.sti.accounting.models.Constant;
 import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IBalancesRepository;

@@ -1,7 +1,7 @@
 package com.sti.accounting.controllers;
 
 import com.sti.accounting.entities.BalancesEntity;
-import com.sti.accounting.entities.Constant;
+import com.sti.accounting.models.Constant;
 import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.services.BalancesService;
 import com.sti.accounting.utils.Util;

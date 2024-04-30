@@ -1,7 +1,6 @@
 package com.sti.accounting.repositories;
 
 import com.sti.accounting.entities.TransactionSumViewEntity;
-import com.sti.accounting.entities.TransactionViewEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;

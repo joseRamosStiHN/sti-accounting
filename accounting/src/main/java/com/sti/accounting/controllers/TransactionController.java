@@ -1,9 +1,8 @@
 package com.sti.accounting.controllers;
 
-import com.sti.accounting.entities.Constant;
+import com.sti.accounting.models.Constant;
 import com.sti.accounting.entities.TransactionEntity;
 import com.sti.accounting.entities.TransactionSumViewEntity;
-import com.sti.accounting.entities.TransactionViewEntity;
 import com.sti.accounting.models.TransactionByPeriodRequest;
 import com.sti.accounting.models.TransactionRequest;
 import com.sti.accounting.services.TransactionService;
@@ -81,14 +80,11 @@ public class TransactionController {
 
 
 
-    @PostMapping("byPeriod")
-    public ResponseEntity<Object> getTrxByPeriod(@Valid @RequestBody TransactionByPeriodRequest transactionRequest, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setValidationError(bindingResult));
-        }
+    @GetMapping("balance/general")
+    public ResponseEntity<Object> getTrxByPeriod() {
+
         try {
-            List<TransactionViewEntity> trx = transactionService.getTrxById(transactionRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body(util.setSuccessResponse(trx, HttpStatus.CREATED));
+            return ResponseEntity.status(HttpStatus.OK).body(util.setSuccessResponse( transactionService.getBalanceGeneral(), HttpStatus.OK));
         } catch (BadRequestException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error transaction By Period"));
         } catch (Exception e) {

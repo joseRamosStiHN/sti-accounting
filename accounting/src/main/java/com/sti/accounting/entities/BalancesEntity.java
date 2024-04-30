@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sti.accounting.models.BalancesRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,7 +32,6 @@ public class BalancesEntity {
 
     @Column(name = "INITIAL BALANCE")
     @NotNull(message = "Initial Balance is required")
-    @Positive(message = "Initial Balance must be positive")
     private BigDecimal initialBalance;
 
     @CreationTimestamp

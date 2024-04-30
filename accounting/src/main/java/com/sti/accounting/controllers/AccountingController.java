@@ -2,7 +2,7 @@ package com.sti.accounting.controllers;
 
 
 import com.sti.accounting.entities.AccountEntity;
-import com.sti.accounting.entities.Constant;
+import com.sti.accounting.models.Constant;
 import com.sti.accounting.models.AccountRequest;
 import com.sti.accounting.services.AccountService;
 import com.sti.accounting.utils.Util;

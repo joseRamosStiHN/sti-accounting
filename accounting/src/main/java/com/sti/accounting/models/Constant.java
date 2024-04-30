@@ -1,4 +1,4 @@
-package com.sti.accounting.entities;
+package com.sti.accounting.models;
 
 public final class Constant {
 

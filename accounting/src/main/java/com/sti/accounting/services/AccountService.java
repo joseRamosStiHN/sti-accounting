@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.time.LocalDateTime;
-import java.util.Collections;
+import com.sti.accounting.utils.AppUtil;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,7 +55,7 @@ public class AccountService {
             newAccount.setStatus(accountRequest.getStatus());
 
             if (!accountRequest.isSupportsRegistration()) {
-                newAccount.setBalances(Collections.emptyList());
+                newAccount.setBalances(AppUtil.buildBalance(newAccount));
             } else {
                 if (accountRequest.getBalances().size() != 1) {
                     throw new BadRequestException("Only one balance allowed per account.");

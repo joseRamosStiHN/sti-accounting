@@ -5,7 +5,8 @@ import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.ITransactionRepository;
 import com.sti.accounting.repositories.ITransactionSumViewRepository;
-import com.sti.accounting.repositories.ITransactionViewRepository;
+import com.sti.accounting.repositories.ITransactionBalanceGeneralRepository;
+import com.sti.accounting.utils.AppUtil;
 import com.sti.accounting.utils.Motion;
 import jakarta.ws.rs.BadRequestException;
 import org.slf4j.Logger;
@@ -26,11 +27,11 @@ public class TransactionService {
     private final ITransactionRepository transactionRepository;
     private final IAccountRepository iAccountRepository;
 
-    private final ITransactionViewRepository view;
+    private final ITransactionBalanceGeneralRepository view;
     private final ITransactionSumViewRepository viewSum;
 
 
-    public TransactionService(ITransactionRepository transactionRepository, IAccountRepository iAccountRepository, ITransactionViewRepository view, ITransactionSumViewRepository viewSum) {
+    public TransactionService(ITransactionRepository transactionRepository, IAccountRepository iAccountRepository, ITransactionBalanceGeneralRepository view, ITransactionSumViewRepository viewSum) {
         this.transactionRepository = transactionRepository;
         this.iAccountRepository = iAccountRepository;
         this.view = view;
@@ -168,8 +169,11 @@ public class TransactionService {
 
 
     @Transactional
-    public List<TransactionViewEntity> getTrxById(TransactionByPeriodRequest transactionRequest) {
-        return  view.findTrx(transactionRequest.getAccount(),transactionRequest.getInitDate(),transactionRequest.getEndDate());
+    public List<BalanceGeneralResponse> getBalanceGeneral() {
+        List<TransactionBalanceGeneralEntity> response = new ArrayList<>();
+        Iterable<TransactionBalanceGeneralEntity> data = view.findAll();
+        data.forEach(response::add);
+        return AppUtil.buildBalanceGeneral(response);
     }
 
     @Transactional
