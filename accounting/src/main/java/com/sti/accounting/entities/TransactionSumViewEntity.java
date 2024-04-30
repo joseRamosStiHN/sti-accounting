@@ -24,7 +24,7 @@ public class TransactionSumViewEntity {
     private Long id;
 
     @Column(name = "ACCOUNT_ID")
-    private String account_id;
+    private String accountId;
 
     @Column(name = "DEBIT")
     private String debit;

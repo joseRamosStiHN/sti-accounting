@@ -85,7 +85,6 @@ public class TransactionService {
 
             return transactionRepository.save(transactionEntity);
         } catch (Exception e) {
-            logger.error("Error creating transaction: {}", e.getMessage());
             throw new RuntimeException("Error transaction account: " + e.getMessage());
         }
     }

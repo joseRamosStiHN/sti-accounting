@@ -23,7 +23,7 @@ public class TransactionBalanceGeneralEntity {
     private Long id;
 
     @Column(name = "ACCOUNTNAME")
-    private String account_name;
+    private String accountName;
 
     @Column(name = "PARENTID")
     private Long parentId;

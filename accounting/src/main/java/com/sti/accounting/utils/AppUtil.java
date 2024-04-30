@@ -32,7 +32,7 @@ public class AppUtil {
         for (TransactionBalanceGeneralEntity entity : entities) {
             balance = new BalanceGeneralResponse();
             balance.setId(entity.getId());
-            balance.setAccountName(entity.getAccount_name());
+            balance.setAccountName(entity.getAccountName());
             balance.setParentId(entity.getParentId());
             balance.setCategory(entity.getCategory());
             balance.setRoot(entity.isRoot());
