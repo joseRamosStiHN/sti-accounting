@@ -11,8 +11,10 @@ import com.sti.accounting.utils.Motion;
 import jakarta.ws.rs.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -39,7 +41,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionEntity createTransaction(TransactionRequest transactionRequest) {
+    public TransactionEntity CreateTransaction(TransactionRequest transactionRequest) {
         logger.info("creating transaction");
         try {
 
@@ -66,12 +68,12 @@ public class TransactionService {
 
 
             if (!totalCredits.equals(totalDebits)) {
-                throw new BadRequestException("The values entered in the detail are not balanced");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"The values entered in the detail are not balanced");
             }
 
             List<TransactionDetailEntity> detail = transactionRequest.getDetail().stream().map(detailRequest -> {
                 AccountEntity account = iAccountRepository.findById(detailRequest.getAccountId())
-                        .orElseThrow(() -> new BadRequestException("Account with id " + detailRequest.getAccountId() + Constant.NOT_FOUND));
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"Account with id " + detailRequest.getAccountId() + Constant.NOT_FOUND));
                 TransactionDetailEntity dto = new TransactionDetailEntity();
                 dto.setTransaction(transactionEntity);
                 dto.setAccount(account);
@@ -91,11 +93,11 @@ public class TransactionService {
 
 
     @Transactional
-    public TransactionEntity updateTransaction(Long id, TransactionRequest transactionRequest) {
+    public TransactionEntity UpdateTransaction(Long id, TransactionRequest transactionRequest) {
         logger.info("Updating transaction with ID: {}", id);
         try {
             TransactionEntity existingTransaction = transactionRepository.findById(id)
-                    .orElseThrow(() -> new BadRequestException(
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                             String.format("No transaction found with ID: %d", id)));
 
             existingTransaction.setCreateAtDate(transactionRequest.getCreateAtDate());
@@ -113,11 +115,11 @@ public class TransactionService {
                         TransactionDetailEntity existingDetail = existingTransaction.getTransactionDetail().stream()
                                 .filter(detail -> detail.getId().equals(detailRequest.getId()))
                                 .findFirst()
-                                .orElseThrow(() -> new BadRequestException(
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                         String.format("No detail entity found with ID: %d", detailRequest.getId())));
 
                         AccountEntity account = iAccountRepository.findById(detailRequest.getAccountId())
-                                .orElseThrow(() -> new BadRequestException(
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                         "Account with ID " + detailRequest.getAccountId() + Constant.NOT_FOUND));
 
                         existingDetail.setAccount(account);
@@ -126,7 +128,7 @@ public class TransactionService {
                         updatedDetails.add(existingDetail);
                     } else {
                         AccountEntity account = iAccountRepository.findById(detailRequest.getAccountId())
-                                .orElseThrow(() -> new BadRequestException(
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                         "Account with ID " + detailRequest.getAccountId() + Constant.NOT_FOUND));
 
                         TransactionDetailEntity newDetail = new TransactionDetailEntity();
@@ -151,11 +153,11 @@ public class TransactionService {
     }
 
     @Transactional
-    public void changeTransactionStatus(Long transactionId) {
+    public void ChangeTransactionStatus(Long transactionId) {
         logger.info("Changing status of transaction with id {}", transactionId);
         try {
             TransactionEntity existingTransaction = transactionRepository.findById(transactionId)
-                    .orElseThrow(() -> new BadRequestException(
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                             String.format("No transaction found with ID: %d", transactionId)));
 
             existingTransaction.setStatus(StatusTransaction.SUCCESS);
@@ -168,7 +170,7 @@ public class TransactionService {
 
 
     @Transactional
-    public List<BalanceGeneralResponse> getBalanceGeneral() {
+    public List<BalanceGeneralResponse> GetBalanceGeneral() {
         List<TransactionBalanceGeneralEntity> response = new ArrayList<>();
         Iterable<TransactionBalanceGeneralEntity> data = view.findAll();
         data.forEach(response::add);
@@ -176,8 +178,8 @@ public class TransactionService {
     }
 
     @Transactional
-    public List<TransactionSumViewEntity> getTrxSum(TransactionByPeriodRequest transactionRequest) {
-        return  viewSum.findTrx(transactionRequest.getAccount(),transactionRequest.getInitDate(),transactionRequest.getEndDate());
+    public List<TransactionSumViewEntity> GetTrxSum(TransactionByPeriodRequest transactionRequest) {
+        return  viewSum.FindTrx(transactionRequest.getAccount(),transactionRequest.getInitDate(),transactionRequest.getEndDate());
     }
 
 }

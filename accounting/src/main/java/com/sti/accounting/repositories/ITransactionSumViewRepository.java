@@ -11,6 +11,6 @@ import java.util.List;
 public interface ITransactionSumViewRepository extends CrudRepository<TransactionSumViewEntity, Long> {
 
     @Query(value = "SELECT r.id , sum(r.debit) as debit, sum(r.credit) as credit  from db_contabilidad.book_account_sum r where r.account_id = :account and `date`  BETWEEN  :initDate and :endDate", nativeQuery = true)
-    public List<TransactionSumViewEntity> findTrx(@Param("account") String account, @Param("initDate") LocalDate initDate, @Param("endDate") LocalDate endDate);
+    List<TransactionSumViewEntity> FindTrx(@Param("account") String account, @Param("initDate") LocalDate initDate, @Param("endDate") LocalDate endDate);
 
 }

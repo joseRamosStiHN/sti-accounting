@@ -32,68 +32,57 @@ public class BalancesService {
     }
 
 
-    public List<BalancesRequest> getAllBalances() {
+    public List<BalancesRequest> GetAllBalances() {
         List<BalancesEntity> entities = this.iBalancesRepository.findAll();
         return entities.stream().map(BalancesEntity::entityToRequest).collect(Collectors.toList());
     }
 
-    public BalancesRequest getById(Long id) {
+    public BalancesRequest GetById(Long id) {
         logger.trace("balance request with id {}", id);
         BalancesEntity balancesEntity = this.iBalancesRepository.findById(id).orElseThrow(
-                () -> new BadRequestException(String.format(Constant.NOT_BALANCE, id))
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format(Constant.NOT_BALANCE, id))
         );
         return balancesEntity.entityToRequest();
     }
 
-    public BalancesEntity createBalances(BalancesRequest balancesRequest) {
+    public BalancesEntity CreateBalances(BalancesRequest balancesRequest) {
         logger.info("creating balance");
-        try {
-            AccountEntity account = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
-                    () -> new BadRequestException(String.format("The specified account %s does not exist", balancesRequest.getAccountId()))
-            );
 
+        AccountEntity account = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("The specified account %s does not exist", balancesRequest.getAccountId()))
+        );
 
-            BalancesEntity newBalance = new BalancesEntity();
-            newBalance.setAccount(account);
-            newBalance.setInitialBalance(balancesRequest.getInitialBalance());
-            newBalance.setIsActual(balancesRequest.getIsActual());
-            return iBalancesRepository.save(newBalance);
-
-        } catch (BadRequestException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("Error creating balance: " + e.getMessage());
-        }
+        BalancesEntity newBalance = new BalancesEntity();
+        newBalance.setAccount(account);
+        newBalance.setInitialBalance(balancesRequest.getInitialBalance());
+        newBalance.setIsActual(balancesRequest.getIsActual());
+        return iBalancesRepository.save(newBalance);
     }
 
-    public BalancesEntity updateBalance(Long id, BalancesRequest balancesRequest) {
+    //TODO: mejorar esto
+    public BalancesEntity UpdateBalance(Long id, BalancesRequest balancesRequest) {
         logger.info("Updating balance with ID: {}", id);
-        try {
-            BalancesEntity existingBalance = this.iBalancesRepository.findById(id).orElseThrow(
-                    () -> new BadRequestException(String.format(Constant.NOT_BALANCE, id))
-            );
 
-            AccountEntity account = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
-                    () -> new BadRequestException(String.format("The specified account %s does not exist", balancesRequest.getAccountId()))
-            );
+        BalancesEntity existingBalance = this.iBalancesRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format(Constant.NOT_BALANCE, id))
+        );
 
-            existingBalance.setAccount(account);
-            existingBalance.setInitialBalance(balancesRequest.getInitialBalance());
-            existingBalance.setCreateAtDate(LocalDateTime.now());
-            existingBalance.setIsActual(balancesRequest.getIsActual());
-            return iBalancesRepository.save(existingBalance);
+        AccountEntity account = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("The specified account %s does not exist", balancesRequest.getAccountId()))
+        );
+
+        existingBalance.setAccount(account);
+        existingBalance.setInitialBalance(balancesRequest.getInitialBalance());
+        existingBalance.setCreateAtDate(LocalDateTime.now());
+        existingBalance.setIsActual(balancesRequest.getIsActual());
+        return iBalancesRepository.save(existingBalance);
 
 
-        } catch (BadRequestException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("Error updating balance: " + e.getMessage());
-        }
     }
 
-    public void deleteBalance(Long id) {
+    public void DeleteBalance(Long id) {
         logger.info("delete balance");
-        BalancesEntity existingBalance = this.iBalancesRepository.findById(id).orElseThrow(
+        this.iBalancesRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format(Constant.NOT_BALANCE, id))
         );
 
