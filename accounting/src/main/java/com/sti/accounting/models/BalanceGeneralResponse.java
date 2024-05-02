@@ -22,7 +22,7 @@ public class BalanceGeneralResponse {
 
     private Long parentId;
 
-    private Long category;
+    private String category;
 
     private boolean isRoot;
 

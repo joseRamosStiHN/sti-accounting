@@ -29,7 +29,7 @@ public class TransactionBalanceGeneralEntity {
     private Long parentId;
 
     @Column(name = "CATEGORY")
-    private Long category;
+    private String category;
 
     @Column(name = "ISROOT")
     private boolean isRoot;
