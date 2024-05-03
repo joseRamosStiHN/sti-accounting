@@ -31,15 +31,11 @@ jobs:
           echo "spring.jpa.show-sql=${{ secrets.DATABASE_SHOW_QUERY }}" >> src/main/resources/application.properties
 
       - name: Build with Maven
-        run: mvn clean install -DskipTests
+        run: mvn clean install
         working-directory: ./accounting
 
       - name: Rename Jar file
         run: mv ./target/*.jar ./target/accounting.jar
-        working-directory: ./accounting
-
-      - name: List JAR files
-        run: ls -l ./target/
         working-directory: ./accounting
 
       - name: Deploy to EC2
@@ -48,13 +44,11 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: './accounting/target/accounting.jar'
-          target: '/home/ubuntu/app'
           port: 22
           script: |
-            # Transferir el nuevo archivo .jar
-            ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}
             # Detener la aplicación existente
             sudo systemctl stop accounting-service
+            # Transferir el nuevo archivo .jar
+            scp ./accounting/target/accounting.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/accounting.jar
             # Reiniciar el servicio
             sudo systemctl start accounting-service
