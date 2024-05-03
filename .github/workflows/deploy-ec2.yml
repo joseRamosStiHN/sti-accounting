@@ -21,6 +21,8 @@ jobs:
 
       - name: Create application.properties
         run: |
+          mkdir -p src/main/resources/
+          touch src/main/resources/application.properties
           echo "spring.datasource.url=${{ secrets.DATABASE_URL }}" >> src/main/resources/application.properties
           echo "spring.datasource.username=${{ secrets.DATABASE_USERNAME }}" >> src/main/resources/application.properties
           echo "spring.datasource.password=${{ secrets.DATABASE_PASSWORD }}" >> src/main/resources/application.properties
