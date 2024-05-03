@@ -38,6 +38,18 @@ jobs:
         run: mv ./target/*.jar ./target/accounting.jar
         working-directory: ./accounting
 
+      - name: List files in target directory
+        run: ls -la ./target
+        working-directory: ./accounting
+
+      - name: Verificar archivo accounting.jar
+        working-directory: ./accounting
+        run: |
+          if [ ! -f ./target/accounting.jar ]; then
+            echo "Error: El archivo accounting.jar no se ha creado."
+            exit 1
+          fi
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
@@ -46,9 +58,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # Detener la aplicación existente
-            sudo systemctl stop accounting-service
-            # Transferir el nuevo archivo .jar
-            scp ./target/accounting.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/accounting.jar
-            # Reiniciar el servicio
-            sudo systemctl start accounting-service
+            # who am I
+            whoami
+            ls -al
+            # move file 
+            scp ./accounting/target/accounting.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/accounting.jar
