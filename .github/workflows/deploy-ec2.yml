@@ -59,7 +59,5 @@ jobs:
           port: 22
           script: |
             # who am I
-            whoami
-            ls -al
             # move file 
-            scp ./accounting/target/accounting.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/accounting.jar
+            scp accounting.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/accounting.jar
