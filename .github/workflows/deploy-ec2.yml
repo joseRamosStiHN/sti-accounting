@@ -49,6 +49,6 @@ jobs:
             # Detener la aplicación existente
             sudo systemctl stop accounting-service
             # Transferir el nuevo archivo .jar
-            scp ./accounting/target/accounting.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/accounting.jar
+            scp ./target/accounting.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/accounting.jar
             # Reiniciar el servicio
             sudo systemctl start accounting-service
