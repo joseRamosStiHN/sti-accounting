@@ -50,9 +50,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # Detener la aplicación existente
-            sudo systemctl stop accounting-service
+            # move to directory
+            cd ./accounting
             # Transferir el nuevo archivo .jar
             scp ./target/accounting.jar ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/app/accounting.jar
+            # Detener la aplicación existente
+            sudo systemctl stop accounting-service
             # Reiniciar el servicio
             sudo systemctl start accounting-service
