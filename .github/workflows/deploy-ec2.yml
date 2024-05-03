@@ -48,12 +48,12 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          source: './accounting/target/accounting.jar'
+          target: '/home/ubuntu/app'
           port: 22
           script: |
-            # move to directory
-            cd ./accounting
             # Transferir el nuevo archivo .jar
-            scp ./target/accounting.jar ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/app/accounting.jar
+            ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY }} ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}
             # Detener la aplicación existente
             sudo systemctl stop accounting-service
             # Reiniciar el servicio
