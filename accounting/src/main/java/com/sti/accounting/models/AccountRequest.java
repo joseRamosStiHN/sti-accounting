@@ -5,7 +5,9 @@ import com.sti.accounting.utils.Status;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.validation.constraints.*;
 
@@ -34,7 +36,7 @@ public class AccountRequest {
 
     private Status status;
 
-    private List<BalancesEntity> balances;
+    private Set<AccountBalance> balances = new HashSet<>();
 
     @AssertTrue(message = "Parent Id is required")
     private boolean isValidParentId() {
