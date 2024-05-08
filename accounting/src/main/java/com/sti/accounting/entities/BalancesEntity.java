@@ -1,6 +1,6 @@
 package com.sti.accounting.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import com.sti.accounting.models.BalancesRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -26,8 +26,7 @@ public class BalancesEntity {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "ACCOUNT_ID", nullable = false)
-    @JsonIgnore
+    @JoinColumn(name = "account_id")
     private AccountEntity account;
 
     @Column(name = "INITIAL BALANCE")
@@ -41,6 +40,7 @@ public class BalancesEntity {
     @Column(name = "IS_ACTUAL")
     private Boolean isActual;
 
+    @Transient
     public BalancesRequest entityToRequest(){
         BalancesRequest request = new BalancesRequest();
         request.setId(this.getId());

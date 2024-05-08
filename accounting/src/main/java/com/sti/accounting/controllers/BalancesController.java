@@ -1,28 +1,26 @@
 package com.sti.accounting.controllers;
 
 import com.sti.accounting.entities.BalancesEntity;
-import com.sti.accounting.models.Constant;
 import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.services.BalancesService;
-import com.sti.accounting.utils.Util;
-import jakarta.ws.rs.BadRequestException;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/v1/balances")
 public class BalancesController {
 
     private final BalancesService balancesService;
-    private final Util util;
+
 
     public BalancesController(BalancesService balancesService) {
         this.balancesService = balancesService;
-        this.util = new Util();
     }
 
     // Endpoint para obtener todos los saldos
@@ -39,29 +37,15 @@ public class BalancesController {
 
     //TODO: NO SE DEBE RETORNAR EL ENTITY
     @PostMapping
-    public ResponseEntity<Object> createBalance(@Validated @RequestBody BalancesRequest balancesRequest) {
+    public BalancesEntity createBalance(@Validated @RequestBody BalancesRequest balancesRequest) {
+        return balancesService.CreateBalances(balancesRequest);
 
-        try {
-            BalancesEntity newBalance = balancesService.CreateBalances(balancesRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body(this.util.setSuccessResponse(newBalance, HttpStatus.CREATED));
-        } catch (BadRequestException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error creating balance"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(util.setError(HttpStatus.INTERNAL_SERVER_ERROR, Constant.ERROR_INTERNAL, e.getMessage()));
-        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Object> updateBalance(@PathVariable("id") Long id, @Validated @RequestBody BalancesRequest balancesRequest) {
+    public BalancesEntity updateBalance(@PathVariable("id") Long id, @Validated @RequestBody BalancesRequest balancesRequest) {
+        return balancesService.UpdateBalance(id, balancesRequest);
 
-        try {
-            BalancesEntity updatedBalance = balancesService.UpdateBalance(id, balancesRequest);
-            return ResponseEntity.status(HttpStatus.OK).body(this.util.setSuccessResponse(updatedBalance, HttpStatus.OK));
-        } catch (BadRequestException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(util.setError(HttpStatus.BAD_REQUEST, e.getMessage(), "Error updating balance"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(util.setError(HttpStatus.INTERNAL_SERVER_ERROR, Constant.ERROR_INTERNAL, e.getMessage()));
-        }
     }
 
     @DeleteMapping("/{id}")

@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.BadRequestException;
 
 @Service
 public class BalancesService {
