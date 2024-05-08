@@ -1,6 +1,5 @@
 package com.sti.accounting.entities;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.sti.accounting.models.StatusTransaction;
 import com.sti.accounting.utils.Currency;
 import jakarta.persistence.*;
@@ -43,8 +42,8 @@ public class TransactionEntity {
     @Column(name = "REFERENCE")
     private String reference;
 
-    @Column(name = "DOCUMENT_TYPE")
-    private BigInteger documentType;
+//    @Column(name = "DOCUMENT_TYPE")
+//    private BigInteger documentType;
 
     @Column(name = "EXCHANGE_RATE")
     private BigDecimal exchangeRate;
@@ -62,7 +61,11 @@ public class TransactionEntity {
 
 
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonBackReference
     private List<TransactionDetailEntity> transactionDetail;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "document_id", nullable = false)
+    private DocumentEntity document;
+
 
 }

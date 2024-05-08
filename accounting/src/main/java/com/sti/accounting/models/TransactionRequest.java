@@ -18,8 +18,6 @@ public class TransactionRequest {
 
     private Long id;
 
-    private LocalDateTime createAtTime;
-
     @NotNull(message = "Date is required")
     private LocalDate createAtDate;
 
@@ -29,15 +27,13 @@ public class TransactionRequest {
     private String reference;
 
     @NotNull(message = "Document Type is required")
-    private BigInteger documentType;
+    private Long documentType;
 
     @NotNull(message = "Exchange Rate is required")
     private BigDecimal exchangeRate;
 
     @NotNull(message = "Description Pda is required")
     private String descriptionPda;
-
-    private BigInteger numberPda;
 
     private Currency currency;
 
