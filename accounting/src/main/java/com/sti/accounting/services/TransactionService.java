@@ -3,10 +3,7 @@ package com.sti.accounting.services;
 import com.sti.accounting.entities.*;
 import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.*;
-import com.sti.accounting.utils.AppUtil;
-
 import com.sti.accounting.utils.Motion;
-import org.apache.coyote.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -28,18 +25,13 @@ public class TransactionService {
     private final IAccountRepository iAccountRepository;
     private final IDocumentRepository document;
 
-    private final ITransactionBalanceGeneralRepository view;
-    private final ITransactionSumViewRepository viewSum;
 
 
     public TransactionService(ITransactionRepository transactionRepository, IAccountRepository iAccountRepository,
-                              IDocumentRepository document, ITransactionBalanceGeneralRepository view,
-                              ITransactionSumViewRepository viewSum) {
+                              IDocumentRepository document) {
         this.transactionRepository = transactionRepository;
         this.iAccountRepository = iAccountRepository;
         this.document = document;
-        this.view = view;
-        this.viewSum = viewSum;
     }
 
     public List<TransactionResponse> GetAllTransaction() {
@@ -84,52 +76,6 @@ public class TransactionService {
 
         return entityToResponse(entity);
 
-//        try {
-//
-//            TransactionEntity transactionEntity = new TransactionEntity();
-//
-//            transactionEntity.setCreateAtDate(transactionRequest.getCreateAtDate());
-//            transactionEntity.setStatus(StatusTransaction.DRAFT);
-//            transactionEntity.setReference(transactionRequest.getReference());
-//            transactionEntity.setDocumentType(transactionRequest.getDocumentType());
-//            transactionEntity.setExchangeRate(transactionRequest.getExchangeRate());
-//            transactionEntity.setDescriptionPda(transactionRequest.getDescriptionPda());
-//            transactionEntity.setCurrency(transactionRequest.getCurrency());
-//
-//
-//            BigDecimal totalCredits = transactionRequest.getDetail().stream()
-//                    .filter(detail -> Motion.C.equals(detail.getMotion()))
-//                    .map(TransactionDetailRequest::getAmount)
-//                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-//
-//            BigDecimal totalDebits = transactionRequest.getDetail().stream()
-//                    .filter(detail -> Motion.D.equals(detail.getMotion()))
-//                    .map(TransactionDetailRequest::getAmount)
-//                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-//
-//
-//            if (!totalCredits.equals(totalDebits)) {
-//                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The values entered in the detail are not balanced");
-//            }
-//
-//            List<TransactionDetailEntity> detail = transactionRequest.getDetail().stream().map(detailRequest -> {
-//                AccountEntity account = iAccountRepository.findById(detailRequest.getAccountId())
-//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account with id " + detailRequest.getAccountId() + Constant.NOT_FOUND));
-//                TransactionDetailEntity dto = new TransactionDetailEntity();
-//                dto.setTransaction(transactionEntity);
-//                dto.setAccount(account);
-//                dto.setAmount(detailRequest.getAmount());
-//                dto.setMotion(detailRequest.getMotion());
-//                return dto;
-//            }).collect(Collectors.toList());
-//
-//
-//            transactionEntity.setTransactionDetail(detail);
-//
-//            return transactionRepository.save(transactionEntity);
-//        } catch (Exception e) {
-//            throw new RuntimeException("Error transaction account: " + e.getMessage());
-//        }
     }
 
 
@@ -189,51 +135,6 @@ public class TransactionService {
         transactionRepository.save(existingTransaction);
         return entityToResponse(existingTransaction);
 
-//        existingTransaction.setCreateAtDate(transactionRequest.getCreateAtDate());
-//        existingTransaction.setReference(transactionRequest.getReference());
-//        //  existingTransaction.setDocumentType(transactionRequest.getDocumentType());
-//        existingTransaction.setExchangeRate(transactionRequest.getExchangeRate());
-//        existingTransaction.setDescriptionPda(transactionRequest.getDescriptionPda());
-//        //  existingTransaction.setNumberPda(transactionRequest.getNumberPda());
-//        existingTransaction.setCurrency(transactionRequest.getCurrency());
-//
-//        List<TransactionDetailEntity> updatedDetails = new ArrayList<>();
-//        if (transactionRequest.getDetail() != null) {
-//            for (TransactionDetailRequest detailRequest : transactionRequest.getDetail()) {
-//                if (detailRequest.getId() != null) {
-//                    TransactionDetailEntity existingDetail = existingTransaction.getTransactionDetail().stream()
-//                            .filter(detail -> detail.getId().equals(detailRequest.getId()))
-//                            .findFirst()
-//                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-//                                    String.format("No detail entity found with ID: %d", detailRequest.getId())));
-//
-//                    AccountEntity account = iAccountRepository.findById(detailRequest.getAccountId())
-//                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-//                                    "Account with ID " + detailRequest.getAccountId() + Constant.NOT_FOUND));
-//
-//                    existingDetail.setAccount(account);
-//                    existingDetail.setAmount(detailRequest.getAmount());
-//                    existingDetail.setMotion(detailRequest.getMotion());
-//                    updatedDetails.add(existingDetail);
-//                } else {
-//                    AccountEntity account = iAccountRepository.findById(detailRequest.getAccountId())
-//                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-//                                    "Account with ID " + detailRequest.getAccountId() + Constant.NOT_FOUND));
-//
-//                    TransactionDetailEntity newDetail = new TransactionDetailEntity();
-//                    newDetail.setTransaction(existingTransaction);
-//                    newDetail.setAccount(account);
-//                    newDetail.setAmount(detailRequest.getAmount());
-//                    newDetail.setMotion(detailRequest.getMotion());
-//                    updatedDetails.add(newDetail);
-//                }
-//            }
-//        }
-//
-//        existingTransaction.getTransactionDetail().clear();
-//        existingTransaction.getTransactionDetail().addAll(updatedDetails);
-//
-//        return transactionRepository.save(existingTransaction);
 
     }
 
@@ -252,18 +153,6 @@ public class TransactionService {
     }
 
 
-    @Transactional
-    public List<BalanceGeneralResponse> GetBalanceGeneral() {
-        List<TransactionBalanceGeneralEntity> response = new ArrayList<>();
-        Iterable<TransactionBalanceGeneralEntity> data = view.findAll();
-        data.forEach(response::add);
-        return AppUtil.buildBalanceGeneral(response);
-    }
-
-    @Transactional
-    public List<TransactionSumViewEntity> GetTrxSum(TransactionByPeriodRequest transactionRequest) {
-        return viewSum.FindTrx(transactionRequest.getAccount(), transactionRequest.getInitDate(), transactionRequest.getEndDate());
-    }
 
     private void validateTransactionDetail(List<TransactionDetailRequest> detailRequest) {
         if (detailRequest.isEmpty()) {

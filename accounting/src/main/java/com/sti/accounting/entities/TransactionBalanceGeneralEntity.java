@@ -20,13 +20,13 @@ public class TransactionBalanceGeneralEntity {
 
     @Id
     @Column(name = "ID")
-    private Long id;
+    private Integer id;
 
     @Column(name = "ACCOUNTNAME")
     private String accountName;
 
     @Column(name = "PARENTID")
-    private Long parentId;
+    private Integer parentId;
 
     @Column(name = "CATEGORY")
     private String category;

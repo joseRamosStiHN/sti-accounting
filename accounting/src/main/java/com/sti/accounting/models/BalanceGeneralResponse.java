@@ -16,11 +16,11 @@ import java.math.BigDecimal;
 public class BalanceGeneralResponse {
 
 
-    private Long id;
+    private Integer id;
 
     private String accountName;
 
-    private Long parentId;
+    private Integer parentId;
 
     private String category;
 

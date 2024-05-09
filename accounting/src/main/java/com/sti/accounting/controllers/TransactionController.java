@@ -1,8 +1,5 @@
 package com.sti.accounting.controllers;
 
-import com.sti.accounting.models.BalanceGeneralResponse;
-import com.sti.accounting.entities.TransactionSumViewEntity;
-import com.sti.accounting.models.TransactionByPeriodRequest;
 import com.sti.accounting.models.TransactionRequest;
 import com.sti.accounting.models.TransactionResponse;
 import com.sti.accounting.services.TransactionService;
@@ -55,19 +52,4 @@ public class TransactionController {
     public void ChangeTransactionStatus(@PathVariable("id") Long transactionId) {
         transactionService.ChangeTransactionStatus(transactionId);
     }
-
-
-    @GetMapping("balance/general")
-    public List<BalanceGeneralResponse> GetTrxByPeriod() {
-        return transactionService.GetBalanceGeneral();
-    }
-
-
-    @PostMapping("byPeriodSum")
-    public List<TransactionSumViewEntity> GetTrxByPeriodSum(@Validated @RequestBody TransactionByPeriodRequest transactionRequest) {
-        return transactionService.GetTrxSum(transactionRequest);
-
-    }
-
-
 }
