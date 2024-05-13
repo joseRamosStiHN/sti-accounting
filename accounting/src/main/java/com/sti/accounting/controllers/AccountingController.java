@@ -27,27 +27,27 @@ public class AccountingController {
 
     @GetMapping()
     public List<AccountResponse> getAccounts() {
-        return accountService.GetAllAccount();
+        return accountService.getAllAccount();
     }
 
     @GetMapping("/{id}")
     public AccountResponse GetAccountById(@PathVariable Long id) {
-        return accountService.GetById(id);
+        return accountService.getById(id);
     }
 
     @PostMapping
     public AccountResponse CreateAccount(@Validated @RequestBody AccountRequest accountRequest) {
-        return accountService.CreateAccount(accountRequest);
+        return accountService.createAccount(accountRequest);
     }
 
     @PutMapping("/{id}")
     public AccountResponse updateAccount(@PathVariable("id") Long id, @Validated @RequestBody AccountRequest accountRequest) {
-        return accountService.UpdateAccount(id, accountRequest);
+        return accountService.updateAccount(id, accountRequest);
     }
 
     @GetMapping("/categories")
     public List<AccountCategory> GetAllCategories() {
-        return accountService.GetAllCategories();
+        return accountService.getAllCategories();
     }
 
 }

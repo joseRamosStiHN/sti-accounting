@@ -34,11 +34,11 @@ public class TransactionService {
         this.document = document;
     }
 
-    public List<TransactionResponse> GetAllTransaction() {
+    public List<TransactionResponse> getAllTransaction() {
         return transactionRepository.findAll().stream().map(this::entityToResponse).toList();
     }
 
-    public TransactionResponse GetById(Long id) {
+    public TransactionResponse getById(Long id) {
         TransactionEntity entity = transactionRepository.findById(id)
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -47,7 +47,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionResponse CreateTransaction(TransactionRequest transactionRequest) {
+    public TransactionResponse createTransaction(TransactionRequest transactionRequest) {
         logger.info("creating transaction");
         TransactionEntity entity = new TransactionEntity();
 
@@ -80,7 +80,7 @@ public class TransactionService {
 
 
     @Transactional
-    public TransactionResponse UpdateTransaction(Long id, TransactionRequest transactionRequest) {
+    public TransactionResponse updateTransaction(Long id, TransactionRequest transactionRequest) {
         logger.info("Updating transaction with ID: {}", id);
 
         TransactionEntity existingTransaction = transactionRepository.findById(id)
@@ -89,17 +89,17 @@ public class TransactionService {
         //validate transactions
         validateTransactionDetail(transactionRequest.getDetail());
         //update transaction detail
-        //get all keys
-        Map<Long, TransactionDetailEntity> existingDetailMap = existingTransaction
-                .getTransactionDetail().stream()
-                .collect(Collectors
-                        .toMap(TransactionDetailEntity::getId, detail -> detail));
+        //get all keys (var existingDetailMap is a Map<Long, TransactionDetailEntity>)
+        var existingDetailMap = existingTransaction
+                                .getTransactionDetail().stream()
+                                .collect(Collectors
+                                .toMap(TransactionDetailEntity::getId, detail -> detail));
         /* object that will be used to update the existing details
          *  if the detail is not found in the existing details, it will be added
          *  if the detail is found in the existing details, it will be updated*/
         List<TransactionDetailEntity> updatedDetails = new ArrayList<>();
-        //prepared accounts
-        Map<Long, AccountEntity> accountsMap = iAccountRepository.findAll().stream().collect(Collectors.toMap(AccountEntity::getId, account -> account));
+        //prepared accounts (accountsMap is a Map<Long, AccountEntity>)
+        var accountsMap = iAccountRepository.findAll().stream().collect(Collectors.toMap(AccountEntity::getId, account -> account));
 
         // loop over request
         for (TransactionDetailRequest detailRequest : transactionRequest.getDetail()) {
@@ -139,7 +139,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public void ChangeTransactionStatus(Long transactionId) {
+    public void changeTransactionStatus(Long transactionId) {
         logger.info("Changing status of transaction with id {}", transactionId);
 
         TransactionEntity existingTransaction = transactionRepository.findById(transactionId)
@@ -152,6 +152,12 @@ public class TransactionService {
         transactionRepository.save(existingTransaction);
     }
 
+    public List<TransactionResponse> getByDocumentType(Long id) {
+
+        List<TransactionEntity> transByDocument = transactionRepository.findByDocumentId(id);
+
+        return transByDocument.stream().map(this::entityToResponse).toList();
+    }
 
 
     private void validateTransactionDetail(List<TransactionDetailRequest> detailRequest) {
@@ -226,6 +232,7 @@ public class TransactionService {
         response.setTransactionDetails(detailResponseSet);
         return response;
     }
+
 
 
 }
