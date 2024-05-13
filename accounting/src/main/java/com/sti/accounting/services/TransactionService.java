@@ -34,11 +34,11 @@ public class TransactionService {
         this.document = document;
     }
 
-    public List<TransactionResponse> GetAllTransaction() {
+    public List<TransactionResponse> getAllTransaction() {
         return transactionRepository.findAll().stream().map(this::entityToResponse).toList();
     }
 
-    public TransactionResponse GetById(Long id) {
+    public TransactionResponse getById(Long id) {
         TransactionEntity entity = transactionRepository.findById(id)
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -46,8 +46,15 @@ public class TransactionService {
         return entityToResponse(entity);
     }
 
+    public List<TransactionResponse> getByDocumentType(Long id) {
+
+        List<TransactionEntity> transByDocument = transactionRepository.findByDocumentId(id);
+
+        return transByDocument.stream().map(this::entityToResponse).toList();
+    }
+
     @Transactional
-    public TransactionResponse CreateTransaction(TransactionRequest transactionRequest) {
+    public TransactionResponse createTransaction(TransactionRequest transactionRequest) {
         logger.info("creating transaction");
         TransactionEntity entity = new TransactionEntity();
 
@@ -80,7 +87,7 @@ public class TransactionService {
 
 
     @Transactional
-    public TransactionResponse UpdateTransaction(Long id, TransactionRequest transactionRequest) {
+    public TransactionResponse updateTransaction(Long id, TransactionRequest transactionRequest) {
         logger.info("Updating transaction with ID: {}", id);
 
         TransactionEntity existingTransaction = transactionRepository.findById(id)
@@ -139,7 +146,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public void ChangeTransactionStatus(Long transactionId) {
+    public void changeTransactionStatus(Long transactionId) {
         logger.info("Changing status of transaction with id {}", transactionId);
 
         TransactionEntity existingTransaction = transactionRepository.findById(transactionId)

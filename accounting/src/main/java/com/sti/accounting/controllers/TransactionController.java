@@ -22,34 +22,38 @@ public class TransactionController {
 
     @GetMapping
     public List<TransactionResponse> getAllTransactions() {
-        return transactionService.GetAllTransaction();
+        return transactionService.getAllTransaction();
     }
 
     @GetMapping("/{id}")
     public TransactionResponse GetTransactionById(@PathVariable("id") Long id) {
-        return transactionService.GetById(id);
+        return transactionService.getById(id);
     }
 
+    @GetMapping("/by-document/{id}")
+    public List<TransactionResponse> GetTransactionByDocumentType(@PathVariable("id") Long id) {
+        return transactionService.getByDocumentType(id);
+    }
 
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void addTransaction(@RequestBody TransactionRequest model) {
-        transactionService.CreateTransaction(model);
+        transactionService.createTransaction(model);
     }
 
     @PostMapping
     public TransactionResponse CreateTransaction(@Validated @RequestBody TransactionRequest transactionRequest) {
-        return transactionService.CreateTransaction(transactionRequest);
+        return transactionService.createTransaction(transactionRequest);
     }
 
     @PutMapping("/{id}")
     public TransactionResponse UpdateTransaction(@PathVariable("id") Long id, @Validated @RequestBody TransactionRequest transactionRequest) {
-        return transactionService.UpdateTransaction(id, transactionRequest);
+        return transactionService.updateTransaction(id, transactionRequest);
     }
 
     @PutMapping("/{id}/post")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void ChangeTransactionStatus(@PathVariable("id") Long transactionId) {
-        transactionService.ChangeTransactionStatus(transactionId);
+        transactionService.changeTransactionStatus(transactionId);
     }
 }
