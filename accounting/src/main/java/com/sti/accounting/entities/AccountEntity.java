@@ -28,7 +28,7 @@ public class AccountEntity {
     private String description;
 
 //    @Column(name = "PARENT_ID")
-//    private BigDecimal parentId;
+//    private Long parentId;
 
     @Column(name = "TYPICAL_BALANCE")
     private String typicalBalance;
@@ -46,7 +46,6 @@ public class AccountEntity {
     @ManyToOne
     @JoinColumn(name = "category_id", referencedColumnName = "id")
     private AccountCategoryEntity accountCategory;
-
 
     @ManyToOne
     @JoinColumn(name = "parent_id", referencedColumnName = "id")

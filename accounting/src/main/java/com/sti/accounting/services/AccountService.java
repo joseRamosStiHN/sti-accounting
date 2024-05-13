@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -78,9 +79,9 @@ public class AccountService {
         AccountEntity parent = iAccountRepository.findById(accountRequest.getParentId())
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ParentID"));
         existingAccount.setParent(parent);
+
         existingAccount.setCode(accountRequest.getCode());
         existingAccount.setDescription(accountRequest.getDescription());
-
         existingAccount.setTypicalBalance(accountRequest.getTypicalBalance());
         existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
         existingAccount.setStatus(accountRequest.getStatus());
@@ -95,60 +96,6 @@ public class AccountService {
 
         iAccountRepository.save(existingAccount);
         return toResponse(existingAccount);
-
-
-
-
-//        if (!existingAccount.getCode().equals(accountRequest.getCode()) && iAccountRepository.existsByCode(accountRequest.getCode())) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Account with code " + accountRequest.getCode() + " already exists.");
-//        }
-
-
-
-
-//        existingAccount.setCode(accountRequest.getCode());
-//        existingAccount.setDescription(accountRequest.getDescription());
-//        existingAccount.setParentId(accountRequest.getParentId());
-//       // existingAccount.setCategory(accountRequest.getCategory());
-//        existingAccount.setTypicalBalance(accountRequest.getTypicalBalance());
-//        existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
-//        existingAccount.setStatus(accountRequest.getStatus());
-//
-//        if (!accountRequest.isSupportsRegistration()) {
-//            existingAccount.getBalances().clear();
-//        } else {
-//            if (accountRequest.getBalances().size() != 1) {
-//                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Only one balance allowed per account.");
-//            }
-//
-//            List<BalancesEntity> balances = accountRequest.getBalances().stream().map(balanceRequest -> {
-//                if (balanceRequest.getId() != null) {
-//                    BalancesEntity existingBalancesEntity = existingAccount.getBalances().stream()
-//                            .filter(b -> b.getId().equals(balanceRequest.getId()))
-//                            .findFirst()
-//                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-//                                    String.format("No balance entity found with ID: %d", balanceRequest.getId())));
-//
-//                    existingBalancesEntity.setInitialBalance(balanceRequest.getInitialBalance());
-//                    existingBalancesEntity.setIsActual(balanceRequest.getIsActual());
-//                    return existingBalancesEntity;
-//                } else {
-//                    BalancesEntity newBalancesEntity = new BalancesEntity();
-//                    newBalancesEntity.setInitialBalance(balanceRequest.getInitialBalance());
-//                    newBalancesEntity.setCreateAtDate(LocalDateTime.now());
-//                    newBalancesEntity.setIsActual(balanceRequest.getIsActual());
-//                    newBalancesEntity.setAccount(existingAccount);
-//                    return newBalancesEntity;
-//                }
-//            }).toList();
-//
-//            existingAccount.getBalances().clear();
-//            existingAccount.getBalances().addAll(balances);
-//        }
-//
-//        return iAccountRepository.save(existingAccount);
-
-
     }
 
 

@@ -35,6 +35,7 @@ public class TransactionController {
         return transactionService.getByDocumentType(id);
     }
 
+
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void addTransaction(@RequestBody TransactionRequest model) {
