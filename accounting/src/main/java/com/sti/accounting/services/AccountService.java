@@ -32,11 +32,11 @@ public class AccountService {
         this.categoryRepository = categoryRepository;
     }
 
-    public List<AccountResponse> GetAllAccount() {
+    public List<AccountResponse> getAllAccount() {
        return this.iAccountRepository.findAll().stream().map(this::toResponse).toList();
     }
 
-    public AccountResponse GetById(Long id) {
+    public AccountResponse getById(Long id) {
         logger.trace("account request with id {}", id);
         AccountEntity accountEntity = iAccountRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("No account were found with the id %s", id))
@@ -45,12 +45,15 @@ public class AccountService {
     }
 
 
-    public AccountResponse CreateAccount(AccountRequest accountRequest) {
+    public AccountResponse createAccount(AccountRequest accountRequest) {
         AccountEntity entity = new AccountEntity();
         entity.setCode(accountRequest.getCode());
         entity.setStatus(Status.ACTIVO);
         entity.setDescription(accountRequest.getDescription());
-        entity.setParentId(accountRequest.getParentId());
+        //  set parent id
+        AccountEntity parent = iAccountRepository.findById(accountRequest.getParentId())
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ParentID"));
+        entity.setParent(parent);
         entity.setTypicalBalance(accountRequest.getTypicalBalance());
         Long categoryId = accountRequest.getCategory().longValue();
         AccountCategoryEntity accountCategoryEntity = categoryRepository.findById(categoryId)
@@ -62,7 +65,7 @@ public class AccountService {
         return  toResponse(entity);
     }
 
-    public AccountResponse UpdateAccount(Long id, AccountRequest accountRequest) {
+    public AccountResponse updateAccount(Long id, AccountRequest accountRequest) {
         logger.info("Updating account with ID: {}", id);
         //account exist
         AccountEntity existingAccount = iAccountRepository.findById(id)
@@ -72,9 +75,12 @@ public class AccountService {
         if(iAccountRepository.existsByCodeAndNotId(accountRequest.getCode(), id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Account with code %s already exists.",accountRequest.getCode()));
         }
+        AccountEntity parent = iAccountRepository.findById(accountRequest.getParentId())
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ParentID"));
+        existingAccount.setParent(parent);
         existingAccount.setCode(accountRequest.getCode());
         existingAccount.setDescription(accountRequest.getDescription());
-        existingAccount.setParentId(accountRequest.getParentId());
+
         existingAccount.setTypicalBalance(accountRequest.getTypicalBalance());
         existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
         existingAccount.setStatus(accountRequest.getStatus());
@@ -147,7 +153,7 @@ public class AccountService {
 
 
     /*Return All Categories of Accounts*/
-    public List<AccountCategory> GetAllCategories() {
+    public List<AccountCategory> getAllCategories() {
        return categoryRepository.findAll().stream().map(x->{
             AccountCategory dto = new AccountCategory();
             dto.setId(x.getId());
@@ -183,13 +189,12 @@ public class AccountService {
         response.setAccountCode(entity.getCode());
         response.setCategoryName(entity.getAccountCategory().getName());
         response.setCategoryId(entity.getAccountCategory().getId());
-        // make query to find parent
-        Long id = entity.getParentId() == null ? 0L : entity.getParentId().longValue();
-        iAccountRepository.findById(id).ifPresent(parent -> {
-            response.setParentName(parent.getDescription());
-            response.setParentId(parent.getId());
-            response.setParentCode(parent.getCode());
-        });
+        // recursive query if parent is not null is a root account
+        if(entity.getParent() !=null){
+            response.setParentName(entity.getParent().getDescription());
+            response.setParentId(entity.getParent().getId());
+            response.setParentCode(entity.getParent().getCode());
+        }
         String type = entity.getTypicalBalance().equalsIgnoreCase("C") ? "Credito" : "Debito";
         String status = entity.getStatus().equals(Status.ACTIVO) ? "Activa": "Inactiva";
         response.setTypicallyBalance(type);

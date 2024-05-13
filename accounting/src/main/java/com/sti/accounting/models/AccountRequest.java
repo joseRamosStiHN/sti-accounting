@@ -23,7 +23,7 @@ public class AccountRequest {
     @NotBlank(message = "Description is required")
     private String description;
 
-    private BigDecimal parentId;
+    private Long parentId;
 
     @NotNull(message = "Category is required")
     @DecimalMin(value = "0", inclusive = false, message = "Category must be greater than 0")
