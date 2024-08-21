@@ -18,9 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-
 
 @Service
 public class AccountService {
@@ -34,15 +32,15 @@ public class AccountService {
     }
 
     public List<AccountResponse> getAllAccount() {
-       return this.iAccountRepository.findAll().stream().map(this::toResponse).toList();
+        return this.iAccountRepository.findAll().stream().map(this::toResponse).toList();
     }
 
     public AccountResponse getById(Long id) {
         logger.trace("account request with id {}", id);
         AccountEntity accountEntity = iAccountRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("No account were found with the id %s", id))
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No account were found with the id %s", id))
         );
-       return toResponse(accountEntity);
+        return toResponse(accountEntity);
     }
 
 
@@ -52,18 +50,25 @@ public class AccountService {
         entity.setStatus(Status.ACTIVO);
         entity.setDescription(accountRequest.getDescription());
         //  set parent id
-        AccountEntity parent = iAccountRepository.findById(accountRequest.getParentId())
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ParentID"));
+//        AccountEntity parent = iAccountRepository.findById(accountRequest.getParentId())
+//                .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ParentID"));
+//        entity.setParent(parent);
+        AccountEntity parent = null;
+        if (accountRequest.getParentId() != null) {
+            parent = iAccountRepository.findById(accountRequest.getParentId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ParentID"));
+        }
         entity.setParent(parent);
         entity.setTypicalBalance(accountRequest.getTypicalBalance());
         Long categoryId = accountRequest.getCategory().longValue();
         AccountCategoryEntity accountCategoryEntity = categoryRepository.findById(categoryId)
-                                                        .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Category"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Category"));
         entity.setAccountCategory(accountCategoryEntity);
         entity.setSupportsRegistration(accountRequest.isSupportsRegistration());
+
         iAccountRepository.save(entity);
 
-        return  toResponse(entity);
+        return toResponse(entity);
     }
 
     public AccountResponse updateAccount(Long id, AccountRequest accountRequest) {
@@ -73,11 +78,11 @@ public class AccountService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No account found with ID: %d", id)));
         //check if code exist
-        if(iAccountRepository.existsByCodeAndNotId(accountRequest.getCode(), id)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("Account with code %s already exists.",accountRequest.getCode()));
+        if (iAccountRepository.existsByCodeAndNotId(accountRequest.getCode(), id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Account with code %s already exists.", accountRequest.getCode()));
         }
         AccountEntity parent = iAccountRepository.findById(accountRequest.getParentId())
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ParentID"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ParentID"));
         existingAccount.setParent(parent);
 
         existingAccount.setCode(accountRequest.getCode());
@@ -86,7 +91,7 @@ public class AccountService {
         existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
         existingAccount.setStatus(accountRequest.getStatus());
 
-        if(!accountRequest.getBalances().isEmpty() && accountRequest.isSupportsRegistration()) {
+        if (!accountRequest.getBalances().isEmpty() && accountRequest.isSupportsRegistration()) {
             // validate balances
             validateBalances(accountRequest.getBalances());
             // update balances
@@ -101,7 +106,7 @@ public class AccountService {
 
     /*Return All Categories of Accounts*/
     public List<AccountCategory> getAllCategories() {
-       return categoryRepository.findAll().stream().map(x->{
+        return categoryRepository.findAll().stream().map(x -> {
             AccountCategory dto = new AccountCategory();
             dto.setId(x.getId());
             dto.setName(x.getName());
@@ -109,14 +114,14 @@ public class AccountService {
         }).toList();
     }
 
-    private void validateBalances(Set<AccountBalance> balances){
+    private void validateBalances(Set<AccountBalance> balances) {
 
         long count = balances.stream().filter(AccountBalance::getIsCurrent).count();
-        if (count == 0){
+        if (count == 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one balance must be current");
         }
 
-        if(count > 1){
+        if (count > 1) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only one balance must be current");
         }
 
@@ -137,13 +142,13 @@ public class AccountService {
         response.setCategoryName(entity.getAccountCategory().getName());
         response.setCategoryId(entity.getAccountCategory().getId());
         // recursive query if parent is not null is a root account
-        if(entity.getParent() !=null){
+        if (entity.getParent() != null) {
             response.setParentName(entity.getParent().getDescription());
             response.setParentId(entity.getParent().getId());
             response.setParentCode(entity.getParent().getCode());
         }
         String type = entity.getTypicalBalance().equalsIgnoreCase("C") ? "Credito" : "Debito";
-        String status = entity.getStatus().equals(Status.ACTIVO) ? "Activa": "Inactiva";
+        String status = entity.getStatus().equals(Status.ACTIVO) ? "Activa" : "Inactiva";
         response.setTypicallyBalance(type);
         response.setStatus(status);
         response.setSupportEntry(entity.isSupportsRegistration());

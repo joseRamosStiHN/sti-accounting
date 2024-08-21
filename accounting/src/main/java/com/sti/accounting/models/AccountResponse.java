@@ -11,7 +11,7 @@ public class AccountResponse {
     private String name;
     private String accountCode;
     private String parentName;
-    private Long ParentId;
+    private Long parentId;
     private String parentCode;
     private String categoryName;
     private Long categoryId;

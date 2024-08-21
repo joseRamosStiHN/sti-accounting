@@ -31,12 +31,12 @@ public class AccountingController {
     }
 
     @GetMapping("/{id}")
-    public AccountResponse GetAccountById(@PathVariable Long id) {
+    public AccountResponse getAccountById(@PathVariable Long id) {
         return accountService.getById(id);
     }
 
     @PostMapping
-    public AccountResponse CreateAccount(@Validated @RequestBody AccountRequest accountRequest) {
+    public AccountResponse createAccount(@Validated @RequestBody AccountRequest accountRequest) {
         return accountService.createAccount(accountRequest);
     }
 
@@ -46,7 +46,7 @@ public class AccountingController {
     }
 
     @GetMapping("/categories")
-    public List<AccountCategory> GetAllCategories() {
+    public List<AccountCategory> getAllCategories() {
         return accountService.getAllCategories();
     }
 
