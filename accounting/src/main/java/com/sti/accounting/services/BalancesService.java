@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -51,7 +52,12 @@ public class BalancesService {
         AccountEntity accountEntity = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No account were found with the id %s", balancesRequest.getAccountId())));
 
+        if (balancesRequest.getInitialBalance().compareTo(BigDecimal.ZERO) < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The initial account balance cannot be negative");
+        }
+
         balanceEntity.setAccount(accountEntity);
+        balanceEntity.setTypicalBalance(balancesRequest.getTypicalBalance());
         balanceEntity.setInitialBalance(balancesRequest.getInitialBalance());
         balanceEntity.setIsActual(balancesRequest.getIsActual());
         iBalancesRepository.save(balanceEntity);
@@ -63,6 +69,10 @@ public class BalancesService {
     public BalancesResponse updateBalance(Long id, BalancesRequest balancesRequest) {
         logger.info("Updating balance with ID: {}", id);
 
+        if (balancesRequest.getInitialBalance().compareTo(BigDecimal.ZERO) < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The initial account balance cannot be negative");
+        }
+
         BalancesEntity existingBalance = this.iBalancesRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(Constant.NOT_BALANCE, id))
         );
@@ -70,7 +80,9 @@ public class BalancesService {
         AccountEntity accountEntity = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No account were found with the id %s", balancesRequest.getAccountId())));
 
+
         existingBalance.setAccount(accountEntity);
+        existingBalance.setTypicalBalance(balancesRequest.getTypicalBalance());
         existingBalance.setInitialBalance(balancesRequest.getInitialBalance());
         existingBalance.setCreateAtDate(LocalDateTime.now());
         existingBalance.setIsActual(balancesRequest.getIsActual());
@@ -84,6 +96,7 @@ public class BalancesService {
         BalancesResponse balancesResponse = new BalancesResponse();
         balancesResponse.setId(balancesEntity.getId());
         balancesResponse.setAccountId(balancesEntity.getAccount().getId());
+        balancesResponse.setTypicalBalance(balancesEntity.getTypicalBalance());
         balancesResponse.setInitialBalance(balancesEntity.getInitialBalance());
         balancesResponse.setCreateAtDate(balancesEntity.getCreateAtDate());
         balancesResponse.setIsActual(balancesEntity.getIsActual());

@@ -10,6 +10,7 @@ public class BalancesResponse {
 
     private Long id;
     private Long accountId;
+    private String typicalBalance;
     private BigDecimal initialBalance;
     private LocalDateTime createAtDate;
     private Boolean isActual;

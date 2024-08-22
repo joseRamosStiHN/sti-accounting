@@ -1,12 +1,10 @@
 package com.sti.accounting.controllers;
 
-import com.sti.accounting.entities.BalancesEntity;
-import com.sti.accounting.models.AccountResponse;
+
 import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.models.BalancesResponse;
 import com.sti.accounting.services.BalancesService;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 

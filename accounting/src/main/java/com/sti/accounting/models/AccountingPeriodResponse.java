@@ -12,5 +12,5 @@ public class AccountingPeriodResponse {
     private String closureType;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
-
+    private String status;
 }

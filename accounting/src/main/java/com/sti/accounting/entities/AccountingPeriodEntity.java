@@ -31,4 +31,7 @@ public class AccountingPeriodEntity {
 
     @Column(name = "END_DATE", nullable = false)
     private LocalDateTime endDate;
+
+    @Column(name = "STATUS")
+    private String status;
 }

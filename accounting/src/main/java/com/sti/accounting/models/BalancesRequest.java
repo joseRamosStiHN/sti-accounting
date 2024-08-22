@@ -1,6 +1,5 @@
 package com.sti.accounting.models;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -15,7 +14,9 @@ public class BalancesRequest {
 
     private Long accountId;
 
-    @Positive(message = "Initial Balance must be positive")
+    @NotBlank(message = "Typical Balance is required")
+    private String typicalBalance;
+
     private BigDecimal initialBalance;
 
     private LocalDateTime createAtDate;

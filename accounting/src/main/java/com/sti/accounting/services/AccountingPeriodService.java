@@ -6,6 +6,7 @@ import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.models.AccountingPeriodRequest;
 import com.sti.accounting.models.AccountingPeriodResponse;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
+import com.sti.accounting.utils.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -43,6 +44,7 @@ public class AccountingPeriodService {
         entity.setClosureType(accountingPeriodRequest.getClosureType());
         entity.setStartDate(accountingPeriodRequest.getStartDate());
         entity.setEndDate(accountingPeriodRequest.getEndDate());
+        entity.setStatus(accountingPeriodRequest.getStatus());
         accountingPeriodRepository.save(entity);
 
         return toResponse(entity);
@@ -59,6 +61,8 @@ public class AccountingPeriodService {
         existingAccountingPeriod.setClosureType(accountingPeriodRequest.getClosureType());
         existingAccountingPeriod.setStartDate(accountingPeriodRequest.getStartDate());
         existingAccountingPeriod.setEndDate(accountingPeriodRequest.getEndDate());
+        existingAccountingPeriod.setStatus(accountingPeriodRequest.getStatus());
+
         accountingPeriodRepository.save(existingAccountingPeriod);
 
         return toResponse(existingAccountingPeriod);
@@ -72,6 +76,7 @@ public class AccountingPeriodService {
         response.setClosureType(entity.getClosureType());
         response.setStartDate(entity.getStartDate());
         response.setEndDate(entity.getEndDate());
+        response.setStatus(entity.getStatus());
         return response;
     }
 }

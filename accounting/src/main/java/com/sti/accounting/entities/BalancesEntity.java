@@ -27,6 +27,9 @@ public class BalancesEntity {
     @JoinColumn(name = "account_id")
     private AccountEntity account;
 
+    @Column(name = "TYPICAL_BALANCE")
+    private String typicalBalance;
+
     @Column(name = "INITIAL BALANCE")
     private BigDecimal initialBalance;
 
