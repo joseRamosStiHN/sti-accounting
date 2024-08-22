@@ -1,12 +1,10 @@
 package com.sti.accounting.entities;
 
 
-import com.sti.accounting.models.AccountRequest;
 import com.sti.accounting.utils.Status;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
