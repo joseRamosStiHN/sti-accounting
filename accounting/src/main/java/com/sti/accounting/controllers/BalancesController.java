@@ -1,7 +1,9 @@
 package com.sti.accounting.controllers;
 
 import com.sti.accounting.entities.BalancesEntity;
+import com.sti.accounting.models.AccountResponse;
 import com.sti.accounting.models.BalancesRequest;
+import com.sti.accounting.models.BalancesResponse;
 import com.sti.accounting.services.BalancesService;
 
 import org.springframework.http.ResponseEntity;
@@ -23,34 +25,28 @@ public class BalancesController {
         this.balancesService = balancesService;
     }
 
-    // Endpoint para obtener todos los saldos
-    @GetMapping
-    public List<BalancesRequest> getAllBalances() {
-        return balancesService.GetAllBalances();
-
+    @GetMapping()
+    public List<BalancesResponse> getAllBalances() {
+        return balancesService.getAllBalances();
     }
 
+
     @GetMapping("/{id}")
-    public BalancesRequest getBalanceById(@PathVariable Long id) {
-        return balancesService.GetById(id);
+    public BalancesResponse getBalanceById(@PathVariable Long id) {
+        return balancesService.getById(id);
     }
 
     //TODO: NO SE DEBE RETORNAR EL ENTITY
     @PostMapping
-    public BalancesEntity createBalance(@Validated @RequestBody BalancesRequest balancesRequest) {
-        return balancesService.CreateBalances(balancesRequest);
+    public BalancesResponse createBalance(@Validated @RequestBody BalancesRequest balancesRequest) {
+        return balancesService.createBalance(balancesRequest);
 
     }
 
     @PutMapping("/{id}")
-    public BalancesEntity updateBalance(@PathVariable("id") Long id, @Validated @RequestBody BalancesRequest balancesRequest) {
-        return balancesService.UpdateBalance(id, balancesRequest);
+    public BalancesResponse updateBalance(@PathVariable("id") Long id, @Validated @RequestBody BalancesRequest balancesRequest) {
+        return balancesService.updateBalance(id, balancesRequest);
 
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteBalance(@PathVariable("id") Long id) {
-        balancesService.DeleteBalance(id);
-        return ResponseEntity.noContent().build();
-    }
 }

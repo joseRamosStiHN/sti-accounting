@@ -1,9 +1,7 @@
 package com.sti.accounting.entities;
 
 
-import com.sti.accounting.models.BalancesRequest;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,7 +28,6 @@ public class BalancesEntity {
     private AccountEntity account;
 
     @Column(name = "INITIAL BALANCE")
-    @NotNull(message = "Initial Balance is required")
     private BigDecimal initialBalance;
 
     @CreationTimestamp
@@ -39,15 +36,4 @@ public class BalancesEntity {
 
     @Column(name = "IS_ACTUAL")
     private Boolean isActual;
-
-    @Transient
-    public BalancesRequest entityToRequest(){
-        BalancesRequest request = new BalancesRequest();
-        request.setId(this.getId());
-        request.setInitialBalance(this.getInitialBalance());
-        request.setCreateAtDate(this.getCreateAtDate());
-        request.setIsActual(this.getIsActual());
-        return request;
-    }
-
 }

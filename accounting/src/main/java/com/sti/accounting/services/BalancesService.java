@@ -2,6 +2,7 @@ package com.sti.accounting.services;
 
 import com.sti.accounting.entities.AccountEntity;
 import com.sti.accounting.entities.BalancesEntity;
+import com.sti.accounting.models.BalancesResponse;
 import com.sti.accounting.models.Constant;
 import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.repositories.IAccountRepository;
@@ -14,8 +15,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
-
 
 @Service
 public class BalancesService {
@@ -28,63 +27,68 @@ public class BalancesService {
     public BalancesService(IBalancesRepository iBalancesRepository, IAccountRepository iAccountRepository) {
         this.iBalancesRepository = iBalancesRepository;
         this.iAccountRepository = iAccountRepository;
+
     }
 
 
-    public List<BalancesRequest> GetAllBalances() {
-        List<BalancesEntity> entities = this.iBalancesRepository.findAll();
-        return entities.stream().map(BalancesEntity::entityToRequest).collect(Collectors.toList());
+    public List<BalancesResponse> getAllBalances() {
+        return this.iBalancesRepository.findAll().stream().map(this::toResponse).toList();
+
     }
 
-    public BalancesRequest GetById(Long id) {
+    public BalancesResponse getById(Long id) {
         logger.trace("balance request with id {}", id);
         BalancesEntity balancesEntity = this.iBalancesRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format(Constant.NOT_BALANCE, id))
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(Constant.NOT_BALANCE, id))
         );
-        return balancesEntity.entityToRequest();
+        return toResponse(balancesEntity);
     }
 
-    public BalancesEntity CreateBalances(BalancesRequest balancesRequest) {
+    public BalancesResponse createBalance(BalancesRequest balancesRequest) {
         logger.info("creating balance");
+        BalancesEntity balanceEntity = new BalancesEntity();
 
-        AccountEntity account = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("The specified account %s does not exist", balancesRequest.getAccountId()))
-        );
+        AccountEntity accountEntity = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No account were found with the id %s", balancesRequest.getAccountId())));
 
-        BalancesEntity newBalance = new BalancesEntity();
-        newBalance.setAccount(account);
-        newBalance.setInitialBalance(balancesRequest.getInitialBalance());
-        newBalance.setIsActual(balancesRequest.getIsActual());
-        return iBalancesRepository.save(newBalance);
+        balanceEntity.setAccount(accountEntity);
+        balanceEntity.setInitialBalance(balancesRequest.getInitialBalance());
+        balanceEntity.setIsActual(balancesRequest.getIsActual());
+        iBalancesRepository.save(balanceEntity);
+
+        return toResponse(balanceEntity);
     }
 
     //TODO: mejorar esto
-    public BalancesEntity UpdateBalance(Long id, BalancesRequest balancesRequest) {
+    public BalancesResponse updateBalance(Long id, BalancesRequest balancesRequest) {
         logger.info("Updating balance with ID: {}", id);
 
         BalancesEntity existingBalance = this.iBalancesRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format(Constant.NOT_BALANCE, id))
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(Constant.NOT_BALANCE, id))
         );
 
-        AccountEntity account = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,String.format("The specified account %s does not exist", balancesRequest.getAccountId()))
-        );
+        AccountEntity accountEntity = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No account were found with the id %s", balancesRequest.getAccountId())));
 
-        existingBalance.setAccount(account);
+        existingBalance.setAccount(accountEntity);
         existingBalance.setInitialBalance(balancesRequest.getInitialBalance());
         existingBalance.setCreateAtDate(LocalDateTime.now());
         existingBalance.setIsActual(balancesRequest.getIsActual());
-        return iBalancesRepository.save(existingBalance);
+        iBalancesRepository.save(existingBalance);
 
+        return toResponse(existingBalance);
 
     }
 
-    public void DeleteBalance(Long id) {
-        logger.info("delete balance");
-        this.iBalancesRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format(Constant.NOT_BALANCE, id))
-        );
+    private BalancesResponse toResponse(BalancesEntity balancesEntity) {
+        BalancesResponse balancesResponse = new BalancesResponse();
+        balancesResponse.setId(balancesEntity.getId());
+        balancesResponse.setAccountId(balancesEntity.getAccount().getId());
+        balancesResponse.setInitialBalance(balancesEntity.getInitialBalance());
+        balancesResponse.setCreateAtDate(balancesEntity.getCreateAtDate());
+        balancesResponse.setIsActual(balancesEntity.getIsActual());
+        return balancesResponse;
 
-        iBalancesRepository.deleteById(id);
     }
+
 }

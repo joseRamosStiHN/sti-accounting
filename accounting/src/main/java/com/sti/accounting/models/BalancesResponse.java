@@ -1,24 +1,17 @@
 package com.sti.accounting.models;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import jakarta.validation.constraints.*;
 
-@Getter
-@Setter
-public class BalancesRequest {
+@Data
+public class BalancesResponse {
 
     private Long id;
-
     private Long accountId;
-
-    @Positive(message = "Initial Balance must be positive")
     private BigDecimal initialBalance;
-
     private LocalDateTime createAtDate;
-
     private Boolean isActual;
+
 }
