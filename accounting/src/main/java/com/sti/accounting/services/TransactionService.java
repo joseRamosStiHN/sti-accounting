@@ -159,14 +159,6 @@ public class TransactionService {
         transactionRepository.save(existingTransaction);
     }
 
-//    public List<TransactionResponse> getByDocumentType(Long id) {
-//
-//        List<TransactionEntity> transByDocument = transactionRepository.findByDocumentId(id);
-//
-//        return transByDocument.stream().map(this::entityToResponse).toList();
-//    }
-
-
     private void validateTransactionDetail(List<TransactionDetailRequest> detailRequest) {
         if (detailRequest.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Detail is required");

@@ -13,19 +13,19 @@ public class AccountingPeriodRequest {
 
     private Long id;
 
-    @NotBlank(message = "Description is required.")
-    private String description;
+    private String periodName;
 
     @NotBlank(message = "Closure type is required.")
     private String closureType;
 
-    @NotNull(message = "Start date is required.")
-    private LocalDateTime startDate;
+    @NotNull(message = "Start period is required.")
+    private LocalDateTime startPeriod;
 
-    @NotNull(message = "End date is required.")
-    private LocalDateTime endDate;
+    private LocalDateTime endPeriod;
 
-    private String status;
+    private Integer daysPeriod;
+
+    private boolean status;
 
 
 }

@@ -39,4 +39,9 @@ public class AccountingPeriodController {
     public AccountingPeriodResponse updateAccountingPeriod(@PathVariable("id") Long id, @Validated @RequestBody AccountingPeriodRequest accountingPeriodRequest) {
         return accountingPeriodService.updateAccountingPeriod(id, accountingPeriodRequest);
     }
+
+    @DeleteMapping("/{id}")
+    public AccountingPeriodResponse deleteAccountingPeriod(@PathVariable("id") Long id) {
+        return accountingPeriodService.deleteAccountingPeriod(id);
+    }
 }

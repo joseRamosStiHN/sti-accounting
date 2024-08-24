@@ -40,11 +40,12 @@ public class AccountingPeriodService {
     public AccountingPeriodResponse createAccountingPeriod(AccountingPeriodRequest accountingPeriodRequest) {
         AccountingPeriodEntity entity = new AccountingPeriodEntity();
 
-        entity.setDescription(accountingPeriodRequest.getDescription());
+        entity.setPeriodName(accountingPeriodRequest.getPeriodName());
         entity.setClosureType(accountingPeriodRequest.getClosureType());
-        entity.setStartDate(accountingPeriodRequest.getStartDate());
-        entity.setEndDate(accountingPeriodRequest.getEndDate());
-        entity.setStatus(accountingPeriodRequest.getStatus());
+        entity.setStartPeriod(accountingPeriodRequest.getStartPeriod());
+        entity.setEndPeriod(accountingPeriodRequest.getEndPeriod());
+        entity.setDaysPeriod(accountingPeriodRequest.getDaysPeriod());
+        entity.setStatus(false);
         accountingPeriodRepository.save(entity);
 
         return toResponse(entity);
@@ -57,14 +58,26 @@ public class AccountingPeriodService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No accounting period found with ID: %d", id)));
 
-        existingAccountingPeriod.setDescription(accountingPeriodRequest.getDescription());
+        existingAccountingPeriod.setPeriodName(accountingPeriodRequest.getPeriodName());
         existingAccountingPeriod.setClosureType(accountingPeriodRequest.getClosureType());
-        existingAccountingPeriod.setStartDate(accountingPeriodRequest.getStartDate());
-        existingAccountingPeriod.setEndDate(accountingPeriodRequest.getEndDate());
-        existingAccountingPeriod.setStatus(accountingPeriodRequest.getStatus());
+        existingAccountingPeriod.setStartPeriod(accountingPeriodRequest.getStartPeriod());
+        existingAccountingPeriod.setEndPeriod(accountingPeriodRequest.getEndPeriod());
+        existingAccountingPeriod.setDaysPeriod(accountingPeriodRequest.getDaysPeriod());
+        existingAccountingPeriod.setStatus(accountingPeriodRequest.isStatus());
 
         accountingPeriodRepository.save(existingAccountingPeriod);
 
+        return toResponse(existingAccountingPeriod);
+    }
+
+    public AccountingPeriodResponse deleteAccountingPeriod(Long id) {
+        logger.info("Deleting accounting period with ID: {}", id);
+
+        AccountingPeriodEntity existingAccountingPeriod = accountingPeriodRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        String.format("No accounting period found with ID: %d", id)));
+
+        accountingPeriodRepository.delete(existingAccountingPeriod);
         return toResponse(existingAccountingPeriod);
     }
 
@@ -72,11 +85,12 @@ public class AccountingPeriodService {
         AccountingPeriodResponse response = new AccountingPeriodResponse();
 
         response.setId(entity.getId());
-        response.setDescription(entity.getDescription());
+        response.setPeriodName(entity.getPeriodName());
         response.setClosureType(entity.getClosureType());
-        response.setStartDate(entity.getStartDate());
-        response.setEndDate(entity.getEndDate());
-        response.setStatus(entity.getStatus());
+        response.setStartPeriod(entity.getStartPeriod());
+        response.setEndPeriod(entity.getEndPeriod());
+        response.setDaysPeriod(entity.getDaysPeriod());
+        response.setStatus(entity.isStatus());
         return response;
     }
 }

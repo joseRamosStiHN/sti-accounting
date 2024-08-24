@@ -8,9 +8,10 @@ import java.time.LocalDateTime;
 public class AccountingPeriodResponse {
 
     private Long id;
-    private String description;
+    private String periodName;
     private String closureType;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private String status;
+    private LocalDateTime startPeriod;
+    private LocalDateTime endPeriod;
+    private Integer daysPeriod;
+    private boolean status;
 }

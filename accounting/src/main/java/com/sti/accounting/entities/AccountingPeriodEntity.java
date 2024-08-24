@@ -20,18 +20,21 @@ public class AccountingPeriodEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "DESCRIPTION", nullable = false)
-    private String description;
+    @Column(name = "PERIOD_NAME")
+    private String periodName;
 
     @Column(name = "CLOSURE_TYPE", nullable = false)
     private String closureType;
 
-    @Column(name = "START_DATE", nullable = false)
-    private LocalDateTime startDate;
+    @Column(name = "START_PERIOD", nullable = false)
+    private LocalDateTime startPeriod;
 
-    @Column(name = "END_DATE", nullable = false)
-    private LocalDateTime endDate;
+    @Column(name = "END_PERIOD")
+    private LocalDateTime endPeriod;
+
+    @Column(name = "DAYS_PERIOD")
+    private Integer daysPeriod;
 
     @Column(name = "STATUS")
-    private String status;
+    private boolean status;
 }

@@ -50,17 +50,19 @@ public class AccountingApplication {
 		};
 	}
 
-	@Bean
-	CommandLineRunner triggerNumberPda(DataSource dataSource) {
-		return args -> {
-			try (Connection conn = dataSource.getConnection();
-				 Statement stmt = conn.createStatement()) {
-				stmt.execute("CREATE TRIGGER insert_num_pda BEFORE INSERT ON transactions FOR EACH ROW BEGIN SET NEW.number_pda = (SELECT COALESCE(MAX(number_pda), 0) + 1 FROM transactions); END;");
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		};
-	}
+//	@Bean
+//	CommandLineRunner triggerNumberPda(DataSource dataSource) {
+//		return args -> {
+//			try (Connection conn = dataSource.getConnection();
+//				 Statement stmt = conn.createStatement()) {
+//				stmt.execute("CREATE TRIGGER insert_num_pda BEFORE INSERT ON transactions FOR EACH ROW BEGIN SET NEW.number_pda = (SELECT COALESCE(MAX(number_pda), 0) + 1 FROM transactions); END;");
+//			} catch (SQLException e) {
+//				e.printStackTrace();
+//			}
+//		};
+//	}
+
+
 
 
 }
