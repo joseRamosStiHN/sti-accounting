@@ -26,7 +26,6 @@ public class TransactionService {
     private final IDocumentRepository document;
 
 
-
     public TransactionService(ITransactionRepository transactionRepository, IAccountRepository iAccountRepository,
                               IDocumentRepository document) {
         this.transactionRepository = transactionRepository;
@@ -65,6 +64,7 @@ public class TransactionService {
                                 String.format("Document type %d not valid ", transactionRequest.getDocumentType())
                         )
                 );
+
         entity.setDocument(documentType);
         entity.setStatus(StatusTransaction.DRAFT);
         entity.setCurrency(transactionRequest.getCurrency());
@@ -98,9 +98,9 @@ public class TransactionService {
         //update transaction detail
         //get all keys (var existingDetailMap is a Map<Long, TransactionDetailEntity>)
         var existingDetailMap = existingTransaction
-                                .getTransactionDetail().stream()
-                                .collect(Collectors
-                                .toMap(TransactionDetailEntity::getId, detail -> detail));
+                .getTransactionDetail().stream()
+                .collect(Collectors
+                        .toMap(TransactionDetailEntity::getId, detail -> detail));
         /* object that will be used to update the existing details
          *  if the detail is not found in the existing details, it will be added
          *  if the detail is found in the existing details, it will be updated*/
@@ -190,7 +190,7 @@ public class TransactionService {
     }
 
 
-    private List<TransactionDetailEntity> detailToEntity(TransactionEntity TransEntity, List<TransactionDetailRequest> detailRequests) {
+    private List<TransactionDetailEntity> detailToEntity(TransactionEntity transactionEntity, List<TransactionDetailRequest> detailRequests) {
         try {
             List<TransactionDetailEntity> result = new ArrayList<>();
             List<AccountEntity> accounts = iAccountRepository.findAll();
@@ -201,7 +201,7 @@ public class TransactionService {
                 currentAccount.ifPresent(entity::setAccount);
                 entity.setAmount(detail.getAmount());
                 entity.setMotion(detail.getMotion());
-                entity.setTransaction(TransEntity);
+                entity.setTransaction(transactionEntity);
                 result.add(entity);
             }
             return result;
@@ -239,7 +239,6 @@ public class TransactionService {
         response.setTransactionDetails(detailResponseSet);
         return response;
     }
-
 
 
 }

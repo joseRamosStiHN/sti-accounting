@@ -58,8 +58,6 @@ public class TransactionEntity {
     @Column(name = "CURRENCY")
     private Currency currency;
 
-
-
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TransactionDetailEntity> transactionDetail;
 

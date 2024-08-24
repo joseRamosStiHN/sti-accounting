@@ -9,6 +9,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +50,17 @@ public class AccountingApplication {
 		};
 	}
 
+	@Bean
+	CommandLineRunner triggerNumberPda(DataSource dataSource) {
+		return args -> {
+			try (Connection conn = dataSource.getConnection();
+				 Statement stmt = conn.createStatement()) {
+				stmt.execute("CREATE TRIGGER insert_num_pda BEFORE INSERT ON transactions FOR EACH ROW BEGIN SET NEW.number_pda = (SELECT COALESCE(MAX(number_pda), 0) + 1 FROM transactions); END;");
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		};
+	}
 
 
 }
