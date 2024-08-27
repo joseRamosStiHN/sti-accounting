@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -43,7 +44,7 @@ public class AccountingPeriodService {
         entity.setPeriodName(accountingPeriodRequest.getPeriodName());
         entity.setClosureType(accountingPeriodRequest.getClosureType());
         entity.setStartPeriod(accountingPeriodRequest.getStartPeriod());
-        entity.setEndPeriod(accountingPeriodRequest.getEndPeriod());
+        entity.setEndPeriod(accountingPeriodRequest.getEndPeriod() == null ? calculateEndPeriod(accountingPeriodRequest.getStartPeriod(), accountingPeriodRequest.getClosureType()) : accountingPeriodRequest.getEndPeriod());
         entity.setDaysPeriod(accountingPeriodRequest.getDaysPeriod());
         entity.setStatus(false);
         accountingPeriodRepository.save(entity);
@@ -61,7 +62,7 @@ public class AccountingPeriodService {
         existingAccountingPeriod.setPeriodName(accountingPeriodRequest.getPeriodName());
         existingAccountingPeriod.setClosureType(accountingPeriodRequest.getClosureType());
         existingAccountingPeriod.setStartPeriod(accountingPeriodRequest.getStartPeriod());
-        existingAccountingPeriod.setEndPeriod(accountingPeriodRequest.getEndPeriod());
+        existingAccountingPeriod.setEndPeriod(accountingPeriodRequest.getEndPeriod() == null ? calculateEndPeriod(accountingPeriodRequest.getStartPeriod(), accountingPeriodRequest.getClosureType()) : accountingPeriodRequest.getEndPeriod());
         existingAccountingPeriod.setDaysPeriod(accountingPeriodRequest.getDaysPeriod());
         existingAccountingPeriod.setStatus(accountingPeriodRequest.isStatus());
 
@@ -79,6 +80,20 @@ public class AccountingPeriodService {
 
         accountingPeriodRepository.delete(existingAccountingPeriod);
         return toResponse(existingAccountingPeriod);
+    }
+
+    private LocalDateTime calculateEndPeriod(LocalDateTime startPeriod, String closureType) {
+        if (closureType.equalsIgnoreCase("mensual")) {
+            return startPeriod.plusMonths(1);
+        } else if (closureType.equalsIgnoreCase("trimestral")) {
+            return startPeriod.plusMonths(3);
+        } else if (closureType.equalsIgnoreCase("semestral")) {
+            return startPeriod.plusMonths(6);
+        } else if (closureType.equalsIgnoreCase("anual")) {
+            return startPeriod.plusYears(1);
+        } else {
+            throw new IllegalArgumentException("Closure type not recognized: " + closureType);
+        }
     }
 
     private AccountingPeriodResponse toResponse(AccountingPeriodEntity entity) {

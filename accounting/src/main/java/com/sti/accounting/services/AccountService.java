@@ -46,13 +46,15 @@ public class AccountService {
 
     public AccountResponse createAccount(AccountRequest accountRequest) {
         AccountEntity entity = new AccountEntity();
+
+        boolean existsCode = this.iAccountRepository.existsByCode(accountRequest.getCode());
+        if (existsCode) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account code already exists.");
+        }
         entity.setCode(accountRequest.getCode());
         entity.setStatus(Status.ACTIVO);
         entity.setDescription(accountRequest.getDescription());
         //  set parent id
-//        AccountEntity parent = iAccountRepository.findById(accountRequest.getParentId())
-//                .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ParentID"));
-//        entity.setParent(parent);
         AccountEntity parent = null;
         if (accountRequest.getParentId() != null) {
             parent = iAccountRepository.findById(accountRequest.getParentId())
