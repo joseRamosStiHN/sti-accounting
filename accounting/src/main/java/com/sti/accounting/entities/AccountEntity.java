@@ -25,9 +25,6 @@ public class AccountEntity {
     @Column(name = "DESCRIPTION")
     private String description;
 
-//    @Column(name = "PARENT_ID")
-//    private Long parentId;
-
     @Column(name = "TYPICAL_BALANCE")
     private String typicalBalance;
 

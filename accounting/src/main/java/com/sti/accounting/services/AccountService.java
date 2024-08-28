@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -154,6 +155,24 @@ public class AccountService {
         response.setTypicallyBalance(type);
         response.setStatus(status);
         response.setSupportEntry(entity.isSupportsRegistration());
+        // Convertir balances de List<BalancesEntity> a Set<AccountBalance>
+        Set<AccountBalance> balanceSet = new HashSet<>();
+        for (BalancesEntity balanceEntity : entity.getBalances()) {
+            AccountBalance accountBalance = convertToAccountBalance(balanceEntity);
+            balanceSet.add(accountBalance);
+        }
+        response.setBalances(balanceSet);
         return response;
     }
+
+    private AccountBalance convertToAccountBalance(BalancesEntity balanceEntity) {
+        AccountBalance accountBalance = new AccountBalance();
+        accountBalance.setId(balanceEntity.getId());
+        accountBalance.setTypicalBalance(balanceEntity.getTypicalBalance());
+        accountBalance.setInitialBalance(balanceEntity.getInitialBalance());
+        accountBalance.setCreateAtDate(balanceEntity.getCreateAtDate());
+        accountBalance.setIsCurrent(balanceEntity.getIsActual());
+        return accountBalance;
+    }
+
 }
