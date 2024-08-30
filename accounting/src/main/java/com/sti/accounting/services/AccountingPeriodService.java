@@ -82,6 +82,10 @@ public class AccountingPeriodService {
         return toResponse(existingAccountingPeriod);
     }
 
+    public boolean isActivePeriodExists() {
+        return accountingPeriodRepository.findByStatusTrue().isPresent();
+    }
+
     private LocalDateTime calculateEndPeriod(LocalDateTime startPeriod, String closureType) {
         if (closureType.equalsIgnoreCase("mensual")) {
             return startPeriod.plusMonths(1);

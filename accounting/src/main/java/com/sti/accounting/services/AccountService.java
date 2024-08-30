@@ -157,9 +157,12 @@ public class AccountService {
         response.setSupportEntry(entity.isSupportsRegistration());
         // Convertir balances de List<BalancesEntity> a Set<AccountBalance>
         Set<AccountBalance> balanceSet = new HashSet<>();
-        for (BalancesEntity balanceEntity : entity.getBalances()) {
-            AccountBalance accountBalance = convertToAccountBalance(balanceEntity);
-            balanceSet.add(accountBalance);
+        List<BalancesEntity> balances = entity.getBalances();
+        if (balances != null) {
+            for (BalancesEntity balanceEntity : balances) {
+                AccountBalance accountBalance = convertToAccountBalance(balanceEntity);
+                balanceSet.add(accountBalance);
+            }
         }
         response.setBalances(balanceSet);
         return response;

@@ -5,6 +5,8 @@ import com.sti.accounting.models.AccountResponse;
 import com.sti.accounting.models.AccountingPeriodRequest;
 import com.sti.accounting.models.AccountingPeriodResponse;
 import com.sti.accounting.services.AccountingPeriodService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,5 +45,11 @@ public class AccountingPeriodController {
     @DeleteMapping("/{id}")
     public AccountingPeriodResponse deleteAccountingPeriod(@PathVariable("id") Long id) {
         return accountingPeriodService.deleteAccountingPeriod(id);
+    }
+
+    @GetMapping("/active-period")
+    public ResponseEntity<Boolean> checkActivePeriodExists() {
+        boolean existsPeriod = accountingPeriodService.isActivePeriodExists();
+        return new ResponseEntity<>(existsPeriod, HttpStatus.OK);
     }
 }

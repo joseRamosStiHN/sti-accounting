@@ -34,7 +34,6 @@ public class BalancesController {
         return balancesService.getById(id);
     }
 
-    //TODO: NO SE DEBE RETORNAR EL ENTITY
     @PostMapping
     public BalancesResponse createBalance(@Validated @RequestBody BalancesRequest balancesRequest) {
         return balancesService.createBalance(balancesRequest);
