@@ -126,7 +126,7 @@ public class TransactionService {
             //accounts references
             AccountEntity accountEntity = accountsMap.get(detailRequest.getAccountId());
             if (accountEntity == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("account id %d not found, in transaction detail", detailRequest.getId()));
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("account id %d not found, in transaction detail", detailRequest.getAccountId()));
             }
             detailEntity.setAccount(accountEntity);
             updatedDetails.add(detailEntity);
@@ -190,6 +190,9 @@ public class TransactionService {
                 TransactionDetailEntity entity = new TransactionDetailEntity();
                 // si la cuenta no existe esto truena
                 Optional<AccountEntity> currentAccount = accounts.stream().filter(x -> x.getId().equals(detail.getAccountId())).findFirst();
+                if (currentAccount.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account with id " + detail.getAccountId() + "does not exist.");
+                }
                 currentAccount.ifPresent(entity::setAccount);
                 entity.setAmount(detail.getAmount());
                 entity.setMotion(detail.getMotion());
