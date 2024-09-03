@@ -28,9 +28,6 @@ public class AccountEntity {
     @Column(name = "TYPICAL_BALANCE")
     private String typicalBalance;
 
-    @Column(name = "ACCOUNT TYPE")
-    private String accountType;
-
     @Column(name = "SUPPORTS_REGISTRATION")
     private boolean supportsRegistration;
 
@@ -49,4 +46,7 @@ public class AccountEntity {
     @JoinColumn(name = "parent_id", referencedColumnName = "id")
     private AccountEntity parent;
 
+    @ManyToOne
+    @JoinColumn(name = "account_type_id", referencedColumnName = "id")
+    private AccountTypeEntity accountType;
 }

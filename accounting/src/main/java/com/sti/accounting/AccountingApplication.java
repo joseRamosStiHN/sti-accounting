@@ -11,10 +11,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -52,11 +49,11 @@ public class AccountingApplication {
             long accountTypeCount = accountType.count();
             if (accountTypeCount == 0) {
                 List<AccountTypeEntity> accountsType = Arrays.asList(
-                        new AccountTypeEntity(1L, "Ventas", "Tipo de cuenta para ventas."),
-                        new AccountTypeEntity(2L, "Compras", "Tipo de cuenta para compras."),
-                        new AccountTypeEntity(3L, "Efectivo", "Tipo de cuenta para efectivo."),
-                        new AccountTypeEntity(4L, "Bancos", "Tipo de cuenta para bancos."),
-                        new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.")
+                        new AccountTypeEntity(1L, "Ventas", "Tipo de cuenta para ventas.", new HashSet<>()),
+                        new AccountTypeEntity(2L, "Compras", "Tipo de cuenta para compras.", new HashSet<>()),
+                        new AccountTypeEntity(3L, "Efectivo", "Tipo de cuenta para efectivo.", new HashSet<>()),
+                        new AccountTypeEntity(4L, "Bancos", "Tipo de cuenta para bancos.", new HashSet<>()),
+                        new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.", new HashSet<>())
 
                 );
                 accountType.saveAll(accountsType);

@@ -16,7 +16,8 @@ public class AccountResponse {
     private String categoryName;
     private Long categoryId;
     private String typicallyBalance;
-    private String accountType;
+    private String accountTypeName;
+    private Long accountType;
     private String status;
     private Boolean supportEntry;
     private Set<AccountBalance> balances = new HashSet<>();
