@@ -179,6 +179,22 @@ public class TransactionService {
         if (operationResult.compareTo(BigDecimal.ZERO) != 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The values entered in the detail are not balanced");
         }
+
+        // Validate that accountId is not the same for debit and credit
+        Set<Long> creditAccountIds = detailRequest.stream()
+                .filter(x -> x.getMotion().equals(Motion.C))
+                .map(TransactionDetailRequest::getAccountId)
+                .collect(Collectors.toSet());
+
+        Set<Long> debitAccountIds = detailRequest.stream()
+                .filter(x -> x.getMotion().equals(Motion.D))
+                .map(TransactionDetailRequest::getAccountId)
+                .collect(Collectors.toSet());
+
+        creditAccountIds.retainAll(debitAccountIds);
+        if (!creditAccountIds.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account ID cannot be the same for debit and credit");
+        }
     }
 
 
