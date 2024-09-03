@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -151,6 +152,12 @@ public class AccountService {
 
         if (count > 1) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only one balance must be current");
+        }
+
+        for (AccountBalance balance : balances) {
+            if (balance.getInitialBalance().compareTo(BigDecimal.ZERO) < 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The initial account balance cannot be negative");
+            }
         }
 
     }
