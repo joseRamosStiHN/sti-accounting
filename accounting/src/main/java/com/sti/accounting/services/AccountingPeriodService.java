@@ -6,7 +6,6 @@ import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.models.AccountingPeriodRequest;
 import com.sti.accounting.models.AccountingPeriodResponse;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
-import com.sti.accounting.utils.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -59,6 +58,16 @@ public class AccountingPeriodService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No accounting period found with ID: %d", id)));
 
+        // Desactivar los periodos que esten activos cuando se mande activar un periodo
+        if (accountingPeriodRequest.isStatus()) {
+            List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findAllByStatus(true);
+            for (AccountingPeriodEntity activePeriod : activePeriods) {
+                if (!activePeriod.getId().equals(existingAccountingPeriod.getId())) {
+                    activePeriod.setStatus(false);
+                    accountingPeriodRepository.save(activePeriod);
+                }
+            }
+        }
         existingAccountingPeriod.setPeriodName(accountingPeriodRequest.getPeriodName());
         existingAccountingPeriod.setClosureType(accountingPeriodRequest.getClosureType());
         existingAccountingPeriod.setStartPeriod(accountingPeriodRequest.getStartPeriod());
@@ -95,6 +104,8 @@ public class AccountingPeriodService {
             return startPeriod.plusMonths(6);
         } else if (closureType.equalsIgnoreCase("anual")) {
             return startPeriod.plusYears(1);
+        } else if (closureType.equalsIgnoreCase("semanal")) {
+            return startPeriod.plusWeeks(1);
         } else {
             throw new IllegalArgumentException("Closure type not recognized: " + closureType);
         }
