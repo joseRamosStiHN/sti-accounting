@@ -1,8 +1,10 @@
 package com.sti.accounting;
 
 import com.sti.accounting.entities.AccountCategoryEntity;
+import com.sti.accounting.entities.AccountTypeEntity;
 import com.sti.accounting.entities.DocumentEntity;
 import com.sti.accounting.repositories.IAccountCategoryRepository;
+import com.sti.accounting.repositories.IAccountTypeRepository;
 import com.sti.accounting.repositories.IDocumentRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -21,34 +23,47 @@ import java.util.List;
 @SpringBootApplication()
 public class AccountingApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(AccountingApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(AccountingApplication.class, args);
+    }
 
 
-	@Bean
-	CommandLineRunner seedCategories(IAccountCategoryRepository repository, IDocumentRepository document) {
-		return args -> {
-			long count = repository.count();
-			if (count == 0) {
-				List<AccountCategoryEntity> categories = Arrays.asList(
-						new AccountCategoryEntity(1L, "Balance General", "Agrupa las cuentas de Balance General", new HashSet<>()),
-						new AccountCategoryEntity(2L, "Estado de Resultados", "Agrupa las cuentas de resultados", new HashSet<>())
-				);
-				repository.saveAll(categories);
-			}
-			long documentCount = document.count();
-			if(documentCount == 0){
-				List<DocumentEntity> documents = Arrays.asList(
-						new DocumentEntity(1L, "Factura de Clientes", "Factura de clientes", new HashSet<>()),
-						new DocumentEntity(2L, "Factura de Proveedores", "Factura de proveedores", new HashSet<>()),
-						new DocumentEntity(3L, "Notas de Credito", "Notas de Credito", new HashSet<>()),
-						new DocumentEntity(4L, "Notas de Debito", "Notas de Debito", new HashSet<>())
-				);
-				document.saveAll(documents);
-			}
-		};
-	}
+    @Bean
+    CommandLineRunner seedCategories(IAccountCategoryRepository repository, IDocumentRepository document, IAccountTypeRepository accountType) {
+        return args -> {
+            long count = repository.count();
+            if (count == 0) {
+                List<AccountCategoryEntity> categories = Arrays.asList(
+                        new AccountCategoryEntity(1L, "Balance General", "Agrupa las cuentas de Balance General", new HashSet<>()),
+                        new AccountCategoryEntity(2L, "Estado de Resultados", "Agrupa las cuentas de resultados", new HashSet<>())
+                );
+                repository.saveAll(categories);
+            }
+            long documentCount = document.count();
+            if (documentCount == 0) {
+                List<DocumentEntity> documents = Arrays.asList(
+                        new DocumentEntity(1L, "Factura de Clientes", "Factura de clientes", new HashSet<>()),
+                        new DocumentEntity(2L, "Factura de Proveedores", "Factura de proveedores", new HashSet<>()),
+                        new DocumentEntity(3L, "Notas de Credito", "Notas de Credito", new HashSet<>()),
+                        new DocumentEntity(4L, "Notas de Debito", "Notas de Debito", new HashSet<>())
+                );
+                document.saveAll(documents);
+            }
+            long accountTypeCount = accountType.count();
+            if (accountTypeCount == 0) {
+                List<AccountTypeEntity> accountsType = Arrays.asList(
+                        new AccountTypeEntity(1L, "Ventas", "Tipo de cuenta para ventas."),
+                        new AccountTypeEntity(2L, "Compras", "Tipo de cuenta para compras."),
+                        new AccountTypeEntity(3L, "Efectivo", "Tipo de cuenta para efectivo."),
+                        new AccountTypeEntity(4L, "Bancos", "Tipo de cuenta para bancos."),
+                        new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.")
+
+                );
+                accountType.saveAll(accountsType);
+            }
+
+        };
+    }
 
 //	@Bean
 //	CommandLineRunner triggerNumberPda(DataSource dataSource) {
@@ -61,8 +76,6 @@ public class AccountingApplication {
 //			}
 //		};
 //	}
-
-
 
 
 }

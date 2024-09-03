@@ -24,7 +24,7 @@ public class BalancesEntity {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "account_id")
+    @JoinColumn(name = "account_id", referencedColumnName = "id")
     private AccountEntity account;
 
     @Column(name = "TYPICAL_BALANCE")
@@ -37,6 +37,6 @@ public class BalancesEntity {
     @Column(name = "DATE")
     private LocalDateTime createAtDate;
 
-    @Column(name = "IS_ACTUAL")
-    private Boolean isActual;
+    @Column(name = "IS_CURRENT")
+    private Boolean isCurrent;
 }

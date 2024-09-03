@@ -28,6 +28,9 @@ public class AccountEntity {
     @Column(name = "TYPICAL_BALANCE")
     private String typicalBalance;
 
+    @Column(name = "ACCOUNT TYPE")
+    private String accountType;
+
     @Column(name = "SUPPORTS_REGISTRATION")
     private boolean supportsRegistration;
 
@@ -35,7 +38,7 @@ public class AccountEntity {
     @Column(name = "STATUS")
     private Status status;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BalancesEntity> balances;
 
     @ManyToOne

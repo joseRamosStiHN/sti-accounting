@@ -3,12 +3,10 @@ package com.sti.accounting.services;
 import com.sti.accounting.entities.AccountCategoryEntity;
 import com.sti.accounting.entities.AccountEntity;
 import com.sti.accounting.entities.BalancesEntity;
-import com.sti.accounting.models.AccountBalance;
-import com.sti.accounting.models.AccountCategory;
-import com.sti.accounting.models.AccountRequest;
-import com.sti.accounting.models.AccountResponse;
+import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountCategoryRepository;
 import com.sti.accounting.repositories.IAccountRepository;
+import com.sti.accounting.repositories.IAccountTypeRepository;
 import com.sti.accounting.utils.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +24,12 @@ public class AccountService {
     private static final Logger logger = LoggerFactory.getLogger(AccountService.class);
     private final IAccountRepository iAccountRepository;
     private final IAccountCategoryRepository categoryRepository;
+    private final IAccountTypeRepository accountTypeRepository;
 
-    public AccountService(IAccountRepository iAccountRepository, IAccountCategoryRepository categoryRepository) {
+    public AccountService(IAccountRepository iAccountRepository, IAccountCategoryRepository categoryRepository, IAccountTypeRepository accountTypeRepository) {
         this.iAccountRepository = iAccountRepository;
         this.categoryRepository = categoryRepository;
+        this.accountTypeRepository = accountTypeRepository;
     }
 
     public List<AccountResponse> getAllAccount() {
@@ -63,11 +63,26 @@ public class AccountService {
         }
         entity.setParent(parent);
         entity.setTypicalBalance(accountRequest.getTypicalBalance());
+        entity.setAccountType(accountRequest.getAccountType());
         Long categoryId = accountRequest.getCategory().longValue();
         AccountCategoryEntity accountCategoryEntity = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Category"));
         entity.setAccountCategory(accountCategoryEntity);
         entity.setSupportsRegistration(accountRequest.isSupportsRegistration());
+
+        if (!accountRequest.getBalances().isEmpty() && accountRequest.isSupportsRegistration()) {
+            validateBalances(accountRequest.getBalances());
+            List<BalancesEntity> balancesList = accountRequest.getBalances().stream()
+                    .map(balance -> {
+                        BalancesEntity balancesEntity = toBalancesEntity(balance);
+                        balancesEntity.setAccount(entity);
+                        return balancesEntity;
+                    })
+                    .toList();
+
+            entity.setBalances(balancesList);
+        }
+
 
         iAccountRepository.save(entity);
 
@@ -117,6 +132,16 @@ public class AccountService {
         }).toList();
     }
 
+    /*Return All Account Type of Accounts*/
+    public List<AccountType> getAllAccountType() {
+        return accountTypeRepository.findAll().stream().map(x -> {
+            AccountType dto = new AccountType();
+            dto.setId(x.getId());
+            dto.setName(x.getName());
+            return dto;
+        }).toList();
+    }
+
     private void validateBalances(Set<AccountBalance> balances) {
 
         long count = balances.stream().filter(AccountBalance::getIsCurrent).count();
@@ -133,7 +158,8 @@ public class AccountService {
     private BalancesEntity toBalancesEntity(AccountBalance balance) {
         BalancesEntity entity = new BalancesEntity();
         entity.setInitialBalance(balance.getInitialBalance());
-        entity.setIsActual(balance.getIsCurrent());
+        entity.setTypicalBalance(balance.getTypicalBalance());
+        entity.setIsCurrent(balance.getIsCurrent());
         return entity;
     }
 
@@ -153,6 +179,7 @@ public class AccountService {
         String type = entity.getTypicalBalance().equalsIgnoreCase("C") ? "Credito" : "Debito";
         String status = entity.getStatus().equals(Status.ACTIVO) ? "Activa" : "Inactiva";
         response.setTypicallyBalance(type);
+        response.setAccountType(entity.getAccountType());
         response.setStatus(status);
         response.setSupportEntry(entity.isSupportsRegistration());
         // Convertir balances de List<BalancesEntity> a Set<AccountBalance>
@@ -174,7 +201,7 @@ public class AccountService {
         accountBalance.setTypicalBalance(balanceEntity.getTypicalBalance());
         accountBalance.setInitialBalance(balanceEntity.getInitialBalance());
         accountBalance.setCreateAtDate(balanceEntity.getCreateAtDate());
-        accountBalance.setIsCurrent(balanceEntity.getIsActual());
+        accountBalance.setIsCurrent(balanceEntity.getIsCurrent());
         return accountBalance;
     }
 

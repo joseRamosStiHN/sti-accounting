@@ -4,6 +4,7 @@ package com.sti.accounting.controllers;
 import com.sti.accounting.models.AccountCategory;
 import com.sti.accounting.models.AccountRequest;
 import com.sti.accounting.models.AccountResponse;
+import com.sti.accounting.models.AccountType;
 import com.sti.accounting.services.AccountService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,16 @@ public class AccountingController {
         return accountService.getAllAccount();
     }
 
+    @GetMapping("/categories")
+    public List<AccountCategory> getAllCategories() {
+        return accountService.getAllCategories();
+    }
+
+    @GetMapping("/account-type")
+    public List<AccountType> getAllAccountType() {
+        return accountService.getAllAccountType();
+    }
+
     @GetMapping("/{id}")
     public AccountResponse getAccountById(@PathVariable Long id) {
         return accountService.getById(id);
@@ -45,9 +56,5 @@ public class AccountingController {
         return accountService.updateAccount(id, accountRequest);
     }
 
-    @GetMapping("/categories")
-    public List<AccountCategory> getAllCategories() {
-        return accountService.getAllCategories();
-    }
 
 }

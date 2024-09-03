@@ -13,6 +13,6 @@ public class BalancesResponse {
     private String typicalBalance;
     private BigDecimal initialBalance;
     private LocalDateTime createAtDate;
-    private Boolean isActual;
+    private Boolean isCurrent;
 
 }

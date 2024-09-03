@@ -1,12 +1,10 @@
 package com.sti.accounting.models;
 
-import com.sti.accounting.entities.BalancesEntity;
 import com.sti.accounting.utils.Status;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import jakarta.validation.constraints.*;
@@ -31,6 +29,9 @@ public class AccountRequest {
 
     @NotBlank(message = "Typical Balance is required")
     private String typicalBalance;
+
+    @NotBlank(message = "Account Type is required")
+    private String accountType;
 
     private boolean supportsRegistration;
 

@@ -59,13 +59,12 @@ public class BalancesService {
         balanceEntity.setAccount(accountEntity);
         balanceEntity.setTypicalBalance(balancesRequest.getTypicalBalance());
         balanceEntity.setInitialBalance(balancesRequest.getInitialBalance());
-        balanceEntity.setIsActual(balancesRequest.getIsActual());
+        balanceEntity.setIsCurrent(balancesRequest.getIsCurrent());
         iBalancesRepository.save(balanceEntity);
 
         return toResponse(balanceEntity);
     }
 
-    //TODO: mejorar esto
     public BalancesResponse updateBalance(Long id, BalancesRequest balancesRequest) {
         logger.info("Updating balance with ID: {}", id);
 
@@ -85,7 +84,7 @@ public class BalancesService {
         existingBalance.setTypicalBalance(balancesRequest.getTypicalBalance());
         existingBalance.setInitialBalance(balancesRequest.getInitialBalance());
         existingBalance.setCreateAtDate(LocalDateTime.now());
-        existingBalance.setIsActual(balancesRequest.getIsActual());
+        existingBalance.setIsCurrent(balancesRequest.getIsCurrent());
         iBalancesRepository.save(existingBalance);
 
         return toResponse(existingBalance);
@@ -99,7 +98,7 @@ public class BalancesService {
         balancesResponse.setTypicalBalance(balancesEntity.getTypicalBalance());
         balancesResponse.setInitialBalance(balancesEntity.getInitialBalance());
         balancesResponse.setCreateAtDate(balancesEntity.getCreateAtDate());
-        balancesResponse.setIsActual(balancesEntity.getIsActual());
+        balancesResponse.setIsCurrent(balancesEntity.getIsCurrent());
         return balancesResponse;
 
     }

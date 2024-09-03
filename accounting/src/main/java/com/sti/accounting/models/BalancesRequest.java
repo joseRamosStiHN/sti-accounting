@@ -21,5 +21,5 @@ public class BalancesRequest {
 
     private LocalDateTime createAtDate;
 
-    private Boolean isActual;
+    private Boolean isCurrent;
 }
