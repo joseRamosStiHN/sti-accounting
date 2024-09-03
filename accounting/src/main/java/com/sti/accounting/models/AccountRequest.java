@@ -30,7 +30,6 @@ public class AccountRequest {
     @NotBlank(message = "Typical Balance is required")
     private String typicalBalance;
 
-    @DecimalMin(value = "0", inclusive = false, message = "Account Type must be greater than 0")
     private BigDecimal accountType;
 
     private boolean supportsRegistration;

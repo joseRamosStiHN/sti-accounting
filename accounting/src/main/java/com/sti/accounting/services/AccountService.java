@@ -66,10 +66,12 @@ public class AccountService {
         entity.setParent(parent);
         entity.setTypicalBalance(accountRequest.getTypicalBalance());
 
-        Long accountTypeId = accountRequest.getAccountType().longValue();
-        AccountTypeEntity accountTypeEntity =  accountTypeRepository.findById(accountTypeId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Account Type"));
-        entity.setAccountType(accountTypeEntity);
+        if (accountRequest.getAccountType() != null) {
+            Long accountTypeId = accountRequest.getAccountType().longValue();
+            AccountTypeEntity accountTypeEntity = accountTypeRepository.findById(accountTypeId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Account Type"));
+            entity.setAccountType(accountTypeEntity);
+        }
 
         Long categoryId = accountRequest.getCategory().longValue();
         AccountCategoryEntity accountCategoryEntity = categoryRepository.findById(categoryId)
@@ -192,8 +194,11 @@ public class AccountService {
         String type = entity.getTypicalBalance().equalsIgnoreCase("C") ? "Credito" : "Debito";
         String status = entity.getStatus().equals(Status.ACTIVO) ? "Activa" : "Inactiva";
         response.setTypicallyBalance(type);
-        response.setAccountTypeName(entity.getAccountType().getName());
-        response.setAccountType(entity.getAccountType().getId());
+        if (entity.getAccountType() != null) {
+            response.setAccountTypeName(entity.getAccountType().getName());
+            response.setAccountType(entity.getAccountType().getId());
+        }
+
         response.setStatus(status);
         response.setSupportEntry(entity.isSupportsRegistration());
         // Convertir balances de List<BalancesEntity> a Set<AccountBalance>
