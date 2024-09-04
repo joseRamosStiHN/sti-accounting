@@ -225,6 +225,7 @@ public class TransactionService {
         TransactionResponse response = new TransactionResponse();
         response.setId(entity.getId());
         response.setDate(entity.getCreateAtDate());
+        response.setCreationDate(entity.getCreateAtTime());
         response.setReference(entity.getReference());
         response.setDocumentType(entity.getDocument().getId());
         response.setExchangeRate(entity.getExchangeRate());
