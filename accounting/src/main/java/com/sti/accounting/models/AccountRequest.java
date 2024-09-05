@@ -9,8 +9,7 @@ import java.util.Set;
 
 import jakarta.validation.constraints.*;
 
-@Getter
-@Setter
+@Data
 public class AccountRequest {
 
     private Long id;

@@ -42,9 +42,6 @@ public class TransactionEntity {
     @Column(name = "REFERENCE")
     private String reference;
 
-//    @Column(name = "DOCUMENT_TYPE")
-//    private BigInteger documentType;
-
     @Column(name = "EXCHANGE_RATE")
     private BigDecimal exchangeRate;
 
