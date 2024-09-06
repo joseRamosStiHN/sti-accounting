@@ -2,8 +2,6 @@ package com.sti.accounting.controllers;
 
 import com.sti.accounting.models.AccountingJournalRequest;
 import com.sti.accounting.models.AccountingJournalResponse;
-import com.sti.accounting.models.AccountingPeriodRequest;
-import com.sti.accounting.models.AccountingPeriodResponse;
 import com.sti.accounting.services.AccountingJournalService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
