@@ -35,9 +35,8 @@ public class LedgerAccountsService {
     public List<LedgerAccountsResponse> getLedgerAccountsDetail() {
         List<LedgerAccountsResponse> ledgerAccounts = new ArrayList<>();
 
-        // Filtrar transacciones por período contable activo
-        LocalDate startDate = accountingPeriodService.getFechaInicioPeriodoContableActivo();
-        LocalDate endDate = accountingPeriodService.getFechaFinPeriodoContableActivo();
+        LocalDate startDate = accountingPeriodService.getDateStartPeriodAccountingActive();
+        LocalDate endDate = accountingPeriodService.getActiveAccountingPeriodEndDate();
 
         List<TransactionEntity> transactions = transactionRepository.findByCreateAtDateBetween(startDate, endDate);
 
@@ -76,7 +75,6 @@ public class LedgerAccountsService {
                 }
             }
 
-            // Get the account information
             AccountEntity account = iAccountRepository.findById(accountId).orElseThrow();
 
             LedgerAccountsResponse ledgerAccount = new LedgerAccountsResponse();

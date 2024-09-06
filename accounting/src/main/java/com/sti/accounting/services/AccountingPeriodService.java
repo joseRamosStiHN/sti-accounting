@@ -116,14 +116,14 @@ public class AccountingPeriodService {
     @Cacheable("activePeriod")
     public AccountingPeriodEntity getActivePeriod() {
         return accountingPeriodRepository.findByStatusTrue()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay un período contable activo"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no active accounting period"));
     }
 
-    public LocalDate getFechaInicioPeriodoContableActivo() {
+    public LocalDate getDateStartPeriodAccountingActive() {
         return getActivePeriod().getStartPeriod().toLocalDate();
     }
 
-    public LocalDate getFechaFinPeriodoContableActivo() {
+    public LocalDate getActiveAccountingPeriodEndDate() {
         return getActivePeriod().getEndPeriod().toLocalDate();
     }
 
