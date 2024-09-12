@@ -53,8 +53,8 @@ public class AccountingApplication {
             long accountTypeCount = accountType.count();
             if (accountTypeCount == 0) {
                 List<AccountTypeEntity> accountsType = Arrays.asList(
-                        new AccountTypeEntity(1L, "Ventas", "Tipo de cuenta para ventas.", new HashSet<>()),
-                        new AccountTypeEntity(2L, "Compras", "Tipo de cuenta para compras.", new HashSet<>()),
+                        new AccountTypeEntity(1L, "Ingresos", "Tipo de cuenta para ingresos.", new HashSet<>()),
+                        new AccountTypeEntity(2L, "Gastos", "Tipo de cuenta para gastos.", new HashSet<>()),
                         new AccountTypeEntity(3L, "Efectivo", "Tipo de cuenta para efectivo.", new HashSet<>()),
                         new AccountTypeEntity(4L, "Bancos", "Tipo de cuenta para bancos.", new HashSet<>()),
                         new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.", new HashSet<>())

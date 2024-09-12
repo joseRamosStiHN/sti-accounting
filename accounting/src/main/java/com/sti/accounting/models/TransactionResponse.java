@@ -17,6 +17,8 @@ public class TransactionResponse {
     private Long documentType;
     private String documentName;
     private String reference;
+    private Long diaryType;
+    private String diaryName;
     private String entryNumber;
     private String status;
     private BigDecimal exchangeRate;

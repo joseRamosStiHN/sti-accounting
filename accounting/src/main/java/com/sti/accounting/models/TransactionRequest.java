@@ -35,6 +35,9 @@ public class TransactionRequest {
 
     private Currency currency;
 
+    @NotNull(message = "Diary Type is required")
+    private Long diaryType;
+
     private List<TransactionDetailRequest> detail;
 }
 

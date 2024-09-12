@@ -62,5 +62,8 @@ public class TransactionEntity {
     @JoinColumn(name = "document_id", nullable = false)
     private DocumentEntity document;
 
+    @ManyToOne
+    @JoinColumn(name = "diary_id", referencedColumnName = "id")
+    private AccountingJournalEntity accountingJournal;
 
 }

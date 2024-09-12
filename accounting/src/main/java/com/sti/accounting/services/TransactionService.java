@@ -24,13 +24,14 @@ public class TransactionService {
     private final ITransactionRepository transactionRepository;
     private final IAccountRepository iAccountRepository;
     private final IDocumentRepository document;
-
+    private final IAccountingJournalRepository accountingJournalRepository;
 
     public TransactionService(ITransactionRepository transactionRepository, IAccountRepository iAccountRepository,
-                              IDocumentRepository document) {
+                              IDocumentRepository document,IAccountingJournalRepository accountingJournalRepository) {
         this.transactionRepository = transactionRepository;
         this.iAccountRepository = iAccountRepository;
         this.document = document;
+        this.accountingJournalRepository = accountingJournalRepository;
     }
 
     public List<TransactionResponse> getAllTransaction() {
@@ -65,12 +66,19 @@ public class TransactionService {
                         )
                 );
 
+        AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(transactionRequest.getDiaryType()) .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        String.format("Diary type %d not valid ", transactionRequest.getDiaryType())
+                )
+        );
+
         entity.setDocument(documentType);
         entity.setStatus(StatusTransaction.DRAFT);
         entity.setCurrency(transactionRequest.getCurrency());
         entity.setExchangeRate(transactionRequest.getExchangeRate());
         entity.setReference(transactionRequest.getReference());
         entity.setDescriptionPda(transactionRequest.getDescriptionPda());
+        entity.setAccountingJournal(accountingJournal);
         entity.setCreateAtDate(transactionRequest.getCreateAtDate());
 
         //transaction detail validations
@@ -93,6 +101,20 @@ public class TransactionService {
         TransactionEntity existingTransaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No transaction found with ID: %d", id)));
+
+        DocumentEntity documentType = document.findById(transactionRequest.getDocumentType())
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                String.format("Document type %d not valid ", transactionRequest.getDocumentType())
+                        )
+                );
+
+        AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(transactionRequest.getDiaryType()) .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        String.format("Diary type %d not valid ", transactionRequest.getDiaryType())
+                )
+        );
+
         //validate transactions
         validateTransactionDetail(transactionRequest.getDetail());
         //update transaction detail
@@ -131,6 +153,13 @@ public class TransactionService {
             detailEntity.setAccount(accountEntity);
             updatedDetails.add(detailEntity);
         }
+
+        existingTransaction.setDocument(documentType);
+        existingTransaction.setCurrency(transactionRequest.getCurrency());
+        existingTransaction.setExchangeRate(transactionRequest.getExchangeRate());
+        existingTransaction.setReference(transactionRequest.getReference());
+        existingTransaction.setDescriptionPda(transactionRequest.getDescriptionPda());
+        existingTransaction.setAccountingJournal(accountingJournal);
         //delete details that are not in list
         existingTransaction.getTransactionDetail().removeAll(existingDetailMap.values());
         // update list
@@ -235,6 +264,8 @@ public class TransactionService {
         response.setStatus(entity.getStatus().toString());
         response.setDocumentType(entity.getDocument().getId());
         response.setDocumentName(entity.getDocument().getName());
+        response.setDiaryType(entity.getAccountingJournal().getId());
+        response.setDiaryName(entity.getAccountingJournal().getDiaryName());
         //fill up detail
         Set<TransactionDetailResponse> detailResponseSet = new HashSet<>();
         for (TransactionDetailEntity detail : entity.getTransactionDetail()) {
