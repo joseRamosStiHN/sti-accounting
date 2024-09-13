@@ -10,30 +10,28 @@ import java.util.List;
 @Data
 public class LedgerAccountsResponse {
 
-    private Long parentAccountId;
-    private String parentAccountName;
-    private String parentAccountCode;
-    private List<ChildAccountResponse> childAccounts;
+    private Long diaryId;
+    private String diaryName;
+    private List<TransactionResponse> transactions;
 
     @Data
-    public static class ChildAccountResponse {
-        private Long accountId;
-        private String accountName;
-        private String accountCode;
-        private List<TransactionDetailResponse> transactions;
+    public static class TransactionResponse {
+        private Long id;
+        private String description;
+        private String reference;
+        private LocalDateTime creationDate;
+        private LocalDate date;
+        private List<TransactionDetailResponse> transactionsDetail;
     }
 
     @Data
     public static class TransactionDetailResponse {
         private Long id;
-        private String description;
         private String entryType;
         private String shortEntryType;
         private String accountCode;
         private String accountName;
         private BigDecimal amount;
-        private LocalDateTime creationDate;
-        private LocalDate date;
 
     }
 }

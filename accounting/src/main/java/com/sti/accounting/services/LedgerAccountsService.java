@@ -20,11 +20,12 @@ public class LedgerAccountsService {
 
     private final ITransactionRepository transactionRepository;
     private final AccountingPeriodService accountingPeriodService;
+    private final AccountingJournalService accountingJournalService;
 
-    public LedgerAccountsService(ITransactionRepository transactionRepository, AccountingPeriodService accountingPeriodService) {
+    public LedgerAccountsService(ITransactionRepository transactionRepository, AccountingPeriodService accountingPeriodService,AccountingJournalService accountingJournalService) {
         this.transactionRepository = transactionRepository;
         this.accountingPeriodService = accountingPeriodService;
-
+        this.accountingJournalService = accountingJournalService;
     }
 
 
@@ -32,54 +33,51 @@ public class LedgerAccountsService {
         LocalDate startDate = accountingPeriodService.getDateStartPeriodAccountingActive();
         LocalDate endDate = accountingPeriodService.getActiveAccountingPeriodEndDate();
 
-        List<TransactionEntity> transactions = transactionRepository.findByCreateAtDateBetween(startDate, endDate);
+        List<TransactionEntity> transactionList = transactionRepository.findByCreateAtDateBetween(startDate, endDate);
 
-        Map<Long, LedgerAccountsResponse> parentAccountMap = new HashMap<>();
+        Map<Long, List<TransactionEntity>> diaryTransactionsMap = new HashMap<>();
 
-        for (TransactionEntity transaction : transactions) {
-            for (TransactionDetailEntity detail : transaction.getTransactionDetail()) {
-                AccountEntity account = detail.getAccount();
-                Long parentId = account.getParent() != null ? account.getParent().getId() : null;
-
-                if (parentId == null) continue;
-
-                LedgerAccountsResponse parentResponse = parentAccountMap.computeIfAbsent(parentId, id -> {
-                    LedgerAccountsResponse response = new LedgerAccountsResponse();
-                    response.setParentAccountId(id);
-                    response.setParentAccountName(account.getParent().getDescription());
-                    response.setParentAccountCode(account.getParent().getCode());
-                    response.setChildAccounts(new ArrayList<>());
-                    return response;
-                });
-
-                LedgerAccountsResponse.ChildAccountResponse childResponse = parentResponse.getChildAccounts().stream()
-                        .filter(child -> child.getAccountId().equals(account.getId()))
-                        .findFirst()
-                        .orElseGet(() -> {
-                            LedgerAccountsResponse.ChildAccountResponse newChild = new LedgerAccountsResponse.ChildAccountResponse();
-                            newChild.setAccountId(account.getId());
-                            newChild.setAccountName(account.getDescription());
-                            newChild.setAccountCode(account.getCode());
-                            newChild.setTransactions(new ArrayList<>());
-                            parentResponse.getChildAccounts().add(newChild);
-                            return newChild;
-                        });
-
-                LedgerAccountsResponse.TransactionDetailResponse detailResponse = new LedgerAccountsResponse.TransactionDetailResponse();
-                detailResponse.setId(detail.getId());
-                detailResponse.setDescription(detail.getTransaction().getDescriptionPda());
-                detailResponse.setAmount(detail.getAmount());
-                detailResponse.setEntryType(detail.getMotion() == Motion.D ? "Debito" : "Credito");
-                detailResponse.setShortEntryType(detail.getMotion() == Motion.D ? "D" : "C");
-                detailResponse.setAccountName(account.getDescription());
-                detailResponse.setAccountCode(account.getCode());
-                detailResponse.setDate(detail.getTransaction().getCreateAtDate());
-                detailResponse.setCreationDate(detail.getTransaction().getCreateAtTime());
-                childResponse.getTransactions().add(detailResponse);
-            }
+        for (TransactionEntity transaction : transactionList) {
+            Long diaryId = transaction.getAccountingJournal().getId();
+            diaryTransactionsMap.computeIfAbsent(diaryId, id -> new ArrayList<>()).add(transaction);
         }
 
-        return new ArrayList<>(parentAccountMap.values());
-    }
+        List<LedgerAccountsResponse> ledgerAccountsResponses = new ArrayList<>();
+        for (Map.Entry<Long, List<TransactionEntity>> entry : diaryTransactionsMap.entrySet()) {
+            Long diaryId = entry.getKey();
+            List<TransactionEntity> transactions = entry.getValue();
 
+            LedgerAccountsResponse ledgerAccountsResponse = new LedgerAccountsResponse();
+            ledgerAccountsResponse.setDiaryId(diaryId);
+            ledgerAccountsResponse.setDiaryName(accountingJournalService.getDiaryName(diaryId));
+
+            List<LedgerAccountsResponse.TransactionResponse> transactionResponses = new ArrayList<>();
+            for (TransactionEntity transaction : transactions) {
+                LedgerAccountsResponse.TransactionResponse transactionResponse = new LedgerAccountsResponse.TransactionResponse();
+                transactionResponse.setId(transaction.getId());
+                transactionResponse.setDescription(transaction.getDescriptionPda());
+                transactionResponse.setReference(transaction.getReference());
+                transactionResponse.setCreationDate(transaction.getCreateAtTime());
+                transactionResponse.setDate(transaction.getCreateAtDate());
+
+                List<LedgerAccountsResponse.TransactionDetailResponse> transactionDetailResponses = new ArrayList<>();
+                for (TransactionDetailEntity detail : transaction.getTransactionDetail()) {
+                    LedgerAccountsResponse.TransactionDetailResponse detailResponse = new LedgerAccountsResponse.TransactionDetailResponse();
+                    detailResponse.setId(detail.getId());
+                    detailResponse.setEntryType(detail.getMotion() == Motion.D ? "Debito" : "Credito");
+                    detailResponse.setShortEntryType(detail.getMotion() == Motion.D ? "D" : "C");
+                    detailResponse.setAccountCode(detail.getAccount().getCode());
+                    detailResponse.setAccountName(detail.getAccount().getDescription());
+                    detailResponse.setAmount(detail.getAmount());
+                    transactionDetailResponses.add(detailResponse);
+                }
+                transactionResponse.setTransactionsDetail(transactionDetailResponses);
+                transactionResponses.add(transactionResponse);
+            }
+            ledgerAccountsResponse.setTransactions(transactionResponses);
+            ledgerAccountsResponses.add(ledgerAccountsResponse);
+        }
+
+        return ledgerAccountsResponses;
+    }
 }

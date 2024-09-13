@@ -104,6 +104,11 @@ public class AccountingJournalService {
         return null;
     }
 
+    public String getDiaryName(Long diaryId) {
+        AccountingJournalEntity accountingJournalEntity = accountingJournalRepository.findById(diaryId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No accounting journal were found with the id %s", diaryId)));
+        return accountingJournalEntity.getDiaryName();
+    }
 
     private AccountingJournalResponse toResponse(AccountingJournalEntity entity) {
         AccountingJournalResponse response = new AccountingJournalResponse();
