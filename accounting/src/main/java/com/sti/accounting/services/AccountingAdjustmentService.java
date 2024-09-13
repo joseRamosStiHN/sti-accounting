@@ -33,6 +33,10 @@ public class AccountingAdjustmentService {
         this.transactionRepository = transactionRepository;
     }
 
+    public List<AccountingAdjustmentResponse> getAllAccountingAdjustments() {
+        return accountingAdjustmentsRepository.findAll().stream().map(this::entityToResponse).toList();
+    }
+
 
     @Transactional
     public AccountingAdjustmentResponse createAdjustment(AccountingAdjustmentRequest accountingAdjustmentRequest) {

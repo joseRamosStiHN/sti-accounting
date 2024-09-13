@@ -19,7 +19,7 @@ public class TransactionResponse {
     private String reference;
     private Long diaryType;
     private String diaryName;
-    private String entryNumber;
+    private String numberPda;
     private String status;
     private BigDecimal exchangeRate;
 

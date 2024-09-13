@@ -259,7 +259,7 @@ public class TransactionService {
         response.setDocumentType(entity.getDocument().getId());
         response.setExchangeRate(entity.getExchangeRate());
         response.setDescription(entity.getDescriptionPda());
-        response.setEntryNumber(String.valueOf(entity.getNumberPda()));
+        response.setNumberPda(String.valueOf(entity.getNumberPda()));
         response.setCurrency(entity.getCurrency().toString());
         response.setStatus(entity.getStatus().toString());
         response.setDocumentType(entity.getDocument().getId());
