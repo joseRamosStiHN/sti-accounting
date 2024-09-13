@@ -131,7 +131,9 @@ public class AccountingAdjustmentService {
         response.setId(entity.getId());
         response.setTransactionId(entity.getTransaction().getId());
         response.setReference(entity.getReference());
+        response.setInvoiceNo(entity.getTransaction().getReference());
         response.setStatus(entity.getStatus().toString());
+        response.setCreationDate(entity.getCreationDate());
         //fill up detail
         Set<AdjustmentDetailResponse> detailResponseSet = new HashSet<>();
         for (AdjustmentDetailEntity detail : entity.getAdjustmentDetail()) {
