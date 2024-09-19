@@ -17,8 +17,8 @@ public class TrialBalanceController {
         this.trialBalanceService = trialBalanceService;
     }
 
-    //@GetMapping()
-  //  public TrialBalanceResponse getTrialBalance() {
-    //    return trialBalanceService.getTrialBalance();
-    //}
+    @GetMapping()
+    public TrialBalanceResponse getTrialBalance() {
+        return trialBalanceService.getTrialBalance();
+    }
 }

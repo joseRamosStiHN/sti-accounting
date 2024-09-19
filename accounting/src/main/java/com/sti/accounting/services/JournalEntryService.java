@@ -7,7 +7,6 @@ import com.sti.accounting.models.TransactionResponse;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 @Service

@@ -13,4 +13,6 @@ public class TransactionDetailResponse {
     private String accountName;
     private String accountCode;
     private Long accountId;
+    private String typicalBalance;
+    private BigDecimal initialBalance;
 }

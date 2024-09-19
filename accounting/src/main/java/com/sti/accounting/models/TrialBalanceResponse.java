@@ -27,7 +27,6 @@ public class TrialBalanceResponse {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class BalanceDiary {
-        private Long diaryType;
         private String diaryName;
         List<InitialBalance> initialBalance;
         List<BalancePeriod> balancePeriod;
