@@ -7,8 +7,8 @@ import com.sti.accounting.models.TransactionResponse;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class JournalEntryService {
@@ -34,18 +34,18 @@ public class JournalEntryService {
         List<TransactionResponse> transactions = transactionService.getAllTransaction()
                 .stream()
                 .filter(transaction -> {
-                    LocalDate transactionDate = transaction.getCreationDate().toLocalDate(); // Asegúrate que getDate() devuelve LocalDateTime
+                    LocalDate transactionDate = transaction.getCreationDate().toLocalDate();
                     return !transactionDate.isBefore(startDate) && !transactionDate.isAfter(endDate);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         List<AccountingAdjustmentResponse> adjustments = accountingAdjustmentService.getAllAccountingAdjustments()
                 .stream()
                 .filter(adjustment -> {
-                    LocalDate adjustmentDate = adjustment.getCreationDate().toLocalDate(); // Asegúrate que getCreationDate() devuelve LocalDateTime
+                    LocalDate adjustmentDate = adjustment.getCreationDate().toLocalDate();
                     return !adjustmentDate.isBefore(startDate) && !adjustmentDate.isAfter(endDate);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         return new AccountingPeriodDataResponse(transactions, adjustments);
     }

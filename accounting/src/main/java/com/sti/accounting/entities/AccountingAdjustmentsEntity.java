@@ -1,8 +1,6 @@
 package com.sti.accounting.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sti.accounting.models.StatusTransaction;
-import com.sti.accounting.utils.Motion;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 

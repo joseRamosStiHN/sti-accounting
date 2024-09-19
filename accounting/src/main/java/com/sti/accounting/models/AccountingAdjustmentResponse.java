@@ -13,6 +13,8 @@ public class AccountingAdjustmentResponse {
     private Long transactionId;
     private String reference;
     private String invoiceNo;
+    private String diaryName;
+    private String numberPda;
     private String status;
     private LocalDateTime creationDate;
 
