@@ -1,7 +1,7 @@
 package com.sti.accounting.controllers;
 
 import com.sti.accounting.models.BalanceGeneralResponse;
-import com.sti.accounting.services.ReportService;
+import com.sti.accounting.services.GeneralBalanceService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,20 +11,19 @@ import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/v1/report/balance")
-public class ReportController {
+@RequestMapping("/api/v1/balance")
+public class GeneralBalanceController {
 
-    private final ReportService reportService;
+    private final GeneralBalanceService generalBalanceService;
 
-    public ReportController(ReportService balanceService) {
-        this.reportService = balanceService;
+    public GeneralBalanceController(GeneralBalanceService generalBalanceService) {
+        this.generalBalanceService = generalBalanceService;
     }
 
 
-    /*
     @GetMapping("/general")
-    public List<BalanceGeneralResponse> getBalanceGeneral() {
-        return reportService.getBalanceGeneral();
+    public BalanceGeneralResponse getBalanceGeneral() {
+        return generalBalanceService.getBalanceGeneral();
     }
-*/
+
 }

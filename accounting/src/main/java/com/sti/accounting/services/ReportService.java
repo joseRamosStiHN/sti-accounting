@@ -15,6 +15,7 @@ import java.util.stream.StreamSupport;
 @Service
 public class ReportService {
 
+    /*
     private static final Logger logger = LoggerFactory.getLogger(ReportService.class);
 
     private final ITransactionBalanceGeneralRepository view;
@@ -73,5 +74,5 @@ public class ReportService {
         return rootMaps.values().stream().toList();
     }
 
-
+*/
 }

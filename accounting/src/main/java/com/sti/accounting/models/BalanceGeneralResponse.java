@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 
 @Getter
@@ -15,19 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class BalanceGeneralResponse {
 
-
-    private Integer id;
-
-    private String accountName;
-
-    private Integer parentId;
-
-    private String category;
-
-    private boolean isRoot;
-
-    private BigDecimal amount;
-
-
-
+    private List<GeneralBalanceResponse> assets;
+    private List<GeneralBalanceResponse> liabilities;
+    private List<GeneralBalanceResponse> equity;
 }
