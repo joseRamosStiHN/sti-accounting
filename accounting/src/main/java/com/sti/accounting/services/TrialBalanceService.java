@@ -41,12 +41,12 @@ public class TrialBalanceService {
 
         trialBalanceResponse.setBalanceDiaries(balanceDiaries); // Mover esta línea aquí
 
-        // Agregar el balance del periodo para cada diario
+        // Agregar el balance del periodo y el valance final para cada diario
         trialBalanceResponse.getBalanceDiaries().forEach(balanceDiary -> {
-            TrialBalanceResponse.BalancePeriod balancePeriod = calculateBalancePeriod(balanceDiary.getDiaryName(), transactionAdjustment, balanceDiary);
+            TrialBalanceResponse.BalancePeriod balancePeriod = calculateBalancePeriod(balanceDiary.getDiaryName(), transactionAdjustment);
             balanceDiary.setBalancePeriod(Collections.singletonList(balancePeriod));
 
-            TrialBalanceResponse.FinalBalance finalBalance = calculateFinalBalance(balancePeriod);
+            TrialBalanceResponse.FinalBalance finalBalance = calculateFinalBalance(balancePeriod, balanceDiary);
             balanceDiary.setFinalBalance(Collections.singletonList(finalBalance));
         });
 
@@ -127,7 +127,7 @@ public class TrialBalanceService {
         return balanceDiaries;
     }
 
-    private TrialBalanceResponse.BalancePeriod calculateBalancePeriod(String diaryName, AccountingPeriodDataResponse transactionAdjustment, TrialBalanceResponse.BalanceDiary balanceDiary) {
+    private TrialBalanceResponse.BalancePeriod calculateBalancePeriod(String diaryName, AccountingPeriodDataResponse transactionAdjustment) {
         final BigDecimal[] balancePeriodCredit = new BigDecimal[]{BigDecimal.ZERO};
         final BigDecimal[] balancePeriodDebit = new BigDecimal[]{BigDecimal.ZERO};
 
@@ -155,13 +155,6 @@ public class TrialBalanceService {
             }
         });
 
-        // Sumar el valor del initialBalance al balancePeriod
-        if (balanceDiary.getInitialBalance().get(0).getCredit().compareTo(BigDecimal.ZERO) > 0) {
-            balancePeriodCredit[0] = balancePeriodCredit[0].add(balanceDiary.getInitialBalance().get(0).getCredit());
-        } else {
-            balancePeriodDebit[0] = balancePeriodDebit[0].add(balanceDiary.getInitialBalance().get(0).getDebit());
-        }
-
         TrialBalanceResponse.BalancePeriod balancePeriod = new TrialBalanceResponse.BalancePeriod();
         balancePeriod.setCredit(balancePeriodCredit[0]);
         balancePeriod.setDebit(balancePeriodDebit[0]);
@@ -169,11 +162,18 @@ public class TrialBalanceService {
         return balancePeriod;
     }
 
-    private TrialBalanceResponse.FinalBalance calculateFinalBalance(TrialBalanceResponse.BalancePeriod balancePeriod) {
+    private TrialBalanceResponse.FinalBalance calculateFinalBalance(TrialBalanceResponse.BalancePeriod balancePeriod, TrialBalanceResponse.BalanceDiary balanceDiary) {
         TrialBalanceResponse.FinalBalance finalBalance = new TrialBalanceResponse.FinalBalance();
 
         BigDecimal debit = balancePeriod.getDebit();
         BigDecimal credit = balancePeriod.getCredit();
+
+        // Sumar el valor del initialBalance al balancePeriod
+        if (balanceDiary.getInitialBalance().getFirst().getCredit().compareTo(BigDecimal.ZERO) > 0) {
+            credit = credit.add(balanceDiary.getInitialBalance().getFirst().getCredit());
+        } else {
+            debit = debit.add(balanceDiary.getInitialBalance().getFirst().getDebit());
+        }
 
         if (debit.compareTo(credit) > 0) {
             finalBalance.setDebit(debit.subtract(credit));
