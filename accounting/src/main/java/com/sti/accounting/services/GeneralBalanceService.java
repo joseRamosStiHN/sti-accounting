@@ -77,7 +77,7 @@ public class GeneralBalanceService {
             BigDecimal credit = creditSumMap.get(account.getId());
             item.setDebit(debit);
             item.setCredit(credit);
-            item.setBalance(debit.subtract(credit)); // Calculate balance as debit - credit
+            item.setBalance(debit.subtract(credit).abs());
 
             if (account.getCode().startsWith("1")) {
                 assets.add(item);
