@@ -113,6 +113,8 @@ public class GeneralBalanceService {
         GeneralBalanceResponse item = new GeneralBalanceResponse();
         item.setAccountId(account.getId());
         item.setAccountName(account.getDescription());
+        item.setParentId(account.getParent() != null ? account.getParent().getId() : null);
+        item.setCategory(account.getTypicalBalance().equalsIgnoreCase("C") ? "Credito" : "Debito");
         BigDecimal debit = debitSumMap.get(account.getId());
         BigDecimal credit = creditSumMap.get(account.getId());
         item.setDebit(debit);
