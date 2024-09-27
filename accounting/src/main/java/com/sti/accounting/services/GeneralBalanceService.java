@@ -75,7 +75,7 @@ public class GeneralBalanceService {
     }
 
     private boolean isMainCategory(String category) {
-        return category.equals("ACTIVO") || category.equals("PASIVO") || category.equals("PATRIMONIO");
+        return category.equalsIgnoreCase("ACTIVO") || category.equalsIgnoreCase("PASIVO") || category.equalsIgnoreCase("PATRIMONIO");
     }
 
     private BigDecimal getBalance(ControlAccountBalancesEntity sumViewEntity) {
