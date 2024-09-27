@@ -1,6 +1,6 @@
 package com.sti.accounting.controllers;
 
-import com.sti.accounting.models.BalanceGeneralResponse;
+import com.sti.accounting.models.GeneralBalanceResponse;
 import com.sti.accounting.services.GeneralBalanceService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +22,7 @@ public class GeneralBalanceController {
 
 
     @GetMapping("/general")
-    public BalanceGeneralResponse getBalanceGeneral() {
+    public List<GeneralBalanceResponse> getBalanceGeneral() {
         return generalBalanceService.getBalanceGeneral();
     }
 

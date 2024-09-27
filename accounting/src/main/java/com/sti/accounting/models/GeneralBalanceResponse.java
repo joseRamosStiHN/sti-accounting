@@ -11,7 +11,7 @@ public class GeneralBalanceResponse {
     private String accountName;
     private Long parentId;
     private String category;
-    private BigDecimal debit;
-    private BigDecimal credit;
     private BigDecimal balance;
+    private Boolean root;
+
 }

@@ -28,6 +28,9 @@ public class AccountingAdjustmentsEntity {
     @JoinColumn(name = "TRANSACTION_ID", nullable = false)
     private TransactionEntity transaction;
 
+    @Column(name = "DESCRIPTION_ADJUSTMENT")
+    private String descriptionAdjustment;
+
     @Column(name = "REFERENCE")
     private String reference;
 

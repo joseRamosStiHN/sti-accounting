@@ -39,7 +39,7 @@ public class TrialBalanceService {
         // Agregar balance diario al response
         List<TrialBalanceResponse.BalanceDiary> balanceDiaries = calculateInitialBalance(transactionAdjustment);
 
-        trialBalanceResponse.setBalanceDiaries(balanceDiaries); // Mover esta línea aquí
+        trialBalanceResponse.setBalanceDiaries(balanceDiaries);
 
         // Agregar el balance del periodo y el valance final para cada diario
         trialBalanceResponse.getBalanceDiaries().forEach(balanceDiary -> {
@@ -146,11 +146,9 @@ public class TrialBalanceService {
         transactionAdjustment.getAdjustments().forEach(adjustment -> {
             if (adjustment.getDiaryName().equals(diaryName)) {
                 adjustment.getAdjustmentDetails().forEach(detail -> {
-                    if (detail.getShortEntryType().equals("C")) {
-                        balancePeriodCredit[0] = balancePeriodCredit[0].add(detail.getAmount());
-                    } else {
-                        balancePeriodDebit[0] = balancePeriodDebit[0].add(detail.getAmount());
-                    }
+                    balancePeriodCredit[0] = balancePeriodCredit[0].add(detail.getCredit());
+                    balancePeriodDebit[0] = balancePeriodDebit[0].add(detail.getDebit());
+
                 });
             }
         });

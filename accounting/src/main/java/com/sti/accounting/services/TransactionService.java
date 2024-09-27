@@ -25,13 +25,15 @@ public class TransactionService {
     private final IAccountRepository iAccountRepository;
     private final IDocumentRepository document;
     private final IAccountingJournalRepository accountingJournalRepository;
+    private final ControlAccountBalancesService controlAccountBalancesService;
 
     public TransactionService(ITransactionRepository transactionRepository, IAccountRepository iAccountRepository,
-                              IDocumentRepository document,IAccountingJournalRepository accountingJournalRepository) {
+                              IDocumentRepository document, IAccountingJournalRepository accountingJournalRepository, ControlAccountBalancesService controlAccountBalancesService) {
         this.transactionRepository = transactionRepository;
         this.iAccountRepository = iAccountRepository;
         this.document = document;
         this.accountingJournalRepository = accountingJournalRepository;
+        this.controlAccountBalancesService = controlAccountBalancesService;
     }
 
     public List<TransactionResponse> getAllTransaction() {
@@ -66,7 +68,7 @@ public class TransactionService {
                         )
                 );
 
-        AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(transactionRequest.getDiaryType()) .orElseThrow(
+        AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(transactionRequest.getDiaryType()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("Diary type %d not valid ", transactionRequest.getDiaryType())
                 )
@@ -88,6 +90,7 @@ public class TransactionService {
         entity.setTransactionDetail(transactionDetailEntities);
 
         transactionRepository.save(entity);
+        controlAccountBalancesService.updateControlAccountBalances(entity);
 
         return entityToResponse(entity);
 
@@ -109,7 +112,7 @@ public class TransactionService {
                         )
                 );
 
-        AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(transactionRequest.getDiaryType()) .orElseThrow(
+        AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(transactionRequest.getDiaryType()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("Diary type %d not valid ", transactionRequest.getDiaryType())
                 )

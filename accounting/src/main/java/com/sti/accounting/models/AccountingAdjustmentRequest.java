@@ -14,6 +14,8 @@ public class AccountingAdjustmentRequest {
 
     private String reference;
 
+    private String descriptionAdjustment;
+
     private Long status;
 
     private List<AdjustmentDetailRequest> detailAdjustment;

@@ -10,9 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class GeneralBalanceService {
@@ -20,106 +18,69 @@ public class GeneralBalanceService {
     private static final Logger logger = LoggerFactory.getLogger(GeneralBalanceService.class);
 
     private final IAccountRepository iAccountRepository;
-    private final JournalEntryService journalEntryService;
+    private final ControlAccountBalancesService controlAccountBalancesService;
 
-    public GeneralBalanceService(IAccountRepository iAccountRepository, JournalEntryService journalEntryService) {
+    public GeneralBalanceService(IAccountRepository iAccountRepository, ControlAccountBalancesService controlAccountBalancesService) {
         this.iAccountRepository = iAccountRepository;
-        this.journalEntryService = journalEntryService;
+        this.controlAccountBalancesService = controlAccountBalancesService;
     }
 
     @Transactional
-    public BalanceGeneralResponse getBalanceGeneral() {
+    public List<GeneralBalanceResponse> getBalanceGeneral() {
         logger.info("Generating balance general");
 
         List<AccountEntity> accounts = iAccountRepository.findAll();
-        AccountingPeriodDataResponse data = journalEntryService.getTransactionAdjustment();
 
-        Map<Long, BigDecimal> debitSumMap = calculateDebitSums(accounts, data);
-        Map<Long, BigDecimal> creditSumMap = calculateCreditSums(accounts, data);
-
-        List<GeneralBalanceResponse> assets = new ArrayList<>();
-        List<GeneralBalanceResponse> liabilities = new ArrayList<>();
-        List<GeneralBalanceResponse> equity = new ArrayList<>();
+        List<GeneralBalanceResponse> response = new ArrayList<>();
 
         for (AccountEntity account : accounts) {
-            GeneralBalanceResponse item = createGeneralBalanceResponse(account, debitSumMap, creditSumMap);
-            if (account.getCode().startsWith("1")) {
-                assets.add(item);
-            } else if (account.getCode().startsWith("2")) {
-                liabilities.add(item);
-            } else if (account.getCode().startsWith("3")) {
-                equity.add(item);
-            }
+            GeneralBalanceResponse item = createGeneralBalanceResponse(account);
+            response.add(item);
         }
 
-        BalanceGeneralResponse response = new BalanceGeneralResponse();
-        response.setAssets(assets);
-        response.setLiabilities(liabilities);
-        response.setEquity(equity);
         return response;
     }
 
-    private Map<Long, BigDecimal> calculateDebitSums(List<AccountEntity> accounts, AccountingPeriodDataResponse data) {
-        Map<Long, BigDecimal> debitSumMap = new HashMap<>();
-        for (AccountEntity account : accounts) {
-            debitSumMap.put(account.getId(), BigDecimal.ZERO);
-        }
-
-        for (TransactionResponse transaction : data.getTransactions()) {
-            for (TransactionDetailResponse detail : transaction.getTransactionDetails()) {
-                if (detail.getShortEntryType().equals("D")) {
-                    debitSumMap.put(detail.getAccountId(), debitSumMap.get(detail.getAccountId()).add(detail.getAmount()));
-                }
-            }
-        }
-
-        for (AccountingAdjustmentResponse adjustment : data.getAdjustments()) {
-            for (AdjustmentDetailResponse detail : adjustment.getAdjustmentDetails()) {
-                if (detail.getShortEntryType().equals("D")) {
-                    debitSumMap.put(detail.getAccountId(), debitSumMap.get(detail.getAccountId()).add(detail.getAmount()));
-                }
-            }
-        }
-
-        return debitSumMap;
-    }
-
-    private Map<Long, BigDecimal> calculateCreditSums(List<AccountEntity> accounts, AccountingPeriodDataResponse data) {
-        Map<Long, BigDecimal> creditSumMap = new HashMap<>();
-        for (AccountEntity account : accounts) {
-            creditSumMap.put(account.getId(), BigDecimal.ZERO);
-        }
-
-        for (TransactionResponse transaction : data.getTransactions()) {
-            for (TransactionDetailResponse detail : transaction.getTransactionDetails()) {
-                if (detail.getShortEntryType().equals("C")) {
-                    creditSumMap.put(detail.getAccountId(), creditSumMap.get(detail.getAccountId()).add(detail.getAmount()));
-                }
-            }
-        }
-
-        for (AccountingAdjustmentResponse adjustment : data.getAdjustments()) {
-            for (AdjustmentDetailResponse detail : adjustment.getAdjustmentDetails()) {
-                if (detail.getShortEntryType().equals("C")) {
-                    creditSumMap.put(detail.getAccountId(), creditSumMap.get(detail.getAccountId()).add(detail.getAmount()));
-                }
-            }
-        }
-
-        return creditSumMap;
-    }
-
-    private GeneralBalanceResponse createGeneralBalanceResponse(AccountEntity account, Map<Long, BigDecimal> debitSumMap, Map<Long, BigDecimal> creditSumMap) {
+    private GeneralBalanceResponse createGeneralBalanceResponse(AccountEntity account) {
         GeneralBalanceResponse item = new GeneralBalanceResponse();
         item.setAccountId(account.getId());
         item.setAccountName(account.getDescription());
         item.setParentId(account.getParent() != null ? account.getParent().getId() : null);
-        item.setCategory(account.getTypicalBalance().equalsIgnoreCase("C") ? "Credito" : "Debito");
-        BigDecimal debit = debitSumMap.get(account.getId());
-        BigDecimal credit = creditSumMap.get(account.getId());
-        item.setDebit(debit);
-        item.setCredit(credit);
-        item.setBalance(debit.subtract(credit).abs());
+
+        String category = getCategory(account);
+
+        item.setCategory(category);
+
+        ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesService.getControlAccountBalances(account.getId());
+
+        BigDecimal balance = getBalance(sumViewEntity);
+
+        item.setBalance(balance);
+        item.setRoot(account.getParent() == null);
+
         return item;
+    }
+
+    private String getCategory(AccountEntity account) {
+        String parentName = account.getParent() != null ? account.getParent().getDescription() : null;
+        if (parentName != null) {
+            if (isMainCategory(parentName)) {
+                return parentName;
+            } else {
+                return getCategory(account.getParent());
+            }
+        } else {
+            return "ACTIVO";
+        }
+    }
+
+    private boolean isMainCategory(String category) {
+        return category.equals("ACTIVO") || category.equals("PASIVO") || category.equals("PATRIMONIO");
+    }
+
+    private BigDecimal getBalance(ControlAccountBalancesEntity sumViewEntity) {
+        BigDecimal debit = sumViewEntity.getDebit() != null ? new BigDecimal(sumViewEntity.getDebit()) : BigDecimal.ZERO;
+        BigDecimal credit = sumViewEntity.getCredit() != null ? new BigDecimal(sumViewEntity.getCredit()) : BigDecimal.ZERO;
+        return debit.subtract(credit).abs();
     }
 }

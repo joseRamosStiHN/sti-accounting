@@ -31,10 +31,9 @@ public class AdjustmentDetailEntity {
     @JsonIgnore
     private AccountEntity account;
 
-    @Column(name = "AMOUNT")
-    private BigDecimal amount;
+    @Column(name = "DEBIT")
+    private BigDecimal debit;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "MOTION")
-    private Motion motion;
+    @Column(name = "CREDIT")
+    private BigDecimal credit;
 }

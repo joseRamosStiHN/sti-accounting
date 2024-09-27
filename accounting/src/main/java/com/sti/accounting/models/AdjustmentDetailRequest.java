@@ -1,6 +1,5 @@
 package com.sti.accounting.models;
 
-import com.sti.accounting.utils.Motion;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
@@ -13,8 +12,10 @@ public class AdjustmentDetailRequest {
 
     private Long accountId;
 
-    @Positive(message = "Amount must be positive")
-    private BigDecimal amount;
+    @Positive(message = "Debit must be positive")
+    private BigDecimal debit;
 
-    private Motion motion;
+    @Positive(message = "Credit must be positive")
+    private BigDecimal credit;
+
 }

@@ -12,6 +12,7 @@ public class AccountingAdjustmentResponse {
     private Long id;
     private Long transactionId;
     private String reference;
+    private String descriptionAdjustment;
     private String invoiceNo;
     private String diaryName;
     private String numberPda;

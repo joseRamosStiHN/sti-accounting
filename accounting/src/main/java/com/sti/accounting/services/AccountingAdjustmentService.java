@@ -26,11 +26,13 @@ public class AccountingAdjustmentService {
     private final IAccountingAdjustmentsRepository accountingAdjustmentsRepository;
     private final IAccountRepository iAccountRepository;
     private final ITransactionRepository transactionRepository;
+    private final ControlAccountBalancesService controlAccountBalancesService;
 
-    public AccountingAdjustmentService(IAccountingAdjustmentsRepository accountingAdjustmentsRepository, IAccountRepository iAccountRepository, ITransactionRepository transactionRepository) {
+    public AccountingAdjustmentService(IAccountingAdjustmentsRepository accountingAdjustmentsRepository, IAccountRepository iAccountRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService) {
         this.accountingAdjustmentsRepository = accountingAdjustmentsRepository;
         this.iAccountRepository = iAccountRepository;
         this.transactionRepository = transactionRepository;
+        this.controlAccountBalancesService = controlAccountBalancesService;
     }
 
     public List<AccountingAdjustmentResponse> getAllAccountingAdjustments() {
@@ -51,6 +53,7 @@ public class AccountingAdjustmentService {
 
         entity.setTransaction(transactionEntity);
         entity.setReference(accountingAdjustmentRequest.getReference());
+        entity.setDescriptionAdjustment(accountingAdjustmentRequest.getDescriptionAdjustment());
         entity.setStatus(StatusTransaction.DRAFT);
 
         //Adjustment detail validations
@@ -60,6 +63,7 @@ public class AccountingAdjustmentService {
         entity.setAdjustmentDetail(adjustmentDetailEntities);
 
         accountingAdjustmentsRepository.save(entity);
+        controlAccountBalancesService.updateControlAccountBalancesAdjustment(entity);
 
         return entityToResponse(entity);
 
@@ -71,13 +75,11 @@ public class AccountingAdjustmentService {
         }
         //validate credit and debit
         BigDecimal credit = detailRequest.stream()
-                .filter(x -> x.getMotion().equals(Motion.C))
-                .map(AdjustmentDetailRequest::getAmount)
+                .map(AdjustmentDetailRequest::getCredit)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal debit = detailRequest.stream()
-                .filter(x -> x.getMotion().equals(Motion.D))
-                .map(AdjustmentDetailRequest::getAmount)
+                .map(AdjustmentDetailRequest::getDebit)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal operationResult = credit.subtract(debit);
@@ -88,12 +90,10 @@ public class AccountingAdjustmentService {
 
         // Validate that accountId is not the same for debit and credit
         Set<Long> creditAccountIds = detailRequest.stream()
-                .filter(x -> x.getMotion().equals(Motion.C))
                 .map(AdjustmentDetailRequest::getAccountId)
                 .collect(Collectors.toSet());
 
         Set<Long> debitAccountIds = detailRequest.stream()
-                .filter(x -> x.getMotion().equals(Motion.D))
                 .map(AdjustmentDetailRequest::getAccountId)
                 .collect(Collectors.toSet());
 
@@ -115,8 +115,8 @@ public class AccountingAdjustmentService {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account with id " + detail.getAccountId() + "does not exist.");
                 }
                 currentAccount.ifPresent(entity::setAccount);
-                entity.setAmount(detail.getAmount());
-                entity.setMotion(detail.getMotion());
+                entity.setDebit(detail.getDebit());
+                entity.setCredit(detail.getCredit());
                 entity.setAdjustment(accountingAdjustmentsEntity);
                 result.add(entity);
             }
@@ -131,6 +131,7 @@ public class AccountingAdjustmentService {
         response.setId(entity.getId());
         response.setTransactionId(entity.getTransaction().getId());
         response.setReference(entity.getReference());
+        response.setDescriptionAdjustment(entity.getDescriptionAdjustment());
         response.setInvoiceNo(entity.getTransaction().getReference());
         response.setDiaryName(entity.getTransaction().getAccountingJournal().getDiaryName());
         response.setNumberPda(String.valueOf(entity.getTransaction().getNumberPda()));
@@ -141,13 +142,13 @@ public class AccountingAdjustmentService {
         for (AdjustmentDetailEntity detail : entity.getAdjustmentDetail()) {
             AdjustmentDetailResponse detailResponse = new AdjustmentDetailResponse();
             detailResponse.setId(detail.getId());
-            detailResponse.setAmount(detail.getAmount());
+            detailResponse.setDebit(detail.getDebit());
+            detailResponse.setCredit(detail.getCredit());
             detailResponse.setAccountCode(detail.getAccount().getCode());
             detailResponse.setAccountName(detail.getAccount().getDescription());
             detailResponse.setAccountId(detail.getAccount().getId());
             detailResponse.setTypicalBalance(detail.getAccount().getBalances().getFirst().getTypicalBalance());
-            detailResponse.setInitialBalance(detail.getAccount().getBalances().getFirst().getInitialBalance());            detailResponse.setShortEntryType(detail.getMotion().toString());
-            detailResponse.setEntryType(detail.getMotion().equals(Motion.C) ? "Credito" : "Debito");
+            detailResponse.setInitialBalance(detail.getAccount().getBalances().getFirst().getInitialBalance());
             detailResponseSet.add(detailResponse);
         }
         response.setAdjustmentDetails(detailResponseSet);
