@@ -88,19 +88,6 @@ public class AccountingAdjustmentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The values entered in the detail are not balanced");
         }
 
-        // Validate that accountId is not the same for debit and credit
-        Set<Long> creditAccountIds = detailRequest.stream()
-                .map(AdjustmentDetailRequest::getAccountId)
-                .collect(Collectors.toSet());
-
-        Set<Long> debitAccountIds = detailRequest.stream()
-                .map(AdjustmentDetailRequest::getAccountId)
-                .collect(Collectors.toSet());
-
-        creditAccountIds.retainAll(debitAccountIds);
-        if (!creditAccountIds.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account ID cannot be the same for debit and credit");
-        }
     }
 
     private List<AdjustmentDetailEntity> detailToEntity(AccountingAdjustmentsEntity accountingAdjustmentsEntity, List<AdjustmentDetailRequest> detailRequests) {
