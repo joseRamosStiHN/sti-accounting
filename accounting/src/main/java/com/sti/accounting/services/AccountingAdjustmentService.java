@@ -5,7 +5,6 @@ import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IAccountingAdjustmentsRepository;
 import com.sti.accounting.repositories.ITransactionRepository;
-import com.sti.accounting.utils.Motion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -15,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class AccountingAdjustmentService {
