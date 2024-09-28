@@ -66,36 +66,15 @@ public class GeneralBalanceService {
     }
 
     private String getCategory(AccountEntity account) {
-        if (account.getParent() == null) {
-            if (account.getDescription().toUpperCase().contains("ACTIVO")) {
-                return "Activo";
-            } else if (account.getDescription().toUpperCase().contains("PASIVO")) {
-                return "Pasivo";
-            } else if (account.getDescription().toUpperCase().contains("PATRIMONIO")) {
-                return "Patrimonio";
-            }
-        } else {
-            String parentName = account.getParent().getDescription();
-            if (parentName.toUpperCase().contains("ACTIVO")) {
-                return "Activo";
-            } else if (parentName.toUpperCase().contains("PASIVO")) {
-                return "Pasivo";
-            } else if (parentName.toUpperCase().contains("PATRIMONIO")) {
-                return "Patrimonio";
-            } else {
-                AccountEntity parent = account.getParent();
-                while (parent != null) {
-                    if (parent.getDescription().toUpperCase().contains("ACTIVO")) {
-                        return "Activo";
-                    } else if (parent.getDescription().toUpperCase().contains("PASIVO")) {
-                        return "Pasivo";
-                    } else if (parent.getDescription().toUpperCase().contains("PATRIMONIO")) {
-                        return "Patrimonio";
-                    }
-                    parent = parent.getParent();
+        String[] mainCategories = {"ACTIVO", "PASIVO", "PATRIMONIO"};
+        AccountEntity current = account;
+        while (current != null) {
+            for (String mainCategory : mainCategories) {
+                if (current.getDescription().toUpperCase().contains(mainCategory)) {
+                    return mainCategory;
                 }
-                return "ACTIVO"; // Valor por defecto
             }
+            current = current.getParent();
         }
         return "";
     }
