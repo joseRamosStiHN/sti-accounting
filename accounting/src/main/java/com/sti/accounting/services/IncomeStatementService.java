@@ -43,7 +43,9 @@ public class IncomeStatementService {
 
             IncomeStatementResponse.Transaction transaction = new IncomeStatementResponse.Transaction();
             transaction.setId(account.getId());
-            transaction.setCategory(account.getAccountType().getName());
+
+
+            transaction.setCategory(account.getAccountType() != null ? account.getAccountType().getName() : null);
             transaction.setAccountParent(account.getParent() != null ? account.getParent().getDescription() : null);
             transaction.setAccount(account.getDescription());
             transaction.setAmount(balance);

@@ -52,8 +52,7 @@ public class AccountingApplication {
                         new AccountTypeEntity(2L, "Gastos", "Tipo de cuenta para gastos.", new HashSet<>()),
                         new AccountTypeEntity(3L, "Efectivo", "Tipo de cuenta para efectivo.", new HashSet<>()),
                         new AccountTypeEntity(4L, "Bancos", "Tipo de cuenta para bancos.", new HashSet<>()),
-                        new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.", new HashSet<>()),
-                        new AccountTypeEntity(5L, "Costo de Ventas", "Tipo de cuenta para estado de resultados.", new HashSet<>())
+                        new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.", new HashSet<>())
 
                 );
                 accountType.saveAll(accountsType);
