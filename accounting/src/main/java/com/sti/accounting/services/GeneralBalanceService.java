@@ -29,7 +29,7 @@ public class GeneralBalanceService {
 
     @Transactional
     public List<GeneralBalanceResponse> getBalanceGeneral() {
-        IncomeStatementResponse incomeStatementResponse = incomeStatementService.getIncomeStatement();
+        List<IncomeStatementResponse> incomeStatementResponse = incomeStatementService.getIncomeStatement();
         logger.info("Generating balance general");
 
         List<AccountEntity> accounts = iAccountRepository.findAll();
