@@ -54,6 +54,7 @@ public class IncomeStatementService {
 
         return transactions;
     }
+
     private BigDecimal getBalance(ControlAccountBalancesEntity sumViewEntity) {
         BigDecimal debit = sumViewEntity.getDebit() != null ? new BigDecimal(sumViewEntity.getDebit()) : BigDecimal.ZERO;
         BigDecimal credit = sumViewEntity.getCredit() != null ? new BigDecimal(sumViewEntity.getCredit()) : BigDecimal.ZERO;
@@ -65,10 +66,12 @@ public class IncomeStatementService {
         BigDecimal totalExpenses = BigDecimal.ZERO;
 
         for (IncomeStatementResponse transaction : transactions) {
-            if (transaction.getCategory().equalsIgnoreCase("Ingresos")) {
-                totalIncome = totalIncome.add(transaction.getAmount());
-            } else if (transaction.getCategory().equalsIgnoreCase("Gastos")) {
-                totalExpenses = totalExpenses.add(transaction.getAmount());
+            if (transaction.getCategory() != null) {
+                if (transaction.getCategory().equalsIgnoreCase("Ingresos")) {
+                    totalIncome = totalIncome.add(transaction.getAmount());
+                } else if (transaction.getCategory().equalsIgnoreCase("Gastos")) {
+                    totalExpenses = totalExpenses.add(transaction.getAmount());
+                }
             }
         }
 
