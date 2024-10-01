@@ -19,14 +19,17 @@ public class GeneralBalanceService {
 
     private final IAccountRepository iAccountRepository;
     private final ControlAccountBalancesService controlAccountBalancesService;
+    private final IncomeStatementService incomeStatementService;
 
-    public GeneralBalanceService(IAccountRepository iAccountRepository, ControlAccountBalancesService controlAccountBalancesService) {
+    public GeneralBalanceService(IAccountRepository iAccountRepository, ControlAccountBalancesService controlAccountBalancesService, IncomeStatementService incomeStatementService) {
         this.iAccountRepository = iAccountRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
+        this.incomeStatementService = incomeStatementService;
     }
 
     @Transactional
     public List<GeneralBalanceResponse> getBalanceGeneral() {
+        IncomeStatementResponse incomeStatementResponse = incomeStatementService.getIncomeStatement();
         logger.info("Generating balance general");
 
         List<AccountEntity> accounts = iAccountRepository.findAll();
@@ -42,6 +45,16 @@ public class GeneralBalanceService {
             response.add(item);
         }
 
+        // Agregar la utilidad o pérdida del ejercicio
+        GeneralBalanceResponse netProfitResponse = new GeneralBalanceResponse();
+        netProfitResponse.setAccountId(0L);
+        netProfitResponse.setAccountName("Utilidad o Perdida del ejercicio");
+        netProfitResponse.setParentId(null);
+        netProfitResponse.setCategory("PATRIMONIO");
+        netProfitResponse.setBalance(incomeStatementService.getNetProfit(incomeStatementResponse));
+        netProfitResponse.setRoot(true);
+
+        response.add(netProfitResponse);
         return response;
     }
 

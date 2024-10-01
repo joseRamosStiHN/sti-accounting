@@ -63,4 +63,19 @@ public class IncomeStatementService {
         BigDecimal credit = sumViewEntity.getCredit() != null ? new BigDecimal(sumViewEntity.getCredit()) : BigDecimal.ZERO;
         return debit.subtract(credit).abs();
     }
+
+    public BigDecimal getNetProfit(IncomeStatementResponse response) {
+        BigDecimal totalIncome = BigDecimal.ZERO;
+        BigDecimal totalExpenses = BigDecimal.ZERO;
+
+        for (IncomeStatementResponse.Transaction transaction : response.getTransactions()) {
+            if (transaction.getCategory().equalsIgnoreCase("Ingresos")) {
+                totalIncome = totalIncome.add(transaction.getAmount());
+            } else if (transaction.getCategory().equalsIgnoreCase("Gastos")) {
+                totalExpenses = totalExpenses.add(transaction.getAmount());
+            }
+        }
+
+        return totalIncome.subtract(totalExpenses);
+    }
 }

@@ -17,8 +17,10 @@ public class DocumentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(name = "name", columnDefinition = "varchar(100)")
     private String name;
+
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
