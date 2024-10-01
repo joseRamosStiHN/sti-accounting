@@ -10,5 +10,5 @@ public final class Constant {
 
     public static final String NOT_FOUND = "not found";
 
-    public static final String NOT_BALANCE = "No balances were found with the id %s";
+    public static final String NOT_BALANCE = "No balances were found with the id: ";
 }

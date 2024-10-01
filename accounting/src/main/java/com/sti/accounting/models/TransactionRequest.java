@@ -2,16 +2,14 @@ package com.sti.accounting.models;
 
 import com.sti.accounting.utils.Currency;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import jakarta.validation.constraints.*;
 
-@Getter
-@Setter
+@Data
 public class TransactionRequest {
 
     private Long id;

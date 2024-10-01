@@ -10,10 +10,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "accounting_journal")
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 public class AccountingJournalEntity {
 
     @Id

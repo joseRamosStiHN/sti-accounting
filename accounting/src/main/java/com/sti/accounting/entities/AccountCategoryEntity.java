@@ -19,8 +19,10 @@ public class AccountCategoryEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+
     @Column(name = "name", columnDefinition = "VARCHAR(100)")
     private String name;
+
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 

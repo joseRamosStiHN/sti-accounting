@@ -90,7 +90,6 @@ public class TransactionService {
         entity.setTransactionDetail(transactionDetailEntities);
 
         transactionRepository.save(entity);
-        controlAccountBalancesService.updateControlAccountBalances(entity);
 
         return entityToResponse(entity);
 
@@ -189,6 +188,8 @@ public class TransactionService {
         }
         existingTransaction.setStatus(StatusTransaction.SUCCESS);
         transactionRepository.save(existingTransaction);
+        controlAccountBalancesService.updateControlAccountBalances(existingTransaction);
+
     }
 
     private void validateTransactionDetail(List<TransactionDetailRequest> detailRequest) {

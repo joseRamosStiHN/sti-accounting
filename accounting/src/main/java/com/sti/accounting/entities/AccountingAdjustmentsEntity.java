@@ -2,10 +2,7 @@ package com.sti.accounting.entities;
 
 import com.sti.accounting.models.StatusTransaction;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -14,8 +11,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "accounting_adjustments")
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class AccountingAdjustmentsEntity {

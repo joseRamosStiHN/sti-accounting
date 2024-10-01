@@ -3,10 +3,7 @@ package com.sti.accounting.entities;
 import com.sti.accounting.models.StatusTransaction;
 import com.sti.accounting.utils.Currency;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
@@ -18,8 +15,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "transactions")
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionEntity {

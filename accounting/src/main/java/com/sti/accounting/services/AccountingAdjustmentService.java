@@ -61,9 +61,27 @@ public class AccountingAdjustmentService {
         entity.setAdjustmentDetail(adjustmentDetailEntities);
 
         accountingAdjustmentsRepository.save(entity);
-        controlAccountBalancesService.updateControlAccountBalancesAdjustment(entity);
 
         return entityToResponse(entity);
+
+    }
+
+    @Transactional
+    public void changeAdjustmentStatus(Long adjustmentId) {
+        logger.info("Changing status of adjustment with id {}", adjustmentId);
+
+        AccountingAdjustmentsEntity existingAdjustment = accountingAdjustmentsRepository.findById(adjustmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "No adjustment found with ID: " + adjustmentId));
+
+        if (!existingAdjustment.getStatus().equals(StatusTransaction.DRAFT)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The adjustment is not in draft status");
+        }
+
+        existingAdjustment.setStatus(StatusTransaction.SUCCESS);
+
+        accountingAdjustmentsRepository.save(existingAdjustment);
+        controlAccountBalancesService.updateControlAccountBalancesAdjustment(existingAdjustment);
 
     }
 
@@ -94,7 +112,6 @@ public class AccountingAdjustmentService {
             List<AccountEntity> accounts = iAccountRepository.findAll();
             for (AdjustmentDetailRequest detail : detailRequests) {
                 AdjustmentDetailEntity entity = new AdjustmentDetailEntity();
-                // si la cuenta no existe esto truena
                 Optional<AccountEntity> currentAccount = accounts.stream().filter(x -> x.getId().equals(detail.getAccountId())).findFirst();
                 if (currentAccount.isEmpty()) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account with id " + detail.getAccountId() + "does not exist.");
@@ -122,7 +139,7 @@ public class AccountingAdjustmentService {
         response.setNumberPda(String.valueOf(entity.getTransaction().getNumberPda()));
         response.setStatus(entity.getStatus().toString());
         response.setCreationDate(entity.getCreationDate());
-        //fill up detail
+
         Set<AdjustmentDetailResponse> detailResponseSet = new HashSet<>();
         for (AdjustmentDetailEntity detail : entity.getAdjustmentDetail()) {
             AdjustmentDetailResponse detailResponse = new AdjustmentDetailResponse();

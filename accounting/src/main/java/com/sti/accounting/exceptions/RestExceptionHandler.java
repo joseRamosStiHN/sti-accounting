@@ -1,6 +1,5 @@
 package com.sti.accounting.exceptions;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -25,7 +24,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Object> HandleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request) {
+    public ResponseEntity<Object> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request) {
         logger.info("MethodArgumentTypeMismatchException: {}", ex.getMessage());
 
         return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
@@ -53,7 +52,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Object> HandleResponseStatusException(ResponseStatusException ex, WebRequest request) {
+    public ResponseEntity<Object> handleResponseStatusException(ResponseStatusException ex, WebRequest request) {
         logger.error("handleResponseStatusException:", ex);
         List<GeneralError> responseError = new ArrayList<>();
         GeneralError error = new GeneralError();

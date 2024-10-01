@@ -2,14 +2,12 @@ package com.sti.accounting.models;
 
 import com.sti.accounting.utils.Motion;
 import jakarta.validation.constraints.Positive;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.math.BigDecimal;
 
 
-@Getter
-@Setter
+@Data
 public class TransactionDetailRequest {
 
     private Long id;

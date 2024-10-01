@@ -6,8 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import jakarta.validation.constraints.*;
 
-@Getter
-@Setter
+@Data
 public class BalancesRequest {
 
     private Long id;
