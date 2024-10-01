@@ -25,6 +25,11 @@ public class AccountingAdjustmentController {
         return accountingAdjustmentService.getAllAccountingAdjustments();
     }
 
+    @GetMapping("/{id}")
+    public AccountingAdjustmentResponse getAccountingAdjustmentsById(@PathVariable Long id) {
+        return accountingAdjustmentService.getAccountingAdjustmentsById(id);
+    }
+
     @PostMapping
     public AccountingAdjustmentResponse createAdjustment(@Validated @RequestBody AccountingAdjustmentRequest accountingAdjustmentRequest) {
         return accountingAdjustmentService.createAdjustment(accountingAdjustmentRequest);

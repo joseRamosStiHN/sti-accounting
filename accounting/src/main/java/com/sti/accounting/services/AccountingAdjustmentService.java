@@ -37,6 +37,13 @@ public class AccountingAdjustmentService {
         return accountingAdjustmentsRepository.findAll().stream().map(this::entityToResponse).toList();
     }
 
+    public AccountingAdjustmentResponse getAccountingAdjustmentsById(Long id) {
+        AccountingAdjustmentsEntity entity = accountingAdjustmentsRepository.findById(id)
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                String.format("Accounting adjustments not with ID %d not found", id)));
+        return entityToResponse(entity);
+    }
 
     @Transactional
     public AccountingAdjustmentResponse createAdjustment(AccountingAdjustmentRequest accountingAdjustmentRequest) {
