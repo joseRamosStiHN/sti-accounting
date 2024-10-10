@@ -1,6 +1,7 @@
 package com.sti.accounting.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sti.accounting.utils.Motion;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,9 +27,10 @@ public class AdjustmentDetailEntity {
     @JsonIgnore
     private AccountEntity account;
 
-    @Column(name = "DEBIT")
-    private BigDecimal debit;
+    @Column(name = "AMOUNT")
+    private BigDecimal amount;
 
-    @Column(name = "CREDIT")
-    private BigDecimal credit;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "MOTION")
+    private Motion motion;
 }

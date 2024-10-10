@@ -11,8 +11,9 @@ public class AdjustmentDetailResponse {
     private Long accountId;
     private String accountName;
     private String accountCode;
-    private BigDecimal debit;
-    private BigDecimal credit;
+    private BigDecimal amount;
+    private String entryType;
+    private String shortEntryType;
     private String typicalBalance;
     private BigDecimal initialBalance;
 

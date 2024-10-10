@@ -146,11 +146,10 @@ public class TrialBalanceService {
         transactionAdjustment.getAdjustments().forEach(adjustment -> {
             if (adjustment.getDiaryName().equals(diaryName)) {
                 adjustment.getAdjustmentDetails().forEach(detail -> {
-                    if (detail.getDebit() != null) {
-                        balancePeriodDebit[0] = balancePeriodDebit[0].add(detail.getDebit());
-                    }
-                    if (detail.getCredit() != null) {
-                        balancePeriodCredit[0] = balancePeriodCredit[0].add(detail.getCredit());
+                    if (detail.getShortEntryType().equals("C")) {
+                        balancePeriodCredit[0] = balancePeriodCredit[0].add(detail.getAmount());
+                    } else {
+                        balancePeriodDebit[0] = balancePeriodDebit[0].add(detail.getAmount());
                     }
                 });
             }

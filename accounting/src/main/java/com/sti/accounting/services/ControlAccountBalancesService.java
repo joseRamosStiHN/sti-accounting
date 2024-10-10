@@ -59,8 +59,8 @@ public class ControlAccountBalancesService {
 
         for (AdjustmentDetailEntity detail : adjustmentDetail) {
             Long accountId = detail.getAccount().getId();
-            BigDecimal totalDebit = detail.getDebit();
-            BigDecimal totalCredit = detail.getCredit();
+            BigDecimal amount = detail.getAmount();
+            Motion motion = detail.getMotion();
 
             ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountId(accountId)
                     .orElseGet(() -> {
@@ -70,12 +70,13 @@ public class ControlAccountBalancesService {
                     });
 
 
-            sumViewEntity.setDebit(sumViewEntity.getDebit() == null ? totalDebit.toString() :
-                    new BigDecimal(sumViewEntity.getDebit()).add(totalDebit).toString());
-
-            sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? totalCredit.toString() :
-                    new BigDecimal(sumViewEntity.getCredit()).add(totalCredit).toString());
-
+            if (motion.equals(Motion.D)) {
+                sumViewEntity.setDebit(sumViewEntity.getDebit() == null ? amount.toString() :
+                        new BigDecimal(sumViewEntity.getDebit()).add(amount).toString());
+            } else {
+                sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount.toString() :
+                        new BigDecimal(sumViewEntity.getCredit()).add(amount).toString());
+            }
 
             controlAccountBalancesRepository.save(sumViewEntity);
         }

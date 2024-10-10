@@ -30,6 +30,11 @@ public class AccountingAdjustmentController {
         return accountingAdjustmentService.getAccountingAdjustmentsById(id);
     }
 
+    @GetMapping("/by-transaction/{transactionId}")
+    public List<AccountingAdjustmentResponse> getAccountingAdjustmentsByTransactionId(@PathVariable Long transactionId) {
+        return accountingAdjustmentService.getAccountingAdjustmentsByTransactionId(transactionId);
+    }
+
     @PostMapping
     public AccountingAdjustmentResponse createAdjustment(@Validated @RequestBody AccountingAdjustmentRequest accountingAdjustmentRequest) {
         return accountingAdjustmentService.createAdjustment(accountingAdjustmentRequest);
