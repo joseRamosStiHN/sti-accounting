@@ -82,6 +82,38 @@ public class ControlAccountBalancesService {
         }
     }
 
+    @Transactional
+    public void updateControlAccountDebitNotes(DebitNotesEntity debitNotesEntity) {
+        logger.info("creating update Control Account Balances");
+
+        List<DebitNotesDetailEntity> debitNotesDetails = debitNotesEntity.getDebitNoteDetail();
+
+        for (DebitNotesDetailEntity detail : debitNotesDetails) {
+            Long accountId = detail.getAccount().getId();
+            BigDecimal amount = detail.getAmount();
+            Motion motion = detail.getMotion();
+
+            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountId(accountId)
+                    .orElseGet(() -> {
+                        ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
+                        newEntity.setAccountId(accountId);
+                        return newEntity;
+                    });
+
+
+            if (motion.equals(Motion.D)) {
+                sumViewEntity.setDebit(sumViewEntity.getDebit() == null ? amount.toString() :
+                        new BigDecimal(sumViewEntity.getDebit()).add(amount).toString());
+            } else {
+                sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount.toString() :
+                        new BigDecimal(sumViewEntity.getCredit()).add(amount).toString());
+            }
+
+
+            controlAccountBalancesRepository.save(sumViewEntity);
+        }
+    }
+
     public ControlAccountBalancesEntity getControlAccountBalances(Long accountId) {
         return controlAccountBalancesRepository.findByAccountId(accountId)
                 .orElseGet(() -> {
