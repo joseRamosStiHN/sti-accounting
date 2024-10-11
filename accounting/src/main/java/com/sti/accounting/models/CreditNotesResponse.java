@@ -17,6 +17,8 @@ public class CreditNotesResponse {
 
     private String descriptionNote;
 
+    private String invoiceNo;
+
     private Long diaryType;
 
     private String diaryName;
