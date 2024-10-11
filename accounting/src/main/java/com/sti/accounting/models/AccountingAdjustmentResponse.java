@@ -18,6 +18,7 @@ public class AccountingAdjustmentResponse {
     private String numberPda;
     private String status;
     private LocalDateTime creationDate;
+    private String user;
 
     private Set<AdjustmentDetailResponse> adjustmentDetails;
 

@@ -175,6 +175,7 @@ public class AccountingAdjustmentService {
         response.setNumberPda(String.valueOf(entity.getTransaction().getNumberPda()));
         response.setStatus(entity.getStatus().toString());
         response.setCreationDate(entity.getCreationDate());
+        response.setUser("user.mock");
 
         Set<AdjustmentDetailResponse> detailResponseSet = new HashSet<>();
         for (AdjustmentDetailEntity detail : entity.getAdjustmentDetail()) {

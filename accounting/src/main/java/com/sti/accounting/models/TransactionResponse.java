@@ -22,6 +22,7 @@ public class TransactionResponse {
     private String numberPda;
     private String status;
     private BigDecimal exchangeRate;
+    private String user;
 
     private Set<TransactionDetailResponse> transactionDetails;
 

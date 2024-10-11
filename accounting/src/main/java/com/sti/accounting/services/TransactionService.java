@@ -270,6 +270,8 @@ public class TransactionService {
         response.setDocumentName(entity.getDocument().getName());
         response.setDiaryType(entity.getAccountingJournal().getId());
         response.setDiaryName(entity.getAccountingJournal().getDiaryName());
+        response.setUser("user.mock");
+
         //fill up detail
         Set<TransactionDetailResponse> detailResponseSet = new HashSet<>();
         for (TransactionDetailEntity detail : entity.getTransactionDetail()) {
