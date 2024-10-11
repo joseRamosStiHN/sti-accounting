@@ -29,6 +29,8 @@ public class DebitNotesResponse {
 
     private LocalDate date;
 
+    private String user;
+
     private Set<DebitNotesDetailResponse> detailNote;
 
 }

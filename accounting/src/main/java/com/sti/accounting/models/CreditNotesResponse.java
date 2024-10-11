@@ -29,5 +29,7 @@ public class CreditNotesResponse {
 
     private LocalDate date;
 
+    private String user;
+
     private Set<CreditNotesDetailResponse> detailNote;
 }

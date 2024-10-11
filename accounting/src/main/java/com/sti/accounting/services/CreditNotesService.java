@@ -183,6 +183,7 @@ public class CreditNotesService {
         response.setStatus(entity.getStatus().toString());
         response.setDate(entity.getCreateAtDate());
         response.setCreationDate(entity.getCreateAtTime());
+        response.setUser("user.mock");
 
         //fill up detail
         Set<CreditNotesDetailResponse> detailResponseSet = new HashSet<>();

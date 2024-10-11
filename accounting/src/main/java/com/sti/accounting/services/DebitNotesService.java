@@ -183,7 +183,7 @@ public class DebitNotesService {
         response.setStatus(entity.getStatus().toString());
         response.setDate(entity.getCreateAtDate());
         response.setCreationDate(entity.getCreateAtTime());
-
+        response.setUser("user.mock");
         //fill up detail
         Set<DebitNotesDetailResponse> detailResponseSet = new HashSet<>();
         for (DebitNotesDetailEntity detail : entity.getDebitNoteDetail()) {
