@@ -13,6 +13,8 @@ public class DebitNotesResponse {
 
     private Long transactionId;
 
+    private String reference;
+
     private String descriptionNote;
 
     private Long diaryType;

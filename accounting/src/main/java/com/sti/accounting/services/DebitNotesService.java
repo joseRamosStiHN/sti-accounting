@@ -175,6 +175,7 @@ public class DebitNotesService {
         DebitNotesResponse response = new DebitNotesResponse();
         response.setId(entity.getId());
         response.setTransactionId(entity.getTransaction().getId());
+        response.setReference("Nota de Débito");
         response.setDescriptionNote(entity.getDescriptionNote());
         response.setDiaryType(entity.getAccountingJournal().getId());
         response.setDiaryName(entity.getAccountingJournal().getDiaryName());

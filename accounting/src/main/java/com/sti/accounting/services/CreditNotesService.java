@@ -175,6 +175,7 @@ public class CreditNotesService {
         CreditNotesResponse response = new CreditNotesResponse();
         response.setId(entity.getId());
         response.setTransactionId(entity.getTransaction().getId());
+        response.setReference("Nota de Crédito");
         response.setDescriptionNote(entity.getDescriptionNote());
         response.setDiaryType(entity.getAccountingJournal().getId());
         response.setDiaryName(entity.getAccountingJournal().getDiaryName());

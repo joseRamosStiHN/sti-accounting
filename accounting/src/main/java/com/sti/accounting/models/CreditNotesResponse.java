@@ -13,6 +13,8 @@ public class CreditNotesResponse {
 
     private Long transactionId;
 
+    private String reference;
+
     private String descriptionNote;
 
     private Long diaryType;
