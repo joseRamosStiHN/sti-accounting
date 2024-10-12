@@ -31,7 +31,7 @@ public class JournalEntryService {
         LocalDate startDate = activePeriod.getStartPeriod().toLocalDate();
         LocalDate endDate = activePeriod.getEndPeriod().toLocalDate();
 
-        // Obtener transacciones y ajustes para el periodo activo
+        // Obtener transacciones, ajustes y notas para el periodo activo
         List<TransactionResponse> transactions = transactionService.getAllTransaction()
                 .stream()
                 .filter(transaction -> {
