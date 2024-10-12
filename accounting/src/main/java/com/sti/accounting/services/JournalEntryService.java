@@ -1,9 +1,7 @@
 package com.sti.accounting.services;
 
 import com.sti.accounting.entities.AccountingPeriodEntity;
-import com.sti.accounting.models.AccountingAdjustmentResponse;
-import com.sti.accounting.models.AccountingPeriodDataResponse;
-import com.sti.accounting.models.TransactionResponse;
+import com.sti.accounting.models.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -15,15 +13,19 @@ public class JournalEntryService {
     private final AccountingAdjustmentService accountingAdjustmentService;
     private final TransactionService transactionService;
     private final AccountingPeriodService accountingPeriodService;
+    private final CreditNotesService creditNotesService;
+    private final DebitNotesService debitNotesService;
 
-    public JournalEntryService(AccountingAdjustmentService accountingAdjustmentService, TransactionService transactionService, AccountingPeriodService accountingPeriodService) {
+    public JournalEntryService(AccountingAdjustmentService accountingAdjustmentService, TransactionService transactionService, AccountingPeriodService accountingPeriodService, CreditNotesService creditNotesService, DebitNotesService debitNotesService) {
         this.accountingAdjustmentService = accountingAdjustmentService;
         this.transactionService = transactionService;
         this.accountingPeriodService = accountingPeriodService;
+        this.creditNotesService = creditNotesService;
+        this.debitNotesService = debitNotesService;
     }
 
 
-    public AccountingPeriodDataResponse getTransactionAdjustment() {
+    public AccountingPeriodDataResponse getJournalEntry() {
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
         LocalDate startDate = activePeriod.getStartPeriod().toLocalDate();
@@ -46,6 +48,22 @@ public class JournalEntryService {
                 })
                 .toList();
 
-        return new AccountingPeriodDataResponse(transactions, adjustments);
+        List<DebitNotesResponse> debitNotes = debitNotesService.getAllDebitNotes()
+                .stream()
+                .filter(debitNote -> {
+                    LocalDate debitNoteDate = debitNote.getCreationDate().toLocalDate();
+                    return !debitNoteDate.isBefore(startDate) && !debitNoteDate.isAfter(endDate);
+                })
+                .toList();
+
+        List<CreditNotesResponse> creditNotes = creditNotesService.getAllCreditNotes()
+                .stream()
+                .filter(creditNote -> {
+                    LocalDate creditNoteDate = creditNote.getCreationDate().toLocalDate();
+                    return !creditNoteDate.isBefore(startDate) && !creditNoteDate.isAfter(endDate);
+                })
+                .toList();
+
+        return new AccountingPeriodDataResponse(transactions, adjustments, debitNotes, creditNotes);
     }
 }

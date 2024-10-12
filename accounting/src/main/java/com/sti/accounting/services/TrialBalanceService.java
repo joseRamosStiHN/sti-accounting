@@ -14,11 +14,15 @@ public class TrialBalanceService {
     private final TransactionService transactionService;
     private final AccountingPeriodService accountingPeriodService;
     private final AccountingAdjustmentService accountingAdjustmentService;
+    private final CreditNotesService creditNotesService;
+    private final DebitNotesService debitNotesService;
 
-    public TrialBalanceService(TransactionService transactionService, AccountingPeriodService accountingPeriodService, AccountingAdjustmentService accountingAdjustmentService) {
+    public TrialBalanceService(TransactionService transactionService, AccountingPeriodService accountingPeriodService, AccountingAdjustmentService accountingAdjustmentService, CreditNotesService creditNotesService, DebitNotesService debitNotesService) {
         this.transactionService = transactionService;
         this.accountingPeriodService = accountingPeriodService;
         this.accountingAdjustmentService = accountingAdjustmentService;
+        this.creditNotesService = creditNotesService;
+        this.debitNotesService = debitNotesService;
     }
 
     public TrialBalanceResponse getTrialBalance() {
@@ -34,7 +38,7 @@ public class TrialBalanceService {
 
         // Obtener transacciones y ajustes para el periodo activo
         //Utilizando el servicio de asientos y apuntes que trae todas las transacciones y ajustes
-        AccountingPeriodDataResponse transactionAdjustment = new JournalEntryService(accountingAdjustmentService, transactionService, accountingPeriodService).getTransactionAdjustment();
+        AccountingPeriodDataResponse transactionAdjustment = new JournalEntryService(accountingAdjustmentService, transactionService, accountingPeriodService, creditNotesService, debitNotesService).getJournalEntry();
 
         // Agregar balance diario al response
         List<TrialBalanceResponse.BalanceDiary> balanceDiaries = calculateInitialBalance(transactionAdjustment);
@@ -98,6 +102,47 @@ public class TrialBalanceService {
             });
         });
 
+        // Procesar Debit Notes
+        transactionAdjustment.getDebitNotes().forEach(debitNote -> {
+            String diaryName = debitNote.getDiaryName();
+
+            if (!balanceMap.containsKey(diaryName)) {
+                balanceMap.put(diaryName, new HashMap<>());
+            }
+
+            Map<String, BigDecimal> diaryBalanceMap = balanceMap.get(diaryName);
+
+            debitNote.getDetailNote().forEach(detail -> {
+                String accountName = detail.getAccountName();
+                BigDecimal initialBalance = detail.getInitialBalance();
+
+                if (!diaryBalanceMap.containsKey(accountName)) {
+                    diaryBalanceMap.put(accountName, initialBalance);
+                }
+            });
+        });
+
+        // Procesar Credit Notes
+        transactionAdjustment.getCreditNotes().forEach(creditNote -> {
+            String diaryName = creditNote.getDiaryName();
+
+            if (!balanceMap.containsKey(diaryName)) {
+                balanceMap.put(diaryName, new HashMap<>());
+            }
+
+            Map<String, BigDecimal> diaryBalanceMap = balanceMap.get(diaryName);
+
+            creditNote.getDetailNote().forEach(detail -> {
+                String accountName = detail.getAccountName();
+                BigDecimal initialBalance = detail.getInitialBalance();
+
+                if (!diaryBalanceMap.containsKey(accountName)) {
+                    diaryBalanceMap.put(accountName, initialBalance);
+                }
+            });
+        });
+
+
         // Crear BalanceDiary para cada diario
         List<TrialBalanceResponse.BalanceDiary> balanceDiaries = new ArrayList<>();
 
@@ -154,6 +199,30 @@ public class TrialBalanceService {
                 });
             }
         });
+
+        transactionAdjustment.getDebitNotes().forEach(debitNotes -> {
+            if (debitNotes.getDiaryName().equals(diaryName)) {
+                debitNotes.getDetailNote().forEach(detail -> {
+                    if (detail.getShortEntryType().equals("C")) {
+                        balancePeriodCredit[0] = balancePeriodCredit[0].add(detail.getAmount());
+                    } else {
+                        balancePeriodDebit[0] = balancePeriodDebit[0].add(detail.getAmount());
+                    }
+                });
+            }
+        });
+        transactionAdjustment.getCreditNotes().forEach(creditNotes -> {
+            if (creditNotes.getDiaryName().equals(diaryName)) {
+                creditNotes.getDetailNote().forEach(detail -> {
+                    if (detail.getShortEntryType().equals("C")) {
+                        balancePeriodCredit[0] = balancePeriodCredit[0].add(detail.getAmount());
+                    } else {
+                        balancePeriodDebit[0] = balancePeriodDebit[0].add(detail.getAmount());
+                    }
+                });
+            }
+        });
+
 
         TrialBalanceResponse.BalancePeriod balancePeriod = new TrialBalanceResponse.BalancePeriod();
         balancePeriod.setCredit(balancePeriodCredit[0]);

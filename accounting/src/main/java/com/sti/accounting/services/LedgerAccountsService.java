@@ -1,6 +1,5 @@
 package com.sti.accounting.services;
 
-import com.sti.accounting.entities.AccountEntity;
 import com.sti.accounting.entities.TransactionDetailEntity;
 import com.sti.accounting.entities.TransactionEntity;
 import com.sti.accounting.models.LedgerAccountsResponse;

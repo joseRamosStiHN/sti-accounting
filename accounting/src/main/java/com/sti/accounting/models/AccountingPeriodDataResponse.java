@@ -11,5 +11,7 @@ public class AccountingPeriodDataResponse {
 
     private List<TransactionResponse> transactions;
     private List<AccountingAdjustmentResponse> adjustments;
+    private List<DebitNotesResponse> debitNotes;
+    private List<CreditNotesResponse> creditNotes;
 
 }

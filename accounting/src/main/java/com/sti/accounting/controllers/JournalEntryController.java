@@ -18,8 +18,8 @@ public class JournalEntryController {
     }
 
     @GetMapping("")
-    public ResponseEntity<AccountingPeriodDataResponse> getTransactionAdjustment() {
-        AccountingPeriodDataResponse response = journalEntryService.getTransactionAdjustment();
+    public ResponseEntity<AccountingPeriodDataResponse> getJournalEntry() {
+        AccountingPeriodDataResponse response = journalEntryService.getJournalEntry();
         return ResponseEntity.ok(response);
     }
 }
