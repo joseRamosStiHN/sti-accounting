@@ -171,6 +171,7 @@ public class AccountingAdjustmentService {
         response.setReference(entity.getReference());
         response.setDescriptionAdjustment(entity.getDescriptionAdjustment());
         response.setInvoiceNo(entity.getTransaction().getReference());
+        response.setDiaryType(entity.getTransaction().getAccountingJournal().getId());
         response.setDiaryName(entity.getTransaction().getAccountingJournal().getDiaryName());
         response.setNumberPda(String.valueOf(entity.getTransaction().getNumberPda()));
         response.setStatus(entity.getStatus().toString());

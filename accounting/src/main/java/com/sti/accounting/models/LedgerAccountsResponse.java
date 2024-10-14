@@ -13,6 +13,9 @@ public class LedgerAccountsResponse {
     private Long diaryId;
     private String diaryName;
     private List<TransactionResponse> transactions;
+    private List<AccountingAdjustmentResponse> adjustments;
+    private List<CreditNotesResponse> creditNotes;
+    private List<DebitNotesResponse> debitNotes;
 
     @Data
     public static class TransactionResponse {
@@ -32,6 +35,5 @@ public class LedgerAccountsResponse {
         private String accountCode;
         private String accountName;
         private BigDecimal amount;
-
     }
 }

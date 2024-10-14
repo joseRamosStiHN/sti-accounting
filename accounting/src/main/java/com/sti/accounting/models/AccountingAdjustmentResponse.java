@@ -14,6 +14,7 @@ public class AccountingAdjustmentResponse {
     private String reference;
     private String descriptionAdjustment;
     private String invoiceNo;
+    private Long diaryType;
     private String diaryName;
     private String numberPda;
     private String status;
