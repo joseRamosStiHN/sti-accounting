@@ -1,7 +1,5 @@
 package com.sti.accounting.controllers;
 
-import com.sti.accounting.models.AccountRequest;
-import com.sti.accounting.models.AccountResponse;
 import com.sti.accounting.models.AccountingPeriodRequest;
 import com.sti.accounting.models.AccountingPeriodResponse;
 import com.sti.accounting.services.AccountingPeriodService;
@@ -10,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -30,6 +29,11 @@ public class AccountingPeriodController {
     @GetMapping("/{id}")
     public AccountingPeriodResponse getAccountingPeriodById(@PathVariable Long id) {
         return accountingPeriodService.getById(id);
+    }
+
+    @GetMapping("/date-range")
+    public List<AccountingPeriodResponse> getAccountingPeriodByDateRange(@RequestParam("start") LocalDateTime start, @RequestParam("end") LocalDateTime end) {
+        return accountingPeriodService.getAccountingPeriodByDateRange(start,end);
     }
 
     @PostMapping

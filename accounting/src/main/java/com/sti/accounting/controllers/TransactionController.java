@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -33,6 +34,11 @@ public class TransactionController {
     @GetMapping("/by-document/{id}")
     public List<TransactionResponse> getTransactionByDocumentType(@PathVariable("id") Long id) {
         return transactionService.getByDocumentType(id);
+    }
+
+    @GetMapping("/date-range")
+    public List<TransactionResponse> getTransactionByDateRange(@RequestParam("start") LocalDate start, @RequestParam("end") LocalDate end) {
+        return transactionService.getTransactionByDateRange(start,end);
     }
 
     @PostMapping("/add")

@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,6 +36,15 @@ public class AccountingPeriodService {
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No accounting period were found with the id %s", id))
         );
         return toResponse(accountingPeriodEntity);
+    }
+
+    public List<AccountingPeriodResponse> getAccountingPeriodByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        logger.trace("accounting period request with startDate {} and endDate {}", startDate, endDate);
+        if (startDate.isAfter(endDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Invalid date range: start date %s cannot be after end date", startDate));
+        }
+
+        return accountingPeriodRepository.findByStartPeriodBetween(startDate, endDate).stream().map(this::toResponse).toList();
     }
 
     public AccountingPeriodResponse createAccountingPeriod(AccountingPeriodRequest accountingPeriodRequest) {
@@ -117,14 +125,6 @@ public class AccountingPeriodService {
     public AccountingPeriodEntity getActivePeriod() {
         return accountingPeriodRepository.findByStatusTrue()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no active accounting period"));
-    }
-
-    public LocalDate getDateStartPeriodAccountingActive() {
-        return getActivePeriod().getStartPeriod().toLocalDate();
-    }
-
-    public LocalDate getActiveAccountingPeriodEndDate() {
-        return getActivePeriod().getEndPeriod().toLocalDate();
     }
 
     private AccountingPeriodResponse toResponse(AccountingPeriodEntity entity) {

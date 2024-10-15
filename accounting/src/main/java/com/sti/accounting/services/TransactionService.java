@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,6 +54,15 @@ public class TransactionService {
         List<TransactionEntity> transByDocument = transactionRepository.findByDocumentId(id);
 
         return transByDocument.stream().map(this::entityToResponse).toList();
+    }
+
+    public List<TransactionResponse> getTransactionByDateRange(LocalDate startDate, LocalDate endDate) {
+        logger.trace("Transaction request with startDate {} and endDate {}", startDate, endDate);
+        if (startDate.isAfter(endDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Invalid date range: start date %s cannot be after end date", startDate));
+        }
+
+        return transactionRepository.findByCreateAtDateBetween(startDate, endDate).stream().map(this::entityToResponse).toList();
     }
 
     @Transactional
