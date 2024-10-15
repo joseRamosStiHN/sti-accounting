@@ -14,6 +14,7 @@ public class IncomeStatementResponse {
     private String account;
     private BigDecimal amount;
     private Date date;
+    private boolean isDiscountOrReturn;
 
 }
 

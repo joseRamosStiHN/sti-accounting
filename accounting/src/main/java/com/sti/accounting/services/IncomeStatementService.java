@@ -46,8 +46,14 @@ public class IncomeStatementService {
             transaction.setCategory(account.getAccountType() != null ? account.getAccountType().getName() : null);
             transaction.setAccountParent(account.getParent() != null ? account.getParent().getDescription() : null);
             transaction.setAccount(account.getDescription());
-            transaction.setAmount(balance);
+          //  transaction.setAmount(balance);
             transaction.setDate(new Date());
+
+            if (account.getDescription().contains("Descuento") || account.getDescription().contains("Devoluciones")) {
+                transaction.setAmount(balance.negate());
+            } else {
+                transaction.setAmount(balance);
+            }
 
             transactions.add(transaction);
         }
