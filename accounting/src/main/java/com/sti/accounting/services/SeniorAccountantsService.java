@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
-public class JournalEntryService {
+public class SeniorAccountantsService {
 
     private final AccountingAdjustmentService accountingAdjustmentService;
     private final TransactionService transactionService;
@@ -16,7 +16,7 @@ public class JournalEntryService {
     private final CreditNotesService creditNotesService;
     private final DebitNotesService debitNotesService;
 
-    public JournalEntryService(AccountingAdjustmentService accountingAdjustmentService, TransactionService transactionService, AccountingPeriodService accountingPeriodService, CreditNotesService creditNotesService, DebitNotesService debitNotesService) {
+    public SeniorAccountantsService(AccountingAdjustmentService accountingAdjustmentService, TransactionService transactionService, AccountingPeriodService accountingPeriodService, CreditNotesService creditNotesService, DebitNotesService debitNotesService) {
         this.accountingAdjustmentService = accountingAdjustmentService;
         this.transactionService = transactionService;
         this.accountingPeriodService = accountingPeriodService;
@@ -25,7 +25,7 @@ public class JournalEntryService {
     }
 
 
-    public AccountingPeriodDataResponse getJournalEntry() {
+    public SeniorAccountantsResponse getSeniorAccountants() {
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
         LocalDate startDate = activePeriod.getStartPeriod().toLocalDate();
@@ -64,6 +64,6 @@ public class JournalEntryService {
                 })
                 .toList();
 
-        return new AccountingPeriodDataResponse(transactions, adjustments, debitNotes, creditNotes);
+        return new SeniorAccountantsResponse(transactions, adjustments, debitNotes, creditNotes);
     }
 }

@@ -38,7 +38,7 @@ public class TrialBalanceService {
 
         // Obtener transacciones y ajustes para el periodo activo
         //Utilizando el servicio de asientos y apuntes que trae todas las transacciones y ajustes
-        AccountingPeriodDataResponse transactionAdjustment = new JournalEntryService(accountingAdjustmentService, transactionService, accountingPeriodService, creditNotesService, debitNotesService).getJournalEntry();
+        SeniorAccountantsResponse transactionAdjustment = new SeniorAccountantsService(accountingAdjustmentService, transactionService, accountingPeriodService, creditNotesService, debitNotesService).getSeniorAccountants();
 
         // Agregar balance diario al response
         List<TrialBalanceResponse.BalanceDiary> balanceDiaries = calculateInitialBalance(transactionAdjustment);
@@ -59,7 +59,7 @@ public class TrialBalanceService {
         return trialBalanceResponse;
     }
 
-    private List<TrialBalanceResponse.BalanceDiary> calculateInitialBalance(AccountingPeriodDataResponse transactionAdjustment) {
+    private List<TrialBalanceResponse.BalanceDiary> calculateInitialBalance(SeniorAccountantsResponse transactionAdjustment) {
         Map<String, Map<String, BigDecimal>> balanceMap = new HashMap<>();
 
         // Procesar transacciones
@@ -172,7 +172,7 @@ public class TrialBalanceService {
         return balanceDiaries;
     }
 
-    private TrialBalanceResponse.BalancePeriod calculateBalancePeriod(String diaryName, AccountingPeriodDataResponse transactionAdjustment) {
+    private TrialBalanceResponse.BalancePeriod calculateBalancePeriod(String diaryName, SeniorAccountantsResponse transactionAdjustment) {
         final BigDecimal[] balancePeriodCredit = new BigDecimal[]{BigDecimal.ZERO};
         final BigDecimal[] balancePeriodDebit = new BigDecimal[]{BigDecimal.ZERO};
 
