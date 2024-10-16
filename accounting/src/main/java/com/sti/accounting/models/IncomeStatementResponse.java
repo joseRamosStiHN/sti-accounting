@@ -11,10 +11,10 @@ public class IncomeStatementResponse {
     private Long id;
     private String category;
     private String accountParent;
+    private String typicalBalance;
     private String account;
     private BigDecimal amount;
     private Date date;
-    private boolean isDiscountOrReturn;
 
 }
 

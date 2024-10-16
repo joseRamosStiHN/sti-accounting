@@ -41,24 +41,24 @@ public class IncomeStatementService {
             ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesService.getControlAccountBalances(account.getId());
             BigDecimal balance = getBalance(sumViewEntity);
 
-            IncomeStatementResponse transaction = new IncomeStatementResponse();
-            transaction.setId(account.getId());
-            transaction.setCategory(account.getAccountType() != null ? account.getAccountType().getName() : null);
-            transaction.setAccountParent(account.getParent() != null ? account.getParent().getDescription() : null);
-            transaction.setAccount(account.getDescription());
-          //  transaction.setAmount(balance);
-            transaction.setDate(new Date());
-
-            if (account.getDescription().contains("Descuento") || account.getDescription().contains("Devoluciones")) {
-                transaction.setAmount(balance.negate());
-            } else {
-                transaction.setAmount(balance);
-            }
+            IncomeStatementResponse transaction = getIncomeStatementResponse(account, balance);
 
             transactions.add(transaction);
         }
 
         return transactions;
+    }
+
+    private static IncomeStatementResponse getIncomeStatementResponse(AccountEntity account, BigDecimal balance) {
+        IncomeStatementResponse transaction = new IncomeStatementResponse();
+        transaction.setId(account.getId());
+        transaction.setCategory(account.getAccountType() != null ? account.getAccountType().getName() : null);
+        transaction.setAccountParent(account.getParent() != null ? account.getParent().getDescription() : null);
+        transaction.setTypicalBalance(account.getTypicalBalance());
+        transaction.setAccount(account.getDescription());
+        transaction.setAmount(balance);
+        transaction.setDate(new Date());
+        return transaction;
     }
 
     private BigDecimal getBalance(ControlAccountBalancesEntity sumViewEntity) {
@@ -68,19 +68,19 @@ public class IncomeStatementService {
     }
 
     public BigDecimal getNetProfit(List<IncomeStatementResponse> transactions) {
-        BigDecimal totalIncome = BigDecimal.ZERO;
-        BigDecimal totalExpenses = BigDecimal.ZERO;
+        BigDecimal totalCredit = BigDecimal.ZERO;
+        BigDecimal totalDebit = BigDecimal.ZERO;
 
         for (IncomeStatementResponse transaction : transactions) {
-            if (transaction.getCategory() != null) {
-                if (transaction.getCategory().equalsIgnoreCase("Ingresos")) {
-                    totalIncome = totalIncome.add(transaction.getAmount());
-                } else if (transaction.getCategory().equalsIgnoreCase("Gastos")) {
-                    totalExpenses = totalExpenses.add(transaction.getAmount());
+            if (transaction.getTypicalBalance() != null) {
+                if (transaction.getTypicalBalance().equalsIgnoreCase("C")) {
+                    totalCredit = totalCredit.add(transaction.getAmount());
+                } else if (transaction.getTypicalBalance().equalsIgnoreCase("D")) {
+                    totalDebit = totalDebit.add(transaction.getAmount());
                 }
             }
         }
 
-        return totalIncome.subtract(totalExpenses);
+        return totalCredit.subtract(totalDebit);
     }
 }
