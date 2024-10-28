@@ -129,11 +129,18 @@ public class AccountService {
         existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
         existingAccount.setStatus(accountRequest.getStatus());
 
+        if (accountRequest.getAccountType() != null) {
+            Long accountTypeId = accountRequest.getAccountType().longValue();
+            AccountTypeEntity accountTypeEntity = accountTypeRepository.findById(accountTypeId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Account Type"));
+            existingAccount.setAccountType(accountTypeEntity);
+        }
+
         // Si se soporta el registro, actualizar los balances
         if (accountRequest.isSupportsRegistration()) {
             validateBalances(accountRequest.getBalances());
 
-            //existingAccount.getBalances().clear();
+            existingAccount.getBalances().clear();
 
             List<BalancesEntity> balancesList = accountRequest.getBalances().stream()
                     .map(balance -> {
