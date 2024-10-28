@@ -103,15 +103,18 @@ public class AccountService {
 
     public AccountResponse updateAccount(Long id, AccountRequest accountRequest) {
         logger.info("Updating account with ID: {}", id);
-        //account exist
+
+        // Verificar si la cuenta existe
         AccountEntity existingAccount = iAccountRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No account found with ID: %d", id)));
-        //check if code exist
+
+        // Verificar si el código de cuenta ya existe para otra cuenta
         if (iAccountRepository.existsByCodeAndNotId(accountRequest.getCode(), id)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Account with code %s already exists.", accountRequest.getCode()));
         }
 
+        // Establecer el padre de la cuenta si se proporciona
         AccountEntity parent = null;
         if (accountRequest.getParentId() != null) {
             parent = iAccountRepository.findById(accountRequest.getParentId())
@@ -119,20 +122,32 @@ public class AccountService {
         }
         existingAccount.setParent(parent);
 
+        // Actualizar los atributos de la cuenta
         existingAccount.setCode(accountRequest.getCode());
         existingAccount.setDescription(accountRequest.getDescription());
         existingAccount.setTypicalBalance(accountRequest.getTypicalBalance());
         existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
         existingAccount.setStatus(accountRequest.getStatus());
 
+        // Si se soporta el registro, actualizar los balances
         if (accountRequest.isSupportsRegistration()) {
-
             validateBalances(accountRequest.getBalances());
 
-            existingAccount.getBalances().clear();
-            existingAccount.getBalances().addAll(accountRequest.getBalances().stream().map(this::toBalancesEntity).toList());
+            //existingAccount.getBalances().clear();
+
+            List<BalancesEntity> balancesList = accountRequest.getBalances().stream()
+                    .map(balance -> {
+                        BalancesEntity balancesEntity = toBalancesEntity(balance);
+                        balancesEntity.setAccount(existingAccount);
+                        return balancesEntity;
+                    })
+                    .toList();
+
+            existingAccount.getBalances().addAll(balancesList);
         }
+
         iAccountRepository.save(existingAccount);
+
         return toResponse(existingAccount);
     }
 
