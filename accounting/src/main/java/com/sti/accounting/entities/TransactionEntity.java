@@ -51,6 +51,9 @@ public class TransactionEntity {
     @Column(name = "CURRENCY")
     private Currency currency;
 
+    @Column(name = "SUPPLIER_NAME")
+    private String supplierName;
+
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TransactionDetailEntity> transactionDetail;
 

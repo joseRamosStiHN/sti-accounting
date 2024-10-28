@@ -16,4 +16,7 @@ public interface IAccountRepository extends ListCrudRepository<AccountEntity, Lo
             "FROM AccountEntity a " +
             "WHERE a.code = :code AND a.id <> :id")
     boolean existsByCodeAndNotId(@Param("code") String code, @Param("id") Long id);
+
+    long countByParentId(Long parentId);
+
 }

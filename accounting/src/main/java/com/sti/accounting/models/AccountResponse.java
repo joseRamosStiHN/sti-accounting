@@ -21,5 +21,7 @@ public class AccountResponse {
     private String status;
     private Boolean supportEntry;
     private Boolean asTransaction;
+    private boolean hasChildAccounts;
+
     private Set<AccountBalance> balances = new HashSet<>();
 }

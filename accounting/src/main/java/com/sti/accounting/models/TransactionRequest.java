@@ -33,6 +33,8 @@ public class TransactionRequest {
 
     private Currency currency;
 
+    private String supplierName;
+
     @NotNull(message = "Diary Type is required")
     private Long diaryType;
 

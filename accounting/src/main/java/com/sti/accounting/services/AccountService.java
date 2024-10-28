@@ -125,14 +125,14 @@ public class AccountService {
         existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
         existingAccount.setStatus(accountRequest.getStatus());
 
-        if (!accountRequest.getBalances().isEmpty() && accountRequest.isSupportsRegistration()) {
-            // validate balances
-            validateBalances(accountRequest.getBalances());
-            // update balances
+        if (accountRequest.isSupportsRegistration()) {
+            if (!accountRequest.getBalances().isEmpty()) {
+                validateBalances(accountRequest.getBalances());
+            }
+
             existingAccount.getBalances().clear();
             existingAccount.getBalances().addAll(accountRequest.getBalances().stream().map(this::toBalancesEntity).toList());
         }
-
         iAccountRepository.save(existingAccount);
         return toResponse(existingAccount);
     }
@@ -196,6 +196,10 @@ public class AccountService {
         // Verifica si la cuenta tiene transacciones
         boolean hasTransactions = transactionRepository.existsByAccountId(entity.getId());
         response.setAsTransaction(hasTransactions);
+
+        // Verifica si la cuenta tiene cuentas hijas
+        boolean hasChildAccounts = iAccountRepository.countByParentId(entity.getId()) > 0;
+        response.setHasChildAccounts(hasChildAccounts);
 
         // recursive query if parent is not null is a root account
         if (entity.getParent() != null) {

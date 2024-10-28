@@ -92,7 +92,7 @@ public class TransactionService {
         entity.setDescriptionPda(transactionRequest.getDescriptionPda());
         entity.setAccountingJournal(accountingJournal);
         entity.setCreateAtDate(transactionRequest.getCreateAtDate());
-
+        entity.setSupplierName(transactionRequest.getSupplierName());
         //transaction detail validations
         validateTransactionDetail(transactionRequest.getDetail());
 
@@ -172,6 +172,8 @@ public class TransactionService {
         existingTransaction.setReference(transactionRequest.getReference());
         existingTransaction.setDescriptionPda(transactionRequest.getDescriptionPda());
         existingTransaction.setAccountingJournal(accountingJournal);
+        existingTransaction.setSupplierName(transactionRequest.getSupplierName());
+
         //delete details that are not in list
         existingTransaction.getTransactionDetail().removeAll(existingDetailMap.values());
         // update list
@@ -281,6 +283,7 @@ public class TransactionService {
         response.setDiaryType(entity.getAccountingJournal().getId());
         response.setDiaryName(entity.getAccountingJournal().getDiaryName());
         response.setUser("user.mock");
+        response.setSupplierName(entity.getSupplierName());
 
         //fill up detail
         Set<TransactionDetailResponse> detailResponseSet = new HashSet<>();
