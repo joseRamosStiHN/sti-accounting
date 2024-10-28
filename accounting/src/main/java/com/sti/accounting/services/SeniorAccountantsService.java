@@ -35,7 +35,7 @@ public class SeniorAccountantsService {
         List<TransactionResponse> transactions = transactionService.getAllTransaction()
                 .stream()
                 .filter(transaction -> {
-                    LocalDate transactionDate = transaction.getCreationDate().toLocalDate();
+                    LocalDate transactionDate = transaction.getDate();
                     return !transactionDate.isBefore(startDate) && !transactionDate.isAfter(endDate);
                 })
                 .toList();

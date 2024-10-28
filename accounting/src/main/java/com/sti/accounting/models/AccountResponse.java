@@ -20,5 +20,6 @@ public class AccountResponse {
     private Long accountType;
     private String status;
     private Boolean supportEntry;
+    private Boolean asTransaction;
     private Set<AccountBalance> balances = new HashSet<>();
 }

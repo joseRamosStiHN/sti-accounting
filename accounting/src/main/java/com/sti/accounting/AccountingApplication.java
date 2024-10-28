@@ -31,7 +31,9 @@ public class AccountingApplication {
             if (count == 0) {
                 List<AccountCategoryEntity> categories = Arrays.asList(
                         new AccountCategoryEntity(1L, "Balance General", "Agrupa las cuentas de Balance General", new HashSet<>()),
-                        new AccountCategoryEntity(2L, "Estado de Resultados", "Agrupa las cuentas de resultados", new HashSet<>())
+                        new AccountCategoryEntity(2L, "Estado de Resultados", "Agrupa las cuentas de resultados", new HashSet<>()),
+                        new AccountCategoryEntity(3L, "Impuestos", "Agrupa las cuentas de impuesto", new HashSet<>())
+
                 );
                 repository.saveAll(categories);
             }
@@ -52,7 +54,8 @@ public class AccountingApplication {
                         new AccountTypeEntity(2L, "Gastos", "Tipo de cuenta para gastos.", new HashSet<>()),
                         new AccountTypeEntity(3L, "Efectivo", "Tipo de cuenta para efectivo.", new HashSet<>()),
                         new AccountTypeEntity(4L, "Bancos", "Tipo de cuenta para bancos.", new HashSet<>()),
-                        new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.", new HashSet<>())
+                        new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.", new HashSet<>()) ,
+                        new AccountTypeEntity(6L, "Patrimonio", "Tipo de cuenta para patrimonio.", new HashSet<>())
 
                 );
                 accountType.saveAll(accountsType);
@@ -65,7 +68,7 @@ public class AccountingApplication {
 //		return args -> {
 //			try (Connection conn = dataSource.getConnection();
 //                 Statement stmt = conn.createStatement()) {
-//				stmt.execute("CREATE TRIGGER insert_num_pda BEFORE INSERT ON transactions FOR EACH ROW BEGIN SET NEW.number_pda = (SELECT COALESCE(MAX(number_pda), 0) + 1 FROM transactions); END;");
+//				stmt.execute("CREATE TRIGGER INSERT_NUMBER_PDA BEFORE INSERT ON TRANSACTIONS FOR EACH ROW BEGIN SET NEW.NUMBER_PDA = (SELECT COALESCE(MAX(NUMBER_PDA), 0) + 1 FROM TRANSACTIONS); END;");
 //			} catch (SQLException e) {
 //				e.printStackTrace();
 //			}

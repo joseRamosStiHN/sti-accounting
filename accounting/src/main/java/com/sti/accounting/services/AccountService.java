@@ -8,6 +8,7 @@ import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountCategoryRepository;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IAccountTypeRepository;
+import com.sti.accounting.repositories.ITransactionRepository;
 import com.sti.accounting.utils.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +28,13 @@ public class AccountService {
     private final IAccountRepository iAccountRepository;
     private final IAccountCategoryRepository categoryRepository;
     private final IAccountTypeRepository accountTypeRepository;
+    private final ITransactionRepository transactionRepository;
 
-    public AccountService(IAccountRepository iAccountRepository, IAccountCategoryRepository categoryRepository, IAccountTypeRepository accountTypeRepository) {
+    public AccountService(IAccountRepository iAccountRepository, IAccountCategoryRepository categoryRepository, IAccountTypeRepository accountTypeRepository, ITransactionRepository transactionRepository) {
         this.iAccountRepository = iAccountRepository;
         this.categoryRepository = categoryRepository;
         this.accountTypeRepository = accountTypeRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     public List<AccountResponse> getAllAccount() {
@@ -189,6 +192,11 @@ public class AccountService {
         response.setAccountCode(entity.getCode());
         response.setCategoryName(entity.getAccountCategory().getName());
         response.setCategoryId(entity.getAccountCategory().getId());
+
+        // Verifica si la cuenta tiene transacciones
+        boolean hasTransactions = transactionRepository.existsByAccountId(entity.getId());
+        response.setAsTransaction(hasTransactions);
+
         // recursive query if parent is not null is a root account
         if (entity.getParent() != null) {
             response.setParentName(entity.getParent().getDescription());
