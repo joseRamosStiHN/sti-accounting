@@ -126,9 +126,8 @@ public class AccountService {
         existingAccount.setStatus(accountRequest.getStatus());
 
         if (accountRequest.isSupportsRegistration()) {
-            if (!accountRequest.getBalances().isEmpty()) {
-                validateBalances(accountRequest.getBalances());
-            }
+
+            validateBalances(accountRequest.getBalances());
 
             existingAccount.getBalances().clear();
             existingAccount.getBalances().addAll(accountRequest.getBalances().stream().map(this::toBalancesEntity).toList());
