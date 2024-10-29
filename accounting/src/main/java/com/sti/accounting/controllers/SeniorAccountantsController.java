@@ -1,11 +1,14 @@
 package com.sti.accounting.controllers;
 
 import com.sti.accounting.models.SeniorAccountantsResponse;
+import com.sti.accounting.models.SeniorAccountsResponse;
 import com.sti.accounting.services.SeniorAccountantsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/senior-accountants")
@@ -18,8 +21,7 @@ public class SeniorAccountantsController {
     }
 
     @GetMapping("")
-    public ResponseEntity<SeniorAccountantsResponse> getSeniorAccountants() {
-        SeniorAccountantsResponse response = seniorAccountantsService.getSeniorAccountants();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<List<SeniorAccountsResponse>> getSeniorAccountants() {
+        return ResponseEntity.ok(seniorAccountantsService.getAccountsWhitTransactions());
     }
 }

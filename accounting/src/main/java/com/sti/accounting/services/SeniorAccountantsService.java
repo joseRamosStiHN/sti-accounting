@@ -4,8 +4,11 @@ import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.models.*;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class SeniorAccountantsService {
@@ -65,5 +68,63 @@ public class SeniorAccountantsService {
                 .toList();
 
         return new SeniorAccountantsResponse(transactions, adjustments, debitNotes, creditNotes);
+    }
+
+
+    public List<SeniorAccountsResponse> getAccountsWhitTransactions() {
+        Map<String, List<AccountTransactionDTO>> transactionAccounts  =   transactionService.getTransactionAccounts();
+        List<SeniorAccountsResponse> seniorAccountsResponsesList = new ArrayList<>();
+
+        for (Map.Entry<String, List<AccountTransactionDTO>> transaction : transactionAccounts.entrySet()) {
+            SeniorAccountsResponse seniorAccountsResponse = new SeniorAccountsResponse();
+            seniorAccountsResponse.setName(transaction.getValue().getFirst().getDescription());
+            seniorAccountsResponse.setCode(transaction.getValue().getFirst().getCode());
+            seniorAccountsResponse.setCuentaPadre(transaction.getValue().getFirst().getCuentaPadre());
+            seniorAccountsResponse.setTipoCuenta(transaction.getValue().getFirst().getCategoryName());
+
+            BigDecimal totalDebe = transaction.getValue().stream()
+                    .filter(dto -> "D".equalsIgnoreCase(dto.getMotion()))
+                    .map(dto -> new BigDecimal(dto.getAmount()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal totalHaber = transaction.getValue().stream()
+                    .filter(dto -> "C".equalsIgnoreCase(dto.getMotion()))
+                    .map(dto -> new BigDecimal(dto.getAmount()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            seniorAccountsResponse.setTotalDebe(totalDebe);
+            seniorAccountsResponse.setTotalHaber(totalHaber);
+
+            if (totalDebe.compareTo(totalHaber) >= 0) {
+                seniorAccountsResponse.setBalance(totalDebe.subtract(totalHaber));
+            } else  {
+                seniorAccountsResponse.setBalance(totalHaber.subtract(totalDebe));
+            }
+
+            List<SeniorAccountsTransactionResponse> seniorAccountsList = new ArrayList<>();
+            for (AccountTransactionDTO transactionDTO : transaction.getValue()){
+                SeniorAccountsTransactionResponse seniorAccountsTransactionResponse = new SeniorAccountsTransactionResponse();
+                seniorAccountsTransactionResponse.setName(transactionDTO.getDescription());
+                if (transactionDTO.getMotion().equalsIgnoreCase("D")){
+                    seniorAccountsTransactionResponse.setDebe( new BigDecimal(transactionDTO.getAmount()));
+                    seniorAccountsTransactionResponse.setHaber(BigDecimal.ZERO);
+                }else  if(transactionDTO.getMotion().equalsIgnoreCase("C")){
+                    seniorAccountsTransactionResponse.setDebe(BigDecimal.ZERO);
+                    seniorAccountsTransactionResponse.setHaber( new BigDecimal(transactionDTO.getAmount()));
+                }
+                if (seniorAccountsTransactionResponse.getDebe().compareTo(seniorAccountsTransactionResponse.getHaber()) >= 0) {
+                    seniorAccountsTransactionResponse.setBalance(seniorAccountsTransactionResponse.getDebe().subtract(seniorAccountsTransactionResponse.getHaber()));
+                } else  {
+                    seniorAccountsTransactionResponse.setBalance(seniorAccountsTransactionResponse.getHaber().subtract(seniorAccountsTransactionResponse.getDebe()));
+                }
+                seniorAccountsTransactionResponse.setMovimiento(transactionDTO.getMovimiento());
+                seniorAccountsTransactionResponse.setNumberPda(Long.parseLong(transactionDTO.getNumberPda()));
+                seniorAccountsList.add(seniorAccountsTransactionResponse);
+
+            }
+            seniorAccountsResponse.setTransaction(seniorAccountsList);
+            seniorAccountsResponsesList.add(seniorAccountsResponse);
+        }
+        return seniorAccountsResponsesList;
     }
 }

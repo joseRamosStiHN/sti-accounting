@@ -2,7 +2,10 @@ package com.sti.accounting.services;
 
 import com.sti.accounting.entities.*;
 import com.sti.accounting.models.*;
-import com.sti.accounting.repositories.*;
+import com.sti.accounting.repositories.IAccountRepository;
+import com.sti.accounting.repositories.IAccountingJournalRepository;
+import com.sti.accounting.repositories.IDocumentRepository;
+import com.sti.accounting.repositories.ITransactionRepository;
 import com.sti.accounting.utils.Motion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +42,32 @@ public class TransactionService {
 
     public List<TransactionResponse> getAllTransaction() {
         return transactionRepository.findAll().stream().map(this::entityToResponse).toList();
+    }
+
+    public Map<String, List<AccountTransactionDTO>>  getTransactionAccounts() {
+
+        List<Object[]> getAccountTransactionSummary =  transactionRepository.getAccountTransactionSummary();
+        Map<String, List<AccountTransactionDTO>> transactionDTOList = new HashMap<>();
+
+        for (Object[] arr : getAccountTransactionSummary) {
+            AccountTransactionDTO dto = new AccountTransactionDTO();
+            dto.setDescription(arr[0] != null ? arr[0].toString() : "");
+            dto.setCode(arr[1] != null ? arr[1].toString() : "");
+            dto.setCuentaPadre(arr[2] != null ? arr[2].toString() : "");
+            dto.setDate(arr[3] != null ? arr[3].toString() : "");
+            dto.setMovimiento(arr[4] != null ? arr[4].toString() : "");
+            dto.setMotion(arr[5] != null ? arr[5].toString() : "");
+            dto.setAmount(arr[6] != null ? arr[6].toString() : "");
+            dto.setNumberPda(arr[7] != null ? arr[7].toString() : "");
+            dto.setCategoryName(arr[8] != null ? arr[8].toString() : "");
+
+            List<AccountTransactionDTO> dtoList = transactionDTOList.getOrDefault(dto.getDescription(), new ArrayList<>());
+            dtoList.add(dto);
+            transactionDTOList.put(dto.getDescription(), dtoList);
+        }
+
+        return  transactionDTOList;
+
     }
 
     public TransactionResponse getById(Long id) {
