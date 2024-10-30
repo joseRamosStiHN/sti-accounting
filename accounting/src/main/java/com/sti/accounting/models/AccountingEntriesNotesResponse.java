@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class SeniorAccountantsResponse {
+public class AccountingEntriesNotesResponse {
 
     private List<TransactionResponse> transactions;
     private List<AccountingAdjustmentResponse> adjustments;

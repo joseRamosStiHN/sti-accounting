@@ -44,38 +44,34 @@ public class TransactionService {
         return transactionRepository.findAll().stream().map(this::entityToResponse).toList();
     }
 
-    public Map<String, List<AccountTransactionDTO>>  getTransactionAccounts() {
+    public Map<String, List<AccountTransactionDTO>> getTransactionAccounts() {
+        List<Object[]> accountTransactionSummary = transactionRepository.getAccountTransactionSummary();
+        Map<String, List<AccountTransactionDTO>> transactionDTOMap = new HashMap<>();
 
-        List<Object[]> getAccountTransactionSummary =  transactionRepository.getAccountTransactionSummary();
-        Map<String, List<AccountTransactionDTO>> transactionDTOList = new HashMap<>();
-
-        for (Object[] arr : getAccountTransactionSummary) {
-            AccountTransactionDTO dto = new AccountTransactionDTO();
-            dto.setDescription(arr[0] != null ? arr[0].toString() : "");
-            dto.setCode(arr[1] != null ? arr[1].toString() : "");
-            dto.setCuentaPadre(arr[2] != null ? arr[2].toString() : "");
-            dto.setDate(arr[3] != null ? arr[3].toString() : "");
-            dto.setMovimiento(arr[4] != null ? arr[4].toString() : "");
-            dto.setMotion(arr[5] != null ? arr[5].toString() : "");
-            dto.setAmount(arr[6] != null ? arr[6].toString() : "");
-            dto.setNumberPda(arr[7] != null ? arr[7].toString() : "");
-            dto.setCategoryName(arr[8] != null ? arr[8].toString() : "");
-
-            List<AccountTransactionDTO> dtoList = transactionDTOList.getOrDefault(dto.getDescription(), new ArrayList<>());
-            dtoList.add(dto);
-            transactionDTOList.put(dto.getDescription(), dtoList);
+        for (Object[] arr : accountTransactionSummary) {
+            AccountTransactionDTO dto = createAccountTransactionDTO(arr);
+            transactionDTOMap.computeIfAbsent(dto.getDescription(), k -> new ArrayList<>()).add(dto);
         }
 
-        return  transactionDTOList;
-
+        return transactionDTOMap;
     }
 
-    public TransactionResponse getById(Long id) {
-        TransactionEntity entity = transactionRepository.findById(id)
-                .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                String.format("Transaction not with ID %d not found", id)));
-        return entityToResponse(entity);
+    private AccountTransactionDTO createAccountTransactionDTO(Object[] arr) {
+        AccountTransactionDTO dto = new AccountTransactionDTO();
+        dto.setDescription(getValueAsString(arr[0]));
+        dto.setCode(getValueAsString(arr[1]));
+        dto.setFatherAccount(getValueAsString(arr[2]));
+        dto.setDate(getValueAsString(arr[3]));
+        dto.setTypeMovement(getValueAsString(arr[4]));
+        dto.setMotion(getValueAsString(arr[5]));
+        dto.setAmount(getValueAsString(arr[6]));
+        dto.setNumberPda(getValueAsString(arr[7]));
+        dto.setCategoryName(getValueAsString(arr[8]));
+        return dto;
+    }
+
+    private String getValueAsString(Object value) {
+        return value != null ? value.toString() : "";
     }
 
     public List<TransactionResponse> getByDocumentType(Long id) {
@@ -92,6 +88,14 @@ public class TransactionService {
         }
 
         return transactionRepository.findByCreateAtDateBetween(startDate, endDate).stream().map(this::entityToResponse).toList();
+    }
+
+    public TransactionResponse getById(Long id) {
+        TransactionEntity entity = transactionRepository.findById(id)
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                String.format("Transaction not with ID %d not found", id)));
+        return entityToResponse(entity);
     }
 
     @Transactional

@@ -12,12 +12,13 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class SeniorAccountsTransactionResponse {
 
-    private  String name;
-    private  String movimiento;
-    private  BigDecimal debe;
-    private BigDecimal haber;
-    private BigDecimal balance;
+    private String name;
+    private String motion;
     private Long numberPda;
+    private BigDecimal debitAmount;
+    private BigDecimal creditAmount;
+    private BigDecimal balance;
+    private String date;
 
 
 }

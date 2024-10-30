@@ -1,6 +1,5 @@
 package com.sti.accounting.controllers;
 
-import com.sti.accounting.models.SeniorAccountantsResponse;
 import com.sti.accounting.models.SeniorAccountsResponse;
 import com.sti.accounting.services.SeniorAccountantsService;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +21,6 @@ public class SeniorAccountantsController {
 
     @GetMapping("")
     public ResponseEntity<List<SeniorAccountsResponse>> getSeniorAccountants() {
-        return ResponseEntity.ok(seniorAccountantsService.getAccountsWhitTransactions());
+        return ResponseEntity.ok(seniorAccountantsService.getSeniorAccountants());
     }
 }

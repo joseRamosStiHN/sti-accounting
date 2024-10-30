@@ -16,16 +16,13 @@ public class SeniorAccountsResponse {
 
     private String name;
     private String code;
-    private String cuentaPadre;
-    private String tipoCuenta;
-    private BigDecimal totalDebe;
-    private BigDecimal totalHaber;
+    private String fatherAccount;
+    private String typeAccount;
+    private BigDecimal totalDebit;
+    private BigDecimal totalCredit;
     private BigDecimal balance;
 
-
     private List<SeniorAccountsTransactionResponse> transaction;
-
-
 
 
 }
