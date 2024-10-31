@@ -20,7 +20,6 @@ public class GeneralBalanceController {
         this.generalBalanceService = generalBalanceService;
     }
 
-
     @GetMapping("/general")
     public List<GeneralBalanceResponse> getBalanceGeneral() {
         return generalBalanceService.getBalanceGeneral();
