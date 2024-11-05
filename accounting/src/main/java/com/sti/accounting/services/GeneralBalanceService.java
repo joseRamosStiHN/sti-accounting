@@ -76,11 +76,11 @@ public class GeneralBalanceService {
 
         ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesService.getControlAccountBalances(account.getId());
 
-        BigDecimal balance = getBalance(sumViewEntity);
+        BigDecimal balance = getBalanceWhitInitialBalance(sumViewEntity, account);
 
-        BigDecimal initialBalance = getInitialBalance(account.getBalances());
+//        BigDecimal initialBalance = getInitialBalance(account.getBalances());
 
-        item.setBalance(initialBalance.subtract(balance));
+        item.setBalance(balance);
         item.setRoot(account.getParent() == null);
 
         return item;
@@ -101,23 +101,65 @@ public class GeneralBalanceService {
     }
 
 
-    private BigDecimal getBalance(ControlAccountBalancesEntity sumViewEntity) {
-        BigDecimal debit = sumViewEntity.getDebit() != null ? new BigDecimal(sumViewEntity.getDebit()) : BigDecimal.ZERO;
+
+    private BigDecimal getBalanceWhitInitialBalance(ControlAccountBalancesEntity sumViewEntity, AccountEntity account) {
+
+        BigDecimal initialBalanceDebit = account.getBalances().stream()
+                .filter(balancesEntity -> balancesEntity.getTypicalBalance().equalsIgnoreCase("Debito"))
+                .map(BalancesEntity::getInitialBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
+        BigDecimal initialBalanceCredit = account.getBalances().stream()
+                .filter(balancesEntity -> balancesEntity.getTypicalBalance().equalsIgnoreCase("Credito"))
+                .map(BalancesEntity::getInitialBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal debit = sumViewEntity.getDebit() != null ? new BigDecimal(sumViewEntity.getDebit())  : BigDecimal.ZERO;
+        debit = initialBalanceDebit.add(debit);
         BigDecimal credit = sumViewEntity.getCredit() != null ? new BigDecimal(sumViewEntity.getCredit()) : BigDecimal.ZERO;
-        return debit.subtract(credit).abs();
+        credit = initialBalanceCredit.add(credit);
+
+        if (  account.getTypicalBalance().equalsIgnoreCase("D")){
+            return debit.subtract(credit);
+        }else if (  account.getTypicalBalance().equalsIgnoreCase("C")) {
+            return credit.subtract(debit);
+        }else {
+            return debit.subtract(credit);
+        }
     }
 
-    private BigDecimal getInitialBalance(List<BalancesEntity> balances) {
+    private BalancesEntity getInitialBalance(List<BalancesEntity> balances) {
         // Verifica si la lista de balances está vacía
         if (balances == null || balances.isEmpty()) {
-            return BigDecimal.ZERO;
+            return new BalancesEntity();
         }
 
         // Busca el balance que tiene isCurrent como true para obtener el saldo de esa cuenta
         return balances.stream()
                 .filter(balance -> balance.getIsCurrent() != null && balance.getIsCurrent())
-                .map(BalancesEntity::getInitialBalance)
                 .findFirst()
-                .orElse(BigDecimal.ZERO);
+                .orElse(new BalancesEntity());
     }
+
+
+//    private BigDecimal getBalance(ControlAccountBalancesEntity sumViewEntity) {
+//        BigDecimal debit = sumViewEntity.getDebit() != null ? new BigDecimal(sumViewEntity.getDebit()) : BigDecimal.ZERO;
+//        BigDecimal credit = sumViewEntity.getCredit() != null ? new BigDecimal(sumViewEntity.getCredit()) : BigDecimal.ZERO;
+//        return debit.subtract(credit).abs();
+//    }
+//
+//    private BigDecimal getInitialBalance(List<BalancesEntity> balances) {
+//        // Verifica si la lista de balances está vacía
+//        if (balances == null || balances.isEmpty()) {
+//            return BigDecimal.ZERO;
+//        }
+//
+//        // Busca el balance que tiene isCurrent como true para obtener el saldo de esa cuenta
+//        return balances.stream()
+//                .filter(balance -> balance.getIsCurrent() != null && balance.getIsCurrent())
+//                .map(BalancesEntity::getInitialBalance)
+//                .findFirst()
+//                .orElse(BigDecimal.ZERO);
+//    }
 }
