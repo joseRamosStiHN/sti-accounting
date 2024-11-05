@@ -95,18 +95,21 @@ public class DebitNotesService {
     }
 
     @Transactional
-    public void changeDebitNoteStatus(Long debitNoteId) {
-        logger.info("Changing status of debit note with id {}", debitNoteId);
+    public void changeDebitNoteStatus(List<Long> debitNoteIds) {
+        logger.info("Changing status of debit note with id {}", debitNoteIds);
 
-        DebitNotesEntity existingDebitNote = debitNotesRepository.findById(debitNoteId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        String.format("No debit note found with ID: %d", debitNoteId)));
-        if (!existingDebitNote.getStatus().equals(StatusTransaction.DRAFT)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The debit note is not in draft status");
+        for (Long debitNoteId : debitNoteIds) {
+            DebitNotesEntity existingDebitNote = debitNotesRepository.findById(debitNoteId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            String.format("No debit note found with ID: %d", debitNoteId)));
+            if (!existingDebitNote.getStatus().equals(StatusTransaction.DRAFT)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The debit note is not in draft status");
+            }
+            existingDebitNote.setStatus(StatusTransaction.SUCCESS);
+            debitNotesRepository.save(existingDebitNote);
+            controlAccountBalancesService.updateControlAccountDebitNotes(existingDebitNote);
+
         }
-        existingDebitNote.setStatus(StatusTransaction.SUCCESS);
-        debitNotesRepository.save(existingDebitNote);
-        controlAccountBalancesService.updateControlAccountDebitNotes(existingDebitNote);
 
     }
 

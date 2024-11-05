@@ -222,19 +222,20 @@ public class TransactionService {
     }
 
     @Transactional
-    public void changeTransactionStatus(Long transactionId) {
-        logger.info("Changing status of transaction with id {}", transactionId);
+    public void changeTransactionStatus(List<Long> transactionIds) {
+        logger.info("Changing status of transaction with id {}", transactionIds);
 
-        TransactionEntity existingTransaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        String.format("No transaction found with ID: %d", transactionId)));
-        if (!existingTransaction.getStatus().equals(StatusTransaction.DRAFT)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The transaction is not in draft status");
+        for (Long transactionId : transactionIds) {
+            TransactionEntity existingTransaction = transactionRepository.findById(transactionId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            String.format("No transaction found with ID: %d", transactionId)));
+            if (!existingTransaction.getStatus().equals(StatusTransaction.DRAFT)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The transaction is not in draft status");
+            }
+            existingTransaction.setStatus(StatusTransaction.SUCCESS);
+            transactionRepository.save(existingTransaction);
+            controlAccountBalancesService.updateControlAccountBalances(existingTransaction);
         }
-        existingTransaction.setStatus(StatusTransaction.SUCCESS);
-        transactionRepository.save(existingTransaction);
-        controlAccountBalancesService.updateControlAccountBalances(existingTransaction);
-
     }
 
     private void validateTransactionDetail(List<TransactionDetailRequest> detailRequest) {
@@ -327,7 +328,7 @@ public class TransactionService {
             detailResponse.setAccountCode(detail.getAccount().getCode());
             detailResponse.setAccountName(detail.getAccount().getDescription());
             detailResponse.setAccountId(detail.getAccount().getId());
-            if(detail.getAccount().getBalances().getFirst() != null) {
+            if (detail.getAccount().getBalances().getFirst() != null) {
                 detailResponse.setTypicalBalance(detail.getAccount().getBalances().getFirst().getTypicalBalance());
                 detailResponse.setInitialBalance(detail.getAccount().getBalances().getFirst().getInitialBalance());
             }

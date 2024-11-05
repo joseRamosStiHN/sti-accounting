@@ -57,9 +57,9 @@ public class TransactionController {
         return transactionService.updateTransaction(id, transactionRequest);
     }
 
-    @PutMapping("/{id}/post")
+    @PutMapping("/confirm-transactions")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void changeTransactionStatus(@PathVariable("id") Long transactionId) {
-        transactionService.changeTransactionStatus(transactionId);
+    public void changeTransactionStatus(@RequestBody List<Long> transactionIds) {
+        transactionService.changeTransactionStatus(transactionIds);
     }
 }

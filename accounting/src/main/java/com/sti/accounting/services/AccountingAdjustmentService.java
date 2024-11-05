@@ -86,21 +86,24 @@ public class AccountingAdjustmentService {
     }
 
     @Transactional
-    public void changeAdjustmentStatus(Long adjustmentId) {
-        logger.info("Changing status of adjustment with id {}", adjustmentId);
+    public void changeAdjustmentStatus(List<Long> adjustmentIds) {
+        logger.info("Changing status of adjustment with id {}", adjustmentIds);
 
-        AccountingAdjustmentsEntity existingAdjustment = accountingAdjustmentsRepository.findById(adjustmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "No adjustment found with ID: " + adjustmentId));
+        for (Long adjustmentId : adjustmentIds) {
+            AccountingAdjustmentsEntity existingAdjustment = accountingAdjustmentsRepository.findById(adjustmentId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "No adjustment found with ID: " + adjustmentId));
 
-        if (!existingAdjustment.getStatus().equals(StatusTransaction.DRAFT)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The adjustment is not in draft status");
+            if (!existingAdjustment.getStatus().equals(StatusTransaction.DRAFT)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The adjustment is not in draft status");
+            }
+
+            existingAdjustment.setStatus(StatusTransaction.SUCCESS);
+
+            accountingAdjustmentsRepository.save(existingAdjustment);
+            controlAccountBalancesService.updateControlAccountBalancesAdjustment(existingAdjustment);
         }
 
-        existingAdjustment.setStatus(StatusTransaction.SUCCESS);
-
-        accountingAdjustmentsRepository.save(existingAdjustment);
-        controlAccountBalancesService.updateControlAccountBalancesAdjustment(existingAdjustment);
 
     }
 

@@ -42,9 +42,9 @@ public class DebitNotesController {
         return debitNotesService.createDebitNote(debitNotesRequest);
     }
 
-    @PutMapping("/{id}/post")
+    @PutMapping("/confirm-debit-notes")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void changeDebitNoteStatus(@PathVariable("id") Long debitNoteId) {
+    public void changeDebitNoteStatus(@RequestBody List<Long> debitNoteId) {
         debitNotesService.changeDebitNoteStatus(debitNoteId);
     }
 }

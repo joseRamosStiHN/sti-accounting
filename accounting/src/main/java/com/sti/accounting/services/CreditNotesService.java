@@ -96,18 +96,21 @@ public class CreditNotesService {
     }
 
     @Transactional
-    public void changeCreditNoteStatus(Long creditNoteId) {
-        logger.info("Changing status of credit note with id {}", creditNoteId);
+    public void changeCreditNoteStatus(List<Long> creditNoteIds) {
+        logger.info("Changing status of credit note with id {}", creditNoteIds);
 
-        CreditNotesEntity existingCreditNote = creditNotesRepository.findById(creditNoteId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        String.format("No credit note found with ID: %d", creditNoteId)));
-        if (!existingCreditNote.getStatus().equals(StatusTransaction.DRAFT)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The credit note is not in draft status");
+        for (Long creditNoteId : creditNoteIds) {
+            CreditNotesEntity existingCreditNote = creditNotesRepository.findById(creditNoteId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            String.format("No credit note found with ID: %d", creditNoteId)));
+            if (!existingCreditNote.getStatus().equals(StatusTransaction.DRAFT)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The credit note is not in draft status");
+            }
+            existingCreditNote.setStatus(StatusTransaction.SUCCESS);
+            creditNotesRepository.save(existingCreditNote);
+            controlAccountBalancesService.updateControlAccountCreditNotes(existingCreditNote);
+
         }
-        existingCreditNote.setStatus(StatusTransaction.SUCCESS);
-        creditNotesRepository.save(existingCreditNote);
-        controlAccountBalancesService.updateControlAccountCreditNotes(existingCreditNote);
 
     }
 
