@@ -33,6 +33,16 @@ public class TransactionRequest {
 
     private Currency currency;
 
+    private String typeSale;
+
+    private BigDecimal cashValue;
+
+    private BigDecimal creditValue;
+
+    private String typePayment;
+
+    private String rtn;
+
     private String supplierName;
 
     @NotNull(message = "Diary Type is required")

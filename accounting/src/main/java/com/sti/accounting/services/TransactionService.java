@@ -125,6 +125,11 @@ public class TransactionService {
         entity.setDescriptionPda(transactionRequest.getDescriptionPda());
         entity.setAccountingJournal(accountingJournal);
         entity.setCreateAtDate(transactionRequest.getCreateAtDate());
+        entity.setTypeSale(transactionRequest.getTypeSale());
+        entity.setCashValue(transactionRequest.getCashValue());
+        entity.setCreditValue(transactionRequest.getCreditValue());
+        entity.setTypePayment(transactionRequest.getTypePayment());
+        entity.setRtn(transactionRequest.getRtn());
         entity.setSupplierName(transactionRequest.getSupplierName());
         //transaction detail validations
         validateTransactionDetail(transactionRequest.getDetail());
@@ -205,6 +210,11 @@ public class TransactionService {
         existingTransaction.setReference(transactionRequest.getReference());
         existingTransaction.setDescriptionPda(transactionRequest.getDescriptionPda());
         existingTransaction.setAccountingJournal(accountingJournal);
+        existingTransaction.setTypeSale(transactionRequest.getTypeSale());
+        existingTransaction.setCashValue(transactionRequest.getCashValue());
+        existingTransaction.setCreditValue(transactionRequest.getCreditValue());
+        existingTransaction.setTypePayment(transactionRequest.getTypePayment());
+        existingTransaction.setRtn(transactionRequest.getRtn());
         existingTransaction.setSupplierName(transactionRequest.getSupplierName());
 
         //delete details that are not in list
@@ -317,6 +327,11 @@ public class TransactionService {
         response.setDiaryType(entity.getAccountingJournal().getId());
         response.setDiaryName(entity.getAccountingJournal().getDiaryName());
         response.setUser("user.mock");
+        response.setTypeSale(entity.getTypeSale());
+        response.setCashValue(entity.getCashValue());
+        response.setCreditValue(entity.getCreditValue());
+        response.setTypePayment(entity.getTypePayment());
+        response.setRtn(entity.getRtn());
         response.setSupplierName(entity.getSupplierName());
 
         //fill up detail

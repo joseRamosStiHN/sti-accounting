@@ -51,6 +51,21 @@ public class TransactionEntity {
     @Column(name = "CURRENCY")
     private Currency currency;
 
+    @Column(name = "TYPE_SALE")
+    private String typeSale;
+
+    @Column(name = "CASH_VALUE")
+    private BigDecimal cashValue;
+
+    @Column(name = "CREDIT_VALUE")
+    private BigDecimal creditValue;
+
+    @Column(name = "TYPE_PAYMENT")
+    private String typePayment;
+
+    @Column(name = "RTN")
+    private String rtn;
+
     @Column(name = "SUPPLIER_NAME")
     private String supplierName;
 

@@ -23,6 +23,11 @@ public class TransactionResponse {
     private String status;
     private BigDecimal exchangeRate;
     private String user;
+    private String typeSale;
+    private BigDecimal cashValue;
+    private BigDecimal creditValue;
+    private String typePayment;
+    private String rtn;
     private String supplierName;
 
     private Set<TransactionDetailResponse> transactionDetails;
