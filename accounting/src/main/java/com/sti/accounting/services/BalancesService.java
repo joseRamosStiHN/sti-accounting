@@ -86,7 +86,6 @@ public class BalancesService {
         existingBalance.setCreateAtDate(LocalDateTime.now());
         existingBalance.setIsCurrent(balancesRequest.getIsCurrent());
         iBalancesRepository.save(existingBalance);
-
         return toResponse(existingBalance);
 
     }

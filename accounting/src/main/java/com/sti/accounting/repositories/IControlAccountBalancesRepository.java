@@ -11,4 +11,6 @@ public interface IControlAccountBalancesRepository extends ListCrudRepository<Co
 
     Optional<ControlAccountBalancesEntity> findByAccountId(Long accountId);
 
+    Optional<ControlAccountBalancesEntity> findByAccountIdAndAccountingPeriodId(Long accountId, Long periodId);
+
 }

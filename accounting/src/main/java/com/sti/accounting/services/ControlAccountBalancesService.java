@@ -17,16 +17,18 @@ public class ControlAccountBalancesService {
     private static final Logger logger = LoggerFactory.getLogger(ControlAccountBalancesService.class);
 
     private final IControlAccountBalancesRepository controlAccountBalancesRepository;
+    private final AccountingPeriodService accountingPeriodService;
 
-    public ControlAccountBalancesService(IControlAccountBalancesRepository controlAccountBalancesRepository) {
+    public ControlAccountBalancesService(IControlAccountBalancesRepository controlAccountBalancesRepository, AccountingPeriodService accountingPeriodService) {
         this.controlAccountBalancesRepository = controlAccountBalancesRepository;
+        this.accountingPeriodService = accountingPeriodService;
     }
 
     @Transactional
     public void updateControlAccountBalances(TransactionEntity transactionEntity) {
-        logger.info("creating update Control Account Balances");
 
         List<TransactionDetailEntity> transactionDetails = transactionEntity.getTransactionDetail();
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
         for (TransactionDetailEntity detail : transactionDetails) {
             Long accountId = detail.getAccount().getId();
@@ -37,6 +39,8 @@ public class ControlAccountBalancesService {
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
+                        newEntity.setAccountingPeriod(activePeriod);
+
                         return newEntity;
                     });
 
@@ -49,13 +53,14 @@ public class ControlAccountBalancesService {
                         new BigDecimal(sumViewEntity.getCredit()).add(amount).toString());
             }
 
-
             controlAccountBalancesRepository.save(sumViewEntity);
         }
     }
 
+
     public void updateControlAccountBalancesAdjustment(AccountingAdjustmentsEntity accountingAdjustmentsEntity) {
         List<AdjustmentDetailEntity> adjustmentDetail = accountingAdjustmentsEntity.getAdjustmentDetail();
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
         for (AdjustmentDetailEntity detail : adjustmentDetail) {
             Long accountId = detail.getAccount().getId();
@@ -66,6 +71,7 @@ public class ControlAccountBalancesService {
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
+                        newEntity.setAccountingPeriod(activePeriod);
                         return newEntity;
                     });
 
@@ -87,6 +93,7 @@ public class ControlAccountBalancesService {
         logger.info("creating update Control Account Balances");
 
         List<DebitNotesDetailEntity> debitNotesDetails = debitNotesEntity.getDebitNoteDetail();
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
         for (DebitNotesDetailEntity detail : debitNotesDetails) {
             Long accountId = detail.getAccount().getId();
@@ -97,6 +104,8 @@ public class ControlAccountBalancesService {
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
+                        newEntity.setAccountingPeriod(activePeriod);
+
                         return newEntity;
                     });
 
@@ -108,7 +117,6 @@ public class ControlAccountBalancesService {
                 sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount.toString() :
                         new BigDecimal(sumViewEntity.getCredit()).add(amount).toString());
             }
-
 
             controlAccountBalancesRepository.save(sumViewEntity);
         }
@@ -119,6 +127,7 @@ public class ControlAccountBalancesService {
         logger.info("creating update Control Account Balances");
 
         List<CreditNotesDetailEntity> creditNotesDetails = creditNotesEntity.getCreditNoteDetail();
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
         for (CreditNotesDetailEntity detail : creditNotesDetails) {
             Long accountId = detail.getAccount().getId();
@@ -129,6 +138,8 @@ public class ControlAccountBalancesService {
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
+                        newEntity.setAccountingPeriod(activePeriod);
+
                         return newEntity;
                     });
 
@@ -140,7 +151,6 @@ public class ControlAccountBalancesService {
                 sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount.toString() :
                         new BigDecimal(sumViewEntity.getCredit()).add(amount).toString());
             }
-
 
             controlAccountBalancesRepository.save(sumViewEntity);
         }
@@ -154,5 +164,10 @@ public class ControlAccountBalancesService {
                     newEntity.setAccountId(accountId);
                     return newEntity;
                 });
+    }
+
+    public ControlAccountBalancesEntity getControlAccountBalancesForPeriod(Long accountId, Long periodId) {
+        return controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, periodId)
+                .orElse(null);
     }
 }

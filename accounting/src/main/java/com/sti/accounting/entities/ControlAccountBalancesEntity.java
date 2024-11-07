@@ -25,4 +25,7 @@ public class ControlAccountBalancesEntity {
     @Column(name = "CREDIT")
     private String credit;
 
+    @ManyToOne
+    @JoinColumn(name = "ACCOUNTING_PERIOD_ID", nullable = false)
+    private AccountingPeriodEntity accountingPeriod;
 }

@@ -13,21 +13,28 @@ import java.util.List;
 @NoArgsConstructor
 public class TrialBalanceResponse {
 
-    private Long id;
-    private String periodName;
-    private String closureType;
-    private LocalDateTime startPeriod;
-    private LocalDateTime endPeriod;
-    List<BalanceDiary> balanceDiaries;
+    private List<PeriodBalanceResponse> periods;
 
-    public TrialBalanceResponse(List<InitialBalance> initialBalances, List<BalancePeriod> balancePeriods, List<FinalBalance> finalBalances) {
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PeriodBalanceResponse {
+        private Long id;
+        private String periodName;
+        private String closureType;
+        private LocalDateTime startPeriod;
+        private LocalDateTime endPeriod;
+        private List<AccountBalance> accountBalances;
     }
 
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class BalanceDiary {
-        private String diaryName;
+    public static class AccountBalance {
+        private String name;
+        private String accountCode;
+        private String parentName;
+        private Long parentId;
         List<InitialBalance> initialBalance;
         List<BalancePeriod> balancePeriod;
         List<FinalBalance> finalBalance;
