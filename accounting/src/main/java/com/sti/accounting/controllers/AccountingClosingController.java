@@ -2,10 +2,8 @@ package com.sti.accounting.controllers;
 
 import com.sti.accounting.models.AccountingClosingResponse;
 import com.sti.accounting.services.AccountingClosingService;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -18,8 +16,18 @@ public class AccountingClosingController {
         this.accountingClosingService = accountingClosingService;
     }
 
-    @GetMapping()
-    public AccountingClosingResponse getAccountingClosing() {
-        return accountingClosingService.getAccountingClosing();
+    @GetMapping("/detail")
+    public AccountingClosingResponse getDetailAccountingClosing() {
+        return accountingClosingService.getDetailAccountingClosing();
+    }
+
+    @PostMapping("/close")
+    public ResponseEntity<String> closeAccountingPeriod() {
+        try {
+            accountingClosingService.closeAccountingPeriod();
+            return ResponseEntity.ok("Accounting period closed successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error closing accounting period: " + e.getMessage());
+        }
     }
 }

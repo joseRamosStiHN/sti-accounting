@@ -106,16 +106,16 @@ public class AccountingPeriodService {
     }
 
     private LocalDateTime calculateEndPeriod(LocalDateTime startPeriod, String closureType) {
-        if (closureType.equalsIgnoreCase("mensual")) {
-            return startPeriod.plusMonths(1);
+        if (closureType.equalsIgnoreCase("Mensual")) {
+            return startPeriod.plusMonths(1).minusDays(1);
         } else if (closureType.equalsIgnoreCase("trimestral")) {
-            return startPeriod.plusMonths(3);
+            return startPeriod.plusMonths(3).minusDays(1);
         } else if (closureType.equalsIgnoreCase("semestral")) {
-            return startPeriod.plusMonths(6);
+            return startPeriod.plusMonths(6).minusDays(1);
         } else if (closureType.equalsIgnoreCase("anual")) {
-            return startPeriod.plusYears(1);
+            return startPeriod.plusYears(1).minusDays(1);
         } else if (closureType.equalsIgnoreCase("semanal")) {
-            return startPeriod.plusWeeks(1);
+            return startPeriod.plusWeeks(1).minusDays(1);
         } else {
             throw new IllegalArgumentException("Closure type not recognized: " + closureType);
         }

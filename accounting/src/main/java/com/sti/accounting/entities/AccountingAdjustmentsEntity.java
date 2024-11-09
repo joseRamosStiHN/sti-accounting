@@ -38,6 +38,10 @@ public class AccountingAdjustmentsEntity {
     @Column(name = "CREATION_DATE")
     private LocalDateTime creationDate;
 
+    @ManyToOne
+    @JoinColumn(name = "accounting_period_id")
+    private AccountingPeriodEntity accountingPeriod;
+
     @OneToMany(mappedBy = "adjustment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AdjustmentDetailEntity> adjustmentDetail;
 

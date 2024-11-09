@@ -30,27 +30,34 @@ public class TransactionService {
     private final IDocumentRepository document;
     private final IAccountingJournalRepository accountingJournalRepository;
     private final ControlAccountBalancesService controlAccountBalancesService;
+    private final AccountingPeriodService accountingPeriodService;
 
     public TransactionService(ITransactionRepository transactionRepository, IAccountRepository iAccountRepository,
-                              IDocumentRepository document, IAccountingJournalRepository accountingJournalRepository, ControlAccountBalancesService controlAccountBalancesService) {
+                              IDocumentRepository document, IAccountingJournalRepository accountingJournalRepository, ControlAccountBalancesService controlAccountBalancesService, AccountingPeriodService accountingPeriodService) {
         this.transactionRepository = transactionRepository;
         this.iAccountRepository = iAccountRepository;
         this.document = document;
         this.accountingJournalRepository = accountingJournalRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
+        this.accountingPeriodService = accountingPeriodService;
     }
 
     public List<TransactionResponse> getAllTransaction() {
         return transactionRepository.findAll().stream().map(this::entityToResponse).toList();
     }
 
-    public Map<String, List<AccountTransactionDTO>> getTransactionAccounts() {
+    public Map<String, List<AccountTransactionDTO>> getTransactionAccountsByActivePeriod() {
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
         List<Object[]> accountTransactionSummary = transactionRepository.getAccountTransactionSummary();
+
         Map<String, List<AccountTransactionDTO>> transactionDTOMap = new HashMap<>();
 
         for (Object[] arr : accountTransactionSummary) {
             AccountTransactionDTO dto = createAccountTransactionDTO(arr);
-            transactionDTOMap.computeIfAbsent(dto.getDescription(), k -> new ArrayList<>()).add(dto);
+            if (dto.getAccountingPeriodId().equals(activePeriod.getId())) {
+                transactionDTOMap.computeIfAbsent(dto.getDescription(), k -> new ArrayList<>()).add(dto);
+            }
         }
 
         return transactionDTOMap;
@@ -67,6 +74,7 @@ public class TransactionService {
         dto.setAmount(getValueAsString(arr[6]));
         dto.setNumberPda(getValueAsString(arr[7]));
         dto.setCategoryName(getValueAsString(arr[8]));
+        dto.setAccountingPeriodId(getValueAsLong(arr[9]));
         return dto;
     }
 
@@ -75,10 +83,21 @@ public class TransactionService {
     }
 
     public List<TransactionResponse> getByDocumentType(Long id) {
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
         List<TransactionEntity> transByDocument = transactionRepository.findByDocumentId(id);
 
-        return transByDocument.stream().map(this::entityToResponse).toList();
+        return transByDocument.stream()
+                .filter(transaction -> transaction.getAccountingPeriod().equals(activePeriod))
+                .map(this::entityToResponse)
+                .toList();
+    }
+
+    private Long getValueAsLong(Object value) {
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        return null;
     }
 
     public List<TransactionResponse> getTransactionByDateRange(LocalDate startDate, LocalDate endDate) {
@@ -117,6 +136,9 @@ public class TransactionService {
                 )
         );
 
+
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
         entity.setDocument(documentType);
         entity.setStatus(StatusTransaction.DRAFT);
         entity.setCurrency(transactionRequest.getCurrency());
@@ -131,6 +153,7 @@ public class TransactionService {
         entity.setTypePayment(transactionRequest.getTypePayment());
         entity.setRtn(transactionRequest.getRtn());
         entity.setSupplierName(transactionRequest.getSupplierName());
+        entity.setAccountingPeriod(activePeriod);
         //transaction detail validations
         validateTransactionDetail(transactionRequest.getDetail());
 
@@ -164,6 +187,8 @@ public class TransactionService {
                         String.format("Diary type %d not valid ", transactionRequest.getDiaryType())
                 )
         );
+
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
         //validate transactions
         validateTransactionDetail(transactionRequest.getDetail());
@@ -216,6 +241,7 @@ public class TransactionService {
         existingTransaction.setTypePayment(transactionRequest.getTypePayment());
         existingTransaction.setRtn(transactionRequest.getRtn());
         existingTransaction.setSupplierName(transactionRequest.getSupplierName());
+        existingTransaction.setAccountingPeriod(activePeriod);
 
         //delete details that are not in list
         existingTransaction.getTransactionDetail().removeAll(existingDetailMap.values());
@@ -333,6 +359,7 @@ public class TransactionService {
         response.setTypePayment(entity.getTypePayment());
         response.setRtn(entity.getRtn());
         response.setSupplierName(entity.getSupplierName());
+        response.setAccountingPeriodId(entity.getAccountingPeriod().getId());
 
         //fill up detail
         Set<TransactionDetailResponse> detailResponseSet = new HashSet<>();

@@ -35,12 +35,11 @@ public class ControlAccountBalancesService {
             BigDecimal amount = detail.getAmount();
             Motion motion = detail.getMotion();
 
-            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountId(accountId)
+            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, activePeriod.getId())
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
-
                         return newEntity;
                     });
 
@@ -67,7 +66,7 @@ public class ControlAccountBalancesService {
             BigDecimal amount = detail.getAmount();
             Motion motion = detail.getMotion();
 
-            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountId(accountId)
+            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, activePeriod.getId())
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
@@ -100,7 +99,7 @@ public class ControlAccountBalancesService {
             BigDecimal amount = detail.getAmount();
             Motion motion = detail.getMotion();
 
-            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountId(accountId)
+            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, activePeriod.getId())
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
@@ -134,7 +133,7 @@ public class ControlAccountBalancesService {
             BigDecimal amount = detail.getAmount();
             Motion motion = detail.getMotion();
 
-            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountId(accountId)
+            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, activePeriod.getId())
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
@@ -166,8 +165,8 @@ public class ControlAccountBalancesService {
                 });
     }
 
-    public ControlAccountBalancesEntity getControlAccountBalancesForPeriod(Long accountId, Long periodId) {
-        return controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, periodId)
+    public ControlAccountBalancesEntity getControlAccountBalancesForPeriod(Long accountId, Long accountingPeriodId) {
+        return controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, accountingPeriodId)
                 .orElse(null);
     }
 }

@@ -1,5 +1,6 @@
 package com.sti.accounting.services;
 
+import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.models.*;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,8 @@ public class SeniorAccountantsService {
 
 
     public List<SeniorAccountsResponse> getSeniorAccountants() {
-        Map<String, List<AccountTransactionDTO>> transactionAccounts = transactionService.getTransactionAccounts();
+        Map<String, List<AccountTransactionDTO>> transactionAccounts = transactionService.getTransactionAccountsByActivePeriod();
+
         List<SeniorAccountsResponse> seniorAccountsResponsesList = new ArrayList<>();
 
         for (Map.Entry<String, List<AccountTransactionDTO>> transaction : transactionAccounts.entrySet()) {

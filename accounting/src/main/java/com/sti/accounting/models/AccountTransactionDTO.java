@@ -18,4 +18,6 @@ public class AccountTransactionDTO {
     private String amount;
     private String numberPda;
     private String categoryName;
+    private Long accountingPeriodId;
+
 }

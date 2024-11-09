@@ -29,7 +29,7 @@ public class TransactionResponse {
     private String typePayment;
     private String rtn;
     private String supplierName;
-
+    private Long accountingPeriodId;
     private Set<TransactionDetailResponse> transactionDetails;
 
 }

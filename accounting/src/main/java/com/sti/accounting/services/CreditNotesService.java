@@ -28,18 +28,24 @@ public class CreditNotesService {
     private final ControlAccountBalancesService controlAccountBalancesService;
     private final IAccountingJournalRepository accountingJournalRepository;
     private final IAccountRepository iAccountRepository;
+    private final AccountingPeriodService accountingPeriodService;
 
-
-    public CreditNotesService(ICreditNotesRepository creditNotesRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService, IAccountingJournalRepository accountingJournalRepository, IAccountRepository iAccountRepository) {
+    public CreditNotesService(ICreditNotesRepository creditNotesRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService, IAccountingJournalRepository accountingJournalRepository, IAccountRepository iAccountRepository, AccountingPeriodService accountingPeriodService) {
         this.creditNotesRepository = creditNotesRepository;
         this.transactionRepository = transactionRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
         this.accountingJournalRepository = accountingJournalRepository;
         this.iAccountRepository = iAccountRepository;
+        this.accountingPeriodService = accountingPeriodService;
     }
 
     public List<CreditNotesResponse> getAllCreditNotes() {
-        return creditNotesRepository.findAll().stream().map(this::entityToResponse).toList();
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
+        return creditNotesRepository.findAll().stream()
+                .filter(creditNote -> creditNote.getAccountingPeriod().equals(activePeriod))
+                .map(this::entityToResponse)
+                .toList();
     }
 
     public CreditNotesResponse getCreditNoteById(Long id) {
@@ -77,11 +83,14 @@ public class CreditNotesService {
                 )
         );
 
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
         entity.setTransaction(transactionEntity);
         entity.setDescriptionNote(creditNotesRequest.getDescriptionNote());
         entity.setAccountingJournal(accountingJournal);
         entity.setCreateAtDate(creditNotesRequest.getCreateAtDate());
         entity.setStatus(StatusTransaction.DRAFT);
+        entity.setAccountingPeriod(activePeriod);
 
         //Adjustment detail validations
         validateCreditNotesDetail(creditNotesRequest.getDetailNote());
@@ -188,6 +197,7 @@ public class CreditNotesService {
         response.setDate(entity.getCreateAtDate());
         response.setCreationDate(entity.getCreateAtTime());
         response.setUser("user.mock");
+        response.setAccountingPeriodId(entity.getAccountingPeriod().getId());
 
         //fill up detail
         Set<CreditNotesDetailResponse> detailResponseSet = new HashSet<>();

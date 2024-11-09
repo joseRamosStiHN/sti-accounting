@@ -33,6 +33,8 @@ public class DebitNotesResponse {
 
     private String user;
 
+    private Long accountingPeriodId;
+
     private Set<DebitNotesDetailResponse> detailNote;
 
 }

@@ -29,7 +29,8 @@ public interface ITransactionRepository extends ListCrudRepository<TransactionEn
                        td.motion,\s
                        td.amount,\s
                        t.number_pda,\s
-                       ac.name
+                       ac.name, 
+                       t.accounting_period_id
                 from accounts a
                 inner join transaction_detail td on a.id = td.account_id
                 inner join transactions t on t.id = td.transaction_id
@@ -45,7 +46,8 @@ public interface ITransactionRepository extends ListCrudRepository<TransactionEn
                        ad.motion,\s
                        ad.amount,\s
                        t.number_pda,\s
-                       ac.name
+                       ac.name,
+                       aa.accounting_period_id
                 from accounts a
                 inner join adjustment_detail ad on a.id = ad.account_id
                 inner join accounting_adjustments aa on aa.id = ad.adjustment_id
@@ -62,7 +64,8 @@ public interface ITransactionRepository extends ListCrudRepository<TransactionEn
                        cnd.motion,\s
                        cnd.amount,\s
                        t.number_pda,\s
-                       ac.name
+                       ac.name,
+                       cn.accounting_period_id
                 from accounts a
                 inner join credit_notes_detail cnd on a.id = cnd.account_id
                 inner join credit_notes cn on cn.id = cnd.credit_note_id
@@ -79,7 +82,8 @@ public interface ITransactionRepository extends ListCrudRepository<TransactionEn
                        dnd.motion,\s
                        dnd.amount,\s
                        t.number_pda,\s
-                       ac.name
+                       ac.name,
+                       dn.accounting_period_id
                 from accounts a
                 inner join debit_notes_detail dnd on a.id = dnd.account_id
                 inner join debit_notes dn on dn.id = dnd.debit_note_id

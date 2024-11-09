@@ -4,6 +4,7 @@ import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.models.AccountingClosingResponse;
 import com.sti.accounting.models.GeneralBalanceResponse;
 import com.sti.accounting.models.IncomeStatementResponse;
+import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -19,15 +20,17 @@ public class AccountingClosingService {
     private final AccountingPeriodService accountingPeriodService;
     private final GeneralBalanceService generalBalanceService;
     private final IncomeStatementService incomeStatementService;
+    private final IAccountingPeriodRepository accountingPeriodRepository;
 
-    public AccountingClosingService(AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService) {
+    public AccountingClosingService(AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository) {
         this.accountingPeriodService = accountingPeriodService;
         this.generalBalanceService = generalBalanceService;
         this.incomeStatementService = incomeStatementService;
+        this.accountingPeriodRepository = accountingPeriodRepository;
     }
 
-    public AccountingClosingResponse getAccountingClosing(){
-        logger.info("Generating accounting closing");
+    public AccountingClosingResponse getDetailAccountingClosing(){
+        logger.info("Generating detail accounting closing");
 
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
@@ -85,5 +88,15 @@ public class AccountingClosingService {
         accountingClosingResponse.setNetIncome(netIncome);
 
         return accountingClosingResponse;
+    }
+
+    public void closeAccountingPeriod() {
+        logger.info("Closing accounting period");
+
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
+        activePeriod.setStatus(false);
+        this.accountingPeriodRepository.save(activePeriod);
+
     }
 }

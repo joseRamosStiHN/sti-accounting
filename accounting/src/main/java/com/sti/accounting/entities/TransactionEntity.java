@@ -80,4 +80,7 @@ public class TransactionEntity {
     @JoinColumn(name = "diary_id", referencedColumnName = "id")
     private AccountingJournalEntity accountingJournal;
 
+    @ManyToOne
+    @JoinColumn(name = "accounting_period_id")
+    private AccountingPeriodEntity accountingPeriod;
 }

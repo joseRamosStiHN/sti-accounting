@@ -28,17 +28,24 @@ public class DebitNotesService {
     private final ControlAccountBalancesService controlAccountBalancesService;
     private final IAccountingJournalRepository accountingJournalRepository;
     private final IAccountRepository iAccountRepository;
+    private final AccountingPeriodService accountingPeriodService;
 
-    public DebitNotesService(IDebitNotesRepository debitNotesRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService, IAccountingJournalRepository accountingJournalRepository, IAccountRepository iAccountRepository) {
+    public DebitNotesService(IDebitNotesRepository debitNotesRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService, IAccountingJournalRepository accountingJournalRepository, IAccountRepository iAccountRepository, AccountingPeriodService accountingPeriodService) {
         this.debitNotesRepository = debitNotesRepository;
         this.transactionRepository = transactionRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
         this.accountingJournalRepository = accountingJournalRepository;
         this.iAccountRepository = iAccountRepository;
+        this.accountingPeriodService = accountingPeriodService;
     }
 
     public List<DebitNotesResponse> getAllDebitNotes() {
-        return debitNotesRepository.findAll().stream().map(this::entityToResponse).toList();
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
+        return debitNotesRepository.findAll().stream()
+                .filter(debitNote -> debitNote.getAccountingPeriod().equals(activePeriod))
+                .map(this::entityToResponse)
+                .toList();
     }
 
     public DebitNotesResponse getDebitNoteById(Long id) {
@@ -76,11 +83,14 @@ public class DebitNotesService {
                 )
         );
 
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
         entity.setTransaction(transactionEntity);
         entity.setDescriptionNote(debitNotesRequest.getDescriptionNote());
         entity.setAccountingJournal(accountingJournal);
         entity.setCreateAtDate(debitNotesRequest.getCreateAtDate());
         entity.setStatus(StatusTransaction.DRAFT);
+        entity.setAccountingPeriod(activePeriod);
 
         //Adjustment detail validations
         validateDebitNotesDetail(debitNotesRequest.getDetailNote());
@@ -188,6 +198,8 @@ public class DebitNotesService {
         response.setDate(entity.getCreateAtDate());
         response.setCreationDate(entity.getCreateAtTime());
         response.setUser("user.mock");
+        response.setAccountingPeriodId(entity.getAccountingPeriod().getId());
+
         //fill up detail
         Set<DebitNotesDetailResponse> detailResponseSet = new HashSet<>();
         for (DebitNotesDetailEntity detail : entity.getDebitNoteDetail()) {
