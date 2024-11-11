@@ -19,11 +19,11 @@ public class TaxSettingsRequest {
     @NotBlank(message = "Type is required")
     private String type;
 
-    @NotNull(message = "From is required")
-    private BigDecimal from;
+    @NotNull(message = "From value is required")
+    private BigDecimal fromValue;
 
-    @NotNull(message = "To is required")
-    private BigDecimal to;
+    @NotNull(message = "To value is required")
+    private BigDecimal toValue;
 
     private Boolean isCurrent;
 }

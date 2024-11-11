@@ -41,8 +41,8 @@ public class TaxSettingsService {
 
         taxSettingsEntity.setTaxRate(taxSettingsRequest.getTaxRate());
         taxSettingsEntity.setType(taxSettingsRequest.getType());
-        taxSettingsEntity.setFrom(taxSettingsRequest.getFrom());
-        taxSettingsEntity.setTo(taxSettingsRequest.getTo());
+        taxSettingsEntity.setFromValue(taxSettingsRequest.getFromValue());
+        taxSettingsEntity.setToValue(taxSettingsRequest.getToValue());
         taxSettingsEntity.setIsCurrent(taxSettingsRequest.getIsCurrent());
 
         taxSettingsRepository.save(taxSettingsEntity);
@@ -55,8 +55,8 @@ public class TaxSettingsService {
 
         taxSettingsEntity.setTaxRate(taxSettingsRequest.getTaxRate());
         taxSettingsEntity.setType(taxSettingsRequest.getType());
-        taxSettingsEntity.setFrom(taxSettingsRequest.getFrom());
-        taxSettingsEntity.setTo(taxSettingsRequest.getTo());
+        taxSettingsEntity.setFromValue(taxSettingsRequest.getFromValue());
+        taxSettingsEntity.setToValue(taxSettingsRequest.getToValue());
         taxSettingsEntity.setIsCurrent(taxSettingsRequest.getIsCurrent());
 
         taxSettingsRepository.save(taxSettingsEntity);
@@ -68,8 +68,8 @@ public class TaxSettingsService {
 
         response.setTaxRate(entity.getTaxRate());
         response.setType(entity.getType());
-        response.setFrom(entity.getFrom());
-        response.setTo(entity.getTo());
+        response.setFromValue(entity.getFromValue());
+        response.setToValue(entity.getToValue());
         response.setIsCurrent(entity.getIsCurrent());
         response.setCreationDate(entity.getCreateAtDate());
         return response;

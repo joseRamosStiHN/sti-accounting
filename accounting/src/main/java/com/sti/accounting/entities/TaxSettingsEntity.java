@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "account_type")
+@Table(name = "tax_settings")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -26,11 +26,11 @@ public class TaxSettingsEntity {
     @Column(name = "TYPE", columnDefinition = "TEXT")
     private String type;
 
-    @Column(name = "FROM")
-    private BigDecimal from;
+    @Column(name = "FROM_VALUE")
+    private BigDecimal fromValue;
 
-    @Column(name = "TO")
-    private BigDecimal to;
+    @Column(name = "TO_VALUE")
+    private BigDecimal toValue;
 
     @Column(name = "IS_CURRENT")
     private Boolean isCurrent;

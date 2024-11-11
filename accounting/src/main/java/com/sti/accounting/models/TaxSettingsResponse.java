@@ -16,9 +16,9 @@ public class TaxSettingsResponse {
 
     private String type;
 
-    private BigDecimal from;
+    private BigDecimal fromValue;
 
-    private BigDecimal to;
+    private BigDecimal toValue;
 
     private Boolean isCurrent;
 
