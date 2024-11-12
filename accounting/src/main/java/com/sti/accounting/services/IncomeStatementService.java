@@ -26,11 +26,10 @@ public class IncomeStatementService {
         this.controlAccountBalancesService = controlAccountBalancesService;
     }
 
-    public List<IncomeStatementResponse> getIncomeStatement() {
+    public List<IncomeStatementResponse> getIncomeStatement(Long periodId) {
         logger.info("Generating income statement");
 
         List<AccountEntity> accounts = accountRepository.findAll();
-
         accounts = accounts.stream()
                 .filter(account -> account.getAccountCategory().getName().equalsIgnoreCase("Estado de Resultados"))
                 .toList();
@@ -38,15 +37,36 @@ public class IncomeStatementService {
         List<IncomeStatementResponse> transactions = new ArrayList<>();
 
         for (AccountEntity account : accounts) {
-            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesService.getControlAccountBalances(account.getId());
+            ControlAccountBalancesEntity sumViewEntity;
+
+            if (periodId != null) {
+                sumViewEntity = controlAccountBalancesService.getControlAccountBalancesForPeriod(account.getId(), periodId);
+            } else {
+                List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForAllPeriods(account.getId());
+                sumViewEntity = combineBalances(balances);
+            }
+
             BigDecimal balance = getBalance(sumViewEntity);
-
             IncomeStatementResponse transaction = getIncomeStatementResponse(account, balance);
-
             transactions.add(transaction);
         }
 
         return transactions;
+    }
+
+    private ControlAccountBalancesEntity combineBalances(List<ControlAccountBalancesEntity> balances) {
+        ControlAccountBalancesEntity combined = new ControlAccountBalancesEntity();
+        BigDecimal totalDebit = BigDecimal.ZERO;
+        BigDecimal totalCredit = BigDecimal.ZERO;
+
+        for (ControlAccountBalancesEntity balance : balances) {
+            totalDebit = totalDebit.add(new BigDecimal(balance.getDebit() != null ? balance.getDebit() : "0"));
+            totalCredit = totalCredit.add(new BigDecimal(balance.getCredit() != null ? balance.getCredit() : "0"));
+        }
+
+        combined.setDebit(totalDebit.toString());
+        combined.setCredit(totalCredit.toString());
+        return combined;
     }
 
     private static IncomeStatementResponse getIncomeStatementResponse(AccountEntity account, BigDecimal balance) {
@@ -62,6 +82,9 @@ public class IncomeStatementService {
     }
 
     private BigDecimal getBalance(ControlAccountBalancesEntity sumViewEntity) {
+        if (sumViewEntity == null) {
+            return BigDecimal.ZERO;
+        }
         BigDecimal debit = sumViewEntity.getDebit() != null ? new BigDecimal(sumViewEntity.getDebit()) : BigDecimal.ZERO;
         BigDecimal credit = sumViewEntity.getCredit() != null ? new BigDecimal(sumViewEntity.getCredit()) : BigDecimal.ZERO;
         return debit.subtract(credit).abs();

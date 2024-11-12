@@ -1,6 +1,5 @@
 package com.sti.accounting.services;
 
-import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.models.*;
 import org.springframework.stereotype.Service;
 

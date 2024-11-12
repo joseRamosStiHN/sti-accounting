@@ -1,6 +1,5 @@
 package com.sti.accounting.services;
 
-import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.entities.ControlAccountBalancesEntity;
 import com.sti.accounting.models.*;
 import org.springframework.stereotype.Service;
@@ -66,6 +65,7 @@ public class TrialBalanceService {
         response.setClosureType(period.getClosureType());
         response.setStartPeriod(period.getStartPeriod());
         response.setEndPeriod(period.getEndPeriod());
+        response.setStatus(period.isStatus());
         return response;
     }
 
@@ -75,6 +75,7 @@ public class TrialBalanceService {
 
     private TrialBalanceResponse.AccountBalance createAccountBalance(AccountResponse account) {
         TrialBalanceResponse.AccountBalance accountBalance = new TrialBalanceResponse.AccountBalance();
+        accountBalance.setId(account.getId());
         accountBalance.setName(account.getName());
         accountBalance.setAccountCode(account.getAccountCode());
         accountBalance.setParentName(account.getParentName());
@@ -86,21 +87,32 @@ public class TrialBalanceService {
         TrialBalanceResponse.InitialBalance initialBalanceResponse = new TrialBalanceResponse.InitialBalance();
         BigDecimal initialBalance = BigDecimal.ZERO;
 
-        if (account.getBalances() != null) {
-            initialBalance = account.getBalances().stream()
+        if (account.getBalances() != null && !account.getBalances().isEmpty()) {
+            Optional<AccountBalance> currentBalanceOpt = account.getBalances().stream()
                     .filter(balance -> Boolean.TRUE.equals(balance.getIsCurrent()))
-                    .map(balance -> balance.getInitialBalance() != null ? balance.getInitialBalance() : BigDecimal.ZERO)
-                    .findFirst()
-                    .orElse(BigDecimal.ZERO);
+                    .findFirst();
+
+            if (currentBalanceOpt.isPresent()) {
+                AccountBalance currentBalance = currentBalanceOpt.get();
+                initialBalance = currentBalance.getInitialBalance() != null ? currentBalance.getInitialBalance() : BigDecimal.ZERO;
+
+                String typicalBalance = currentBalance.getTypicalBalance();
+
+                if ("D".equalsIgnoreCase(typicalBalance)) {
+                    initialBalanceResponse.setDebit(initialBalance);
+                    initialBalanceResponse.setCredit(BigDecimal.ZERO);
+                } else {
+                    initialBalanceResponse.setDebit(BigDecimal.ZERO);
+                    initialBalanceResponse.setCredit(initialBalance);
+                }
+            }
         }
 
-        if ("D".equalsIgnoreCase(account.getTypicallyBalance())) {
-            initialBalanceResponse.setDebit(initialBalance);
-            initialBalanceResponse.setCredit(BigDecimal.ZERO);
-        } else {
+        if (initialBalance.equals(BigDecimal.ZERO)) {
             initialBalanceResponse.setDebit(BigDecimal.ZERO);
-            initialBalanceResponse.setCredit(initialBalance);
+            initialBalanceResponse.setCredit(BigDecimal.ZERO);
         }
+
         return initialBalanceResponse;
     }
 
@@ -121,8 +133,8 @@ public class TrialBalanceService {
     private TrialBalanceResponse.FinalBalance calculateFinalBalance(TrialBalanceResponse.BalancePeriod balancePeriod, TrialBalanceResponse.InitialBalance initialBalance) {
         TrialBalanceResponse.FinalBalance finalBalance = new TrialBalanceResponse.FinalBalance();
 
-        BigDecimal totalDebit = balancePeriod.getDebit().add(initialBalance.getDebit());
-        BigDecimal totalCredit = balancePeriod.getCredit().add(initialBalance.getCredit());
+        BigDecimal totalDebit = initialBalance.getDebit().add(balancePeriod.getDebit());
+        BigDecimal totalCredit = initialBalance.getCredit().add(balancePeriod.getCredit());
 
         if (totalDebit.compareTo(totalCredit) > 0) {
             finalBalance.setDebit(totalDebit.subtract(totalCredit));

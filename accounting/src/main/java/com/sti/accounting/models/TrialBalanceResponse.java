@@ -24,6 +24,7 @@ public class TrialBalanceResponse {
         private String closureType;
         private LocalDateTime startPeriod;
         private LocalDateTime endPeriod;
+        private boolean status;
         private List<AccountBalance> accountBalances;
     }
 
@@ -31,6 +32,8 @@ public class TrialBalanceResponse {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class AccountBalance {
+
+        private Long id;
         private String name;
         private String accountCode;
         private String parentName;

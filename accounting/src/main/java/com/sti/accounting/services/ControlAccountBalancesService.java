@@ -156,6 +156,10 @@ public class ControlAccountBalancesService {
     }
 
 
+    public List<ControlAccountBalancesEntity> getControlAccountBalancesForAllPeriods(Long accountId) {
+        return controlAccountBalancesRepository.findAllByAccountId(accountId);
+    }
+
     public ControlAccountBalancesEntity getControlAccountBalances(Long accountId) {
         return controlAccountBalancesRepository.findByAccountId(accountId)
                 .orElseGet(() -> {

@@ -35,4 +35,8 @@ public class BalancesEntity {
 
     @Column(name = "IS_CURRENT")
     private Boolean isCurrent;
+
+    @ManyToOne
+    @JoinColumn(name = "accounting_period_id")
+    private AccountingPeriodEntity accountingPeriod;
 }
