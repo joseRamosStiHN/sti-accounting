@@ -5,6 +5,8 @@ import com.sti.accounting.services.AccountingClosingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/v1/accounting-closing")
@@ -14,6 +16,11 @@ public class AccountingClosingController {
 
     public AccountingClosingController(AccountingClosingService accountingClosingService) {
         this.accountingClosingService = accountingClosingService;
+    }
+
+    @GetMapping()
+    public List<AccountingClosingResponse> getAllAccountingClosing() {
+        return accountingClosingService.getAllAccountingClosing();
     }
 
     @GetMapping("/detail")

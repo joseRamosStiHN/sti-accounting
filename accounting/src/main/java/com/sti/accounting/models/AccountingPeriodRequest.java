@@ -29,5 +29,7 @@ public class AccountingPeriodRequest {
 
     private boolean status;
 
+    private Boolean isClosed;
+
 
 }

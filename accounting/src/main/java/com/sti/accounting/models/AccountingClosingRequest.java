@@ -10,18 +10,24 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountingClosingResponse {
+public class AccountingClosingRequest {
 
-    private Long accountingPeriodId;
-    private String periodName;
-    private String typePeriod;
+    private Long id;
+
     private LocalDateTime startPeriod;
+
     private LocalDateTime endPeriod;
+
     private BigDecimal totalAssets;
+
     private BigDecimal totalLiabilities;
+
     private BigDecimal totalCapital;
+
     private BigDecimal totalIncome;
+
     private BigDecimal totalExpenses;
+
     private BigDecimal netIncome;
 
 }

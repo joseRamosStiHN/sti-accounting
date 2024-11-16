@@ -56,6 +56,7 @@ public class AccountingPeriodService {
         entity.setEndPeriod(accountingPeriodRequest.getEndPeriod() == null ? calculateEndPeriod(accountingPeriodRequest.getStartPeriod(), accountingPeriodRequest.getClosureType()) : accountingPeriodRequest.getEndPeriod());
         entity.setDaysPeriod(accountingPeriodRequest.getDaysPeriod());
         entity.setStatus(false);
+        entity.setIsClosed(false);
         accountingPeriodRepository.save(entity);
 
         return toResponse(entity);
@@ -84,6 +85,7 @@ public class AccountingPeriodService {
         existingAccountingPeriod.setEndPeriod(accountingPeriodRequest.getEndPeriod() == null ? calculateEndPeriod(accountingPeriodRequest.getStartPeriod(), accountingPeriodRequest.getClosureType()) : accountingPeriodRequest.getEndPeriod());
         existingAccountingPeriod.setDaysPeriod(accountingPeriodRequest.getDaysPeriod());
         existingAccountingPeriod.setStatus(accountingPeriodRequest.isStatus());
+        existingAccountingPeriod.setIsClosed(false);
 
         accountingPeriodRepository.save(existingAccountingPeriod);
 
@@ -137,6 +139,7 @@ public class AccountingPeriodService {
         response.setEndPeriod(entity.getEndPeriod());
         response.setDaysPeriod(entity.getDaysPeriod());
         response.setStatus(entity.isStatus());
+        response.setIsClosed(entity.getIsClosed());
         return response;
     }
 

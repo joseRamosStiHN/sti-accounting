@@ -30,6 +30,16 @@ Realizar las validaciones de las cuentas
 
 Validaciones de las transacciones
 
+## Asignaciones 11/11/2024
+
+1. Verificar la parte de los saldos al momento de realizar el cierre. LISTO
+2. Modificar la tabla de los montos en ingresos y compras para que se vea la columna debe y haber. FRONT
+3. Crear una tabla para el cierre contable donde guarde la informacion. LISTO
+4. Poner scroll lateral en la pantalla de blanza de comprobacion. FRONT
+5. Realizar cierre anual, este tiene que guardar todos los reportes se va almacenar el PDF que se genere en binario
+   realizar 2 funciones una para que almacene en disco y otra en binario para la base de datos.
+6. Agregar fecha a la tabla de saldos iniciales. FRONT
+
 
 
 

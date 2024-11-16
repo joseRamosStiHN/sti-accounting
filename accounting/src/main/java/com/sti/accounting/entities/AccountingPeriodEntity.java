@@ -33,4 +33,7 @@ public class AccountingPeriodEntity {
 
     @Column(name = "STATUS")
     private boolean status;
+
+    @Column(name = "IS_CLOSED")
+    private Boolean isClosed;
 }

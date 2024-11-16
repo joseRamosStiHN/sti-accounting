@@ -14,4 +14,6 @@ public class AccountingPeriodResponse {
     private LocalDateTime endPeriod;
     private Integer daysPeriod;
     private boolean status;
+    private Boolean isClosed;
+
 }

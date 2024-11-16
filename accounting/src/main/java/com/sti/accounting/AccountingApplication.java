@@ -77,7 +77,8 @@ public class AccountingApplication {
                                 startOfYear,
                                 endOfYear,
                                 365, 
-                                true
+                                true,
+                                false
                         )
                 );
                 accountingPeriodRepository.saveAll(accountingPeriods);

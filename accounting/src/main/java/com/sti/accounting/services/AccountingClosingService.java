@@ -1,8 +1,10 @@
 package com.sti.accounting.services;
 
+import com.sti.accounting.entities.AccountingClosingEntity;
 import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.entities.BalancesEntity;
 import com.sti.accounting.models.*;
+import com.sti.accounting.repositories.IAccountingClosingRepository;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.repositories.IBalancesRepository;
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ public class AccountingClosingService {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountingClosingService.class);
 
+    private final IAccountingClosingRepository accountingClosingRepository;
     private final AccountingPeriodService accountingPeriodService;
     private final GeneralBalanceService generalBalanceService;
     private final IncomeStatementService incomeStatementService;
@@ -25,7 +28,8 @@ public class AccountingClosingService {
     private final TrialBalanceService trialBalanceService;
     private final IBalancesRepository iBalancesRepository;
 
-    public AccountingClosingService(AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository, BalancesService balancesService, TrialBalanceService trialBalanceService, IBalancesRepository iBalancesRepository) {
+    public AccountingClosingService(IAccountingClosingRepository accountingClosingRepository, AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository, BalancesService balancesService, TrialBalanceService trialBalanceService, IBalancesRepository iBalancesRepository) {
+        this.accountingClosingRepository = accountingClosingRepository;
         this.accountingPeriodService = accountingPeriodService;
         this.generalBalanceService = generalBalanceService;
         this.incomeStatementService = incomeStatementService;
@@ -34,6 +38,11 @@ public class AccountingClosingService {
         this.trialBalanceService = trialBalanceService;
         this.iBalancesRepository = iBalancesRepository;
     }
+
+    public List<AccountingClosingResponse> getAllAccountingClosing() {
+        return this.accountingClosingRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
 
     public AccountingClosingResponse getDetailAccountingClosing() {
         logger.info("Generating detail accounting closing");
@@ -102,7 +111,7 @@ public class AccountingClosingService {
         // Obtener el período contable activo
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
-        // Obtener el balance de prueba
+        // Obtener el balance
         TrialBalanceResponse trialBalanceResponse = trialBalanceService.getTrialBalance();
 
         // Verificar si hay períodos
@@ -114,28 +123,57 @@ public class AccountingClosingService {
         // Iterar sobre cada período en el balance de prueba
         for (TrialBalanceResponse.PeriodBalanceResponse periodBalance : trialBalanceResponse.getPeriods()) {
             if (!periodBalance.isStatus()) {
-                continue; // Solo procesar períodos activos
+                continue;
             }
 
             processActivePeriod(periodBalance);
         }
 
+        // Obtener los detalles del cierre contable
+        AccountingClosingResponse closingDetails = getDetailAccountingClosing();
+
+        // Crear registro de cierre contable
+        AccountingClosingEntity closingEntity = new AccountingClosingEntity();
+        closingEntity.setAccountingPeriod(activePeriod);
+        closingEntity.setStartPeriod(closingDetails.getStartPeriod());
+        closingEntity.setEndPeriod(closingDetails.getEndPeriod());
+        closingEntity.setTotalAssets(closingDetails.getTotalAssets());
+        closingEntity.setTotalLiabilities(closingDetails.getTotalLiabilities());
+        closingEntity.setTotalCapital(closingDetails.getTotalCapital());
+        closingEntity.setTotalIncome(closingDetails.getTotalIncome());
+        closingEntity.setTotalExpenses(closingDetails.getTotalExpenses());
+        closingEntity.setNetIncome(closingDetails.getNetIncome());
+
+        accountingClosingRepository.save(closingEntity);
+
         // Cerrar el período contable
         closeActivePeriod(activePeriod);
+
+
     }
 
     private void processActivePeriod(TrialBalanceResponse.PeriodBalanceResponse periodBalance) {
         for (TrialBalanceResponse.AccountBalance accountBalance : periodBalance.getAccountBalances()) {
-            inactivateExistingBalances(accountBalance.getId());
-
+            // Obtener el balance final
             TrialBalanceResponse.FinalBalance finalBalance = getFinalBalance(accountBalance);
-            if (finalBalance == null || isBalanceEmpty(finalBalance)) {
-                continue; // Si no hay saldo final o está vacío, continuar
+            if (finalBalance == null) {
+                continue; // Si no hay balance final, continuar con la siguiente cuenta
             }
 
-            createNewBalance(accountBalance, finalBalance);
+            // Obtener el balance del período
+            TrialBalanceResponse.BalancePeriod balancePeriod = accountBalance.getBalancePeriod().isEmpty() ? null : accountBalance.getBalancePeriod().get(0);
+
+            // Verificar si el balance del período tiene transacciones
+            if (balancePeriod != null && (balancePeriod.getDebit().compareTo(BigDecimal.ZERO) > 0 || balancePeriod.getCredit().compareTo(BigDecimal.ZERO) > 0)) {
+                // Inactivar el balance existente
+                inactivateExistingBalances(accountBalance.getId());
+
+                // Crear un nuevo balance
+                createNewBalance(accountBalance, finalBalance);
+            }
         }
     }
+
 
     private void inactivateExistingBalances(Long accountId) {
         List<BalancesEntity> existingBalances = iBalancesRepository.findByAccountId(accountId);
@@ -150,9 +188,6 @@ public class AccountingClosingService {
         return finalBalances.isEmpty() ? null : finalBalances.get(0);
     }
 
-    private boolean isBalanceEmpty(TrialBalanceResponse.FinalBalance finalBalance) {
-        return finalBalance.getDebit().compareTo(BigDecimal.ZERO) == 0 && finalBalance.getCredit().compareTo(BigDecimal.ZERO) == 0;
-    }
 
     private void createNewBalance(TrialBalanceResponse.AccountBalance accountBalance, TrialBalanceResponse.FinalBalance finalBalance) {
         BalancesRequest balancesRequest = new BalancesRequest();
@@ -172,7 +207,23 @@ public class AccountingClosingService {
 
     private void closeActivePeriod(AccountingPeriodEntity activePeriod) {
         activePeriod.setStatus(false);
+        activePeriod.setIsClosed(true);
         this.accountingPeriodRepository.save(activePeriod);
     }
 
+    private AccountingClosingResponse toResponse(AccountingClosingEntity accountingClosingEntity) {
+        AccountingClosingResponse accountingClosingResponse = new AccountingClosingResponse();
+
+        accountingClosingResponse.setAccountingPeriodId(accountingClosingEntity.getAccountingPeriod().getId());
+        accountingClosingResponse.setStartPeriod(accountingClosingEntity.getStartPeriod());
+        accountingClosingResponse.setEndPeriod(accountingClosingEntity.getEndPeriod());
+        accountingClosingResponse.setTotalAssets(accountingClosingEntity.getTotalAssets());
+        accountingClosingResponse.setTotalLiabilities(accountingClosingEntity.getTotalLiabilities());
+        accountingClosingResponse.setTotalCapital(accountingClosingEntity.getTotalCapital());
+        accountingClosingResponse.setTotalIncome(accountingClosingEntity.getTotalIncome());
+        accountingClosingResponse.setTotalExpenses(accountingClosingEntity.getTotalExpenses());
+        accountingClosingResponse.setNetIncome(accountingClosingEntity.getNetIncome());
+        return accountingClosingResponse;
+
+    }
 }
