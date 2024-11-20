@@ -1,6 +1,7 @@
 package com.sti.accounting.services;
 
 import com.sti.accounting.entities.AccountEntity;
+import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.entities.ControlAccountBalancesEntity;
 import com.sti.accounting.models.IncomeStatementResponse;
 import com.sti.accounting.repositories.IAccountRepository;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -20,10 +22,12 @@ public class IncomeStatementService {
 
     private final IAccountRepository accountRepository;
     private final ControlAccountBalancesService controlAccountBalancesService;
+    private final AccountingPeriodService accountingPeriodService;
 
-    public IncomeStatementService(IAccountRepository accountRepository, ControlAccountBalancesService controlAccountBalancesService) {
+    public IncomeStatementService(IAccountRepository accountRepository, ControlAccountBalancesService controlAccountBalancesService, AccountingPeriodService accountingPeriodService) {
         this.accountRepository = accountRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
+        this.accountingPeriodService = accountingPeriodService;
     }
 
     public List<IncomeStatementResponse> getIncomeStatement(Long periodId) {
@@ -36,11 +40,19 @@ public class IncomeStatementService {
 
         List<IncomeStatementResponse> transactions = new ArrayList<>();
 
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
+        // Obtener el inicio y el final del periodo mensual
+        LocalDate startPeriod = activePeriod.getStartPeriod().toLocalDate();
+        LocalDate endPeriod = activePeriod.getEndPeriod().toLocalDate();
+
+
         for (AccountEntity account : accounts) {
             ControlAccountBalancesEntity sumViewEntity;
 
             if (periodId != null) {
-                sumViewEntity = controlAccountBalancesService.getControlAccountBalancesForPeriod(account.getId(), periodId);
+                List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForPeriodAndMonth(account.getId(), activePeriod.getId(), startPeriod, endPeriod);
+                sumViewEntity = combineBalances(balances);
             } else {
                 List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForAllPeriods(account.getId());
                 sumViewEntity = combineBalances(balances);

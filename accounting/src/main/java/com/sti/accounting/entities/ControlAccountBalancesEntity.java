@@ -4,6 +4,8 @@ package com.sti.accounting.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 
 @Entity
 @Table(name = "control_account_balances")
@@ -28,4 +30,7 @@ public class ControlAccountBalancesEntity {
     @ManyToOne
     @JoinColumn(name = "ACCOUNTING_PERIOD_ID", nullable = false)
     private AccountingPeriodEntity accountingPeriod;
+
+    @Column(name = "DATE")
+    private LocalDate createAtDate;
 }

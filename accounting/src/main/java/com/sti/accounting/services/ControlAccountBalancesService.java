@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -26,7 +27,6 @@ public class ControlAccountBalancesService {
 
     @Transactional
     public void updateControlAccountBalances(TransactionEntity transactionEntity) {
-
         List<TransactionDetailEntity> transactionDetails = transactionEntity.getTransactionDetail();
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
@@ -35,24 +35,33 @@ public class ControlAccountBalancesService {
             BigDecimal amount = detail.getAmount();
             Motion motion = detail.getMotion();
 
-            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, activePeriod.getId())
+            // Obtener el mes y año de la fecha de la transacción
+            LocalDate transactionDate = detail.getTransaction().getCreateAtDate();
+            LocalDate startOfMonth = transactionDate.withDayOfMonth(1);
+            LocalDate endOfMonth = transactionDate.withDayOfMonth(transactionDate.lengthOfMonth());
+
+            // Buscar el registro existente para el mes actual
+            ControlAccountBalancesEntity balanceEntity = controlAccountBalancesRepository
+                    .findByAccountIdAndCreateAtDateBetween(accountId, startOfMonth, endOfMonth)
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
+                        newEntity.setCreateAtDate(startOfMonth);
                         return newEntity;
                     });
 
-
+            // Actualizar los débitos y créditos
             if (motion.equals(Motion.D)) {
-                sumViewEntity.setDebit(sumViewEntity.getDebit() == null ? amount.toString() :
-                        new BigDecimal(sumViewEntity.getDebit()).add(amount).toString());
+                balanceEntity.setDebit(balanceEntity.getDebit() == null ? amount.toString() :
+                        new BigDecimal(balanceEntity.getDebit()).add(amount).toString());
             } else {
-                sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount.toString() :
-                        new BigDecimal(sumViewEntity.getCredit()).add(amount).toString());
+                balanceEntity.setCredit(balanceEntity.getCredit() == null ? amount.toString() :
+                        new BigDecimal(balanceEntity.getCredit()).add(amount).toString());
             }
 
-            controlAccountBalancesRepository.save(sumViewEntity);
+            // Guardar el balance actualizado
+            controlAccountBalancesRepository.save(balanceEntity);
         }
     }
 
@@ -71,6 +80,8 @@ public class ControlAccountBalancesService {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
+                        newEntity.setCreateAtDate(detail.getAdjustment().getTransaction().getCreateAtDate());
+
                         return newEntity;
                     });
 
@@ -104,6 +115,7 @@ public class ControlAccountBalancesService {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
+                        newEntity.setCreateAtDate(detail.getDebitNote().getCreateAtDate());
 
                         return newEntity;
                     });
@@ -138,6 +150,7 @@ public class ControlAccountBalancesService {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
+                        newEntity.setCreateAtDate(detail.getCreditNote().getCreateAtDate());
 
                         return newEntity;
                     });
@@ -172,5 +185,13 @@ public class ControlAccountBalancesService {
     public ControlAccountBalancesEntity getControlAccountBalancesForPeriod(Long accountId, Long accountingPeriodId) {
         return controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, accountingPeriodId)
                 .orElse(null);
+    }
+
+    public List<ControlAccountBalancesEntity> getControlAccountBalancesForMonth(Long accountId, LocalDate startDate, LocalDate endDate) {
+        return controlAccountBalancesRepository.findAllByAccountIdAndCreateAtDateBetween(accountId, startDate, endDate);
+    }
+
+    public List<ControlAccountBalancesEntity> getControlAccountBalancesForPeriodAndMonth(Long accountId, Long accountingPeriodId, LocalDate startDate, LocalDate endDate) {
+        return controlAccountBalancesRepository.findAllByAccountIdAndAccountingPeriodIdAndCreateAtDateBetween(accountId,accountingPeriodId, startDate, endDate);
     }
 }

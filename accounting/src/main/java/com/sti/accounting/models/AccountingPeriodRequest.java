@@ -31,5 +31,8 @@ public class AccountingPeriodRequest {
 
     private Boolean isClosed;
 
+    private Boolean isAnnual;
+
+
 
 }

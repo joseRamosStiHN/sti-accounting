@@ -36,4 +36,7 @@ public class AccountingPeriodEntity {
 
     @Column(name = "IS_CLOSED")
     private Boolean isClosed;
+
+    @Column(name = "IS_ANNUAL")
+    private Boolean isAnnual;
 }

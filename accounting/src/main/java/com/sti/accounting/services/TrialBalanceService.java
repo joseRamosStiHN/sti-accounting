@@ -1,10 +1,13 @@
 package com.sti.accounting.services;
 
+import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.entities.ControlAccountBalancesEntity;
 import com.sti.accounting.models.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -24,38 +27,89 @@ public class TrialBalanceService {
     }
 
     public TrialBalanceResponse getTrialBalance() {
-        List<AccountingPeriodResponse> accountingPeriods = accountingPeriodService.getAllAccountingPeriod();
+        // Obtener el periodo contable activo
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
         TrialBalanceResponse trialBalanceResponse = new TrialBalanceResponse();
         List<TrialBalanceResponse.PeriodBalanceResponse> periodBalances = new ArrayList<>();
 
         List<AccountResponse> allAccounts = accountService.getAllAccount();
 
-        for (AccountingPeriodResponse period : accountingPeriods) {
-            TrialBalanceResponse.PeriodBalanceResponse periodBalanceResponse = createPeriodBalanceResponse(period);
-            List<TrialBalanceResponse.AccountBalance> accountBalances = new ArrayList<>();
+        // Verificar si el periodo activo es anual
+        if (Boolean.TRUE.equals(activePeriod.getIsAnnual())) {
+            // Iterar sobre cada mes del periodo anual
+            LocalDateTime startDate = activePeriod.getStartPeriod();
+            LocalDateTime endDate = activePeriod.getEndPeriod();
 
-            for (AccountResponse account : allAccounts) {
-                if (isSupportEntry(account)) {
-                    TrialBalanceResponse.AccountBalance accountBalance = createAccountBalance(account);
-                    TrialBalanceResponse.InitialBalance initialBalanceResponse = calculateInitialBalance(account);
-                    accountBalance.setInitialBalance(Collections.singletonList(initialBalanceResponse));
+            // Iterar mes a mes
+            LocalDateTime currentDate = startDate;
+            while (!currentDate.isAfter(endDate)) {
+                AccountingPeriodResponse monthlyPeriod = createMonthlyPeriodResponse(currentDate);
+                TrialBalanceResponse.PeriodBalanceResponse periodBalanceResponse = createPeriodBalanceResponse(monthlyPeriod);
+                List<TrialBalanceResponse.AccountBalance> accountBalances = new ArrayList<>();
 
-                    TrialBalanceResponse.BalancePeriod balancePeriodResponse = calculateBalancePeriod(account, period);
-                    accountBalance.setBalancePeriod(Collections.singletonList(balancePeriodResponse));
+                for (AccountResponse account : allAccounts) {
+                    if (isSupportEntry(account)) {
+                        TrialBalanceResponse.AccountBalance accountBalance = createAccountBalance(account);
+                        TrialBalanceResponse.InitialBalance initialBalanceResponse = calculateInitialBalance(account);
+                        accountBalance.setInitialBalance(Collections.singletonList(initialBalanceResponse));
 
-                    TrialBalanceResponse.FinalBalance finalBalanceResponse = calculateFinalBalance(balancePeriodResponse, initialBalanceResponse);
-                    accountBalance.setFinalBalance(Collections.singletonList(finalBalanceResponse));
+                        TrialBalanceResponse.BalancePeriod balancePeriodResponse = calculateBalancePeriod(account, monthlyPeriod);
+                        accountBalance.setBalancePeriod(Collections.singletonList(balancePeriodResponse));
 
-                    accountBalances.add(accountBalance);
+                        TrialBalanceResponse.FinalBalance finalBalanceResponse = calculateFinalBalance(balancePeriodResponse, initialBalanceResponse);
+                        accountBalance.setFinalBalance(Collections.singletonList(finalBalanceResponse));
+
+                        accountBalances.add(accountBalance);
+                    }
                 }
-            }
 
-            periodBalanceResponse.setAccountBalances(accountBalances);
-            periodBalances.add(periodBalanceResponse);
+                periodBalanceResponse.setAccountBalances(accountBalances);
+                periodBalances.add(periodBalanceResponse);
+
+                // Avanzar al siguiente mes
+                currentDate = currentDate.plusMonths(1);
+            }
+        } else {
+            // Si no es anual, continuar con la lógica original
+            List<AccountingPeriodResponse> accountingPeriods = accountingPeriodService.getAllAccountingPeriod();
+            for (AccountingPeriodResponse period : accountingPeriods) {
+                TrialBalanceResponse.PeriodBalanceResponse periodBalanceResponse = createPeriodBalanceResponse(period);
+                List<TrialBalanceResponse.AccountBalance> accountBalances = new ArrayList<>();
+
+                for (AccountResponse account : allAccounts) {
+                    if (isSupportEntry(account)) {
+                        TrialBalanceResponse.AccountBalance accountBalance = createAccountBalance(account);
+                        TrialBalanceResponse.InitialBalance initialBalanceResponse = calculateInitialBalance(account);
+                        accountBalance.setInitialBalance(Collections.singletonList(initialBalanceResponse));
+
+                        TrialBalanceResponse.BalancePeriod balancePeriodResponse = calculateBalancePeriod(account, period);
+                        accountBalance.setBalancePeriod(Collections.singletonList(balancePeriodResponse));
+
+                        TrialBalanceResponse.FinalBalance finalBalanceResponse = calculateFinalBalance(balancePeriodResponse, initialBalanceResponse);
+                        accountBalance.setFinalBalance(Collections.singletonList(finalBalanceResponse));
+
+                        accountBalances.add(accountBalance);
+                    }
+                }
+
+                periodBalanceResponse.setAccountBalances(accountBalances);
+                periodBalances.add(periodBalanceResponse);
+            }
         }
 
         trialBalanceResponse.setPeriods(periodBalances);
         return trialBalanceResponse;
+    }
+
+    private AccountingPeriodResponse createMonthlyPeriodResponse(LocalDateTime date) {
+        AccountingPeriodResponse response = new AccountingPeriodResponse();
+        response.setStartPeriod(date);
+        response.setEndPeriod(date.plusMonths(1).minusDays(1));
+        response.setPeriodName(date.getMonth().name() + " " + date.getYear());
+        response.setClosureType("Mensual");
+        response.setIsAnnual(false);
+        response.setStatus(true);
+        return response;
     }
 
     private TrialBalanceResponse.PeriodBalanceResponse createPeriodBalanceResponse(AccountingPeriodResponse period) {
@@ -117,16 +171,29 @@ public class TrialBalanceService {
     }
 
     private TrialBalanceResponse.BalancePeriod calculateBalancePeriod(AccountResponse account, AccountingPeriodResponse period) {
-        ControlAccountBalancesEntity controlAccountBalances = controlAccountBalancesService.getControlAccountBalancesForPeriod(account.getId(), period.getId());
         TrialBalanceResponse.BalancePeriod balancePeriodResponse = new TrialBalanceResponse.BalancePeriod();
 
-        if (controlAccountBalances != null) {
-            balancePeriodResponse.setDebit(controlAccountBalances.getDebit() != null ? new BigDecimal(controlAccountBalances.getDebit()) : BigDecimal.ZERO);
-            balancePeriodResponse.setCredit(controlAccountBalances.getCredit() != null ? new BigDecimal(controlAccountBalances.getCredit()) : BigDecimal.ZERO);
-        } else {
-            balancePeriodResponse.setDebit(BigDecimal.ZERO);
-            balancePeriodResponse.setCredit(BigDecimal.ZERO);
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
+        // Obtener el inicio y el final del periodo mensual
+        LocalDate startPeriod = period.getStartPeriod().toLocalDate();
+        LocalDate endPeriod = period.getEndPeriod().toLocalDate();
+
+        // Inicializar los totales de débito y crédito
+        BigDecimal totalDebit = BigDecimal.ZERO;
+        BigDecimal totalCredit = BigDecimal.ZERO;
+
+        // Obtener los balances mensuales desde el servicio
+        List<ControlAccountBalancesEntity> monthlyBalances = controlAccountBalancesService.getControlAccountBalancesForPeriodAndMonth(account.getId(),activePeriod.getId(), startPeriod, endPeriod);
+
+        for (ControlAccountBalancesEntity balance : monthlyBalances) {
+            totalDebit = totalDebit.add(balance.getDebit() != null ? new BigDecimal(balance.getDebit()) : BigDecimal.ZERO);
+            totalCredit = totalCredit.add(balance.getCredit() != null ? new BigDecimal(balance.getCredit()) : BigDecimal.ZERO);
         }
+
+        balancePeriodResponse.setDebit(totalDebit);
+        balancePeriodResponse.setCredit(totalCredit);
+
         return balancePeriodResponse;
     }
 

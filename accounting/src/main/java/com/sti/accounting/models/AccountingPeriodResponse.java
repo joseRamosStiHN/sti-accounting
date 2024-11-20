@@ -15,5 +15,6 @@ public class AccountingPeriodResponse {
     private Integer daysPeriod;
     private boolean status;
     private Boolean isClosed;
+    private Boolean isAnnual;
 
 }

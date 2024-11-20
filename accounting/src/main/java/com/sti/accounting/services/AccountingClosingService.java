@@ -152,12 +152,15 @@ public class AccountingClosingService {
 
     }
 
+    //tOdO: revisar metodo que realiza la insersion de los saldos iniciales
     private void processActivePeriod(TrialBalanceResponse.PeriodBalanceResponse periodBalance) {
+
         for (TrialBalanceResponse.AccountBalance accountBalance : periodBalance.getAccountBalances()) {
+
             // Obtener el balance final
             TrialBalanceResponse.FinalBalance finalBalance = getFinalBalance(accountBalance);
             if (finalBalance == null) {
-                continue; // Si no hay balance final, continuar con la siguiente cuenta
+                continue;
             }
 
             // Obtener el balance del período
