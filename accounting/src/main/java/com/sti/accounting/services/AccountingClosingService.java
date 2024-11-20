@@ -7,12 +7,17 @@ import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountingClosingRepository;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.repositories.IBalancesRepository;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class AccountingClosingService {
@@ -155,6 +160,30 @@ public class AccountingClosingService {
     //tOdO: revisar metodo que realiza la insersion de los saldos iniciales
     private void processActivePeriod(TrialBalanceResponse.PeriodBalanceResponse periodBalance) {
 
+        //agrupar todas las cuentas
+        Map<Long, Summary> totalsByAccount = periodBalance.getAccountBalances().stream()
+                .collect(Collectors.groupingBy(
+                        TrialBalanceResponse.AccountBalance::getId, // Agrupar por ID
+                        Collectors.reducing(
+                                new Summary(BigDecimal.ZERO, BigDecimal.ZERO), // Valor inicial
+                                balance -> {
+                                    // Calcular los débitos y créditos totales para este AccountBalance
+                                    BigDecimal totalDebit = sumAllDebits(balance);
+                                    BigDecimal totalCredit = sumAllCredits(balance);
+                                    return new Summary(totalDebit, totalCredit);
+                                },
+                                Summary::combine // Combinar los totales para cuentas con el mismo ID
+                        )
+                ));
+
+        totalsByAccount.forEach((id, summary) -> {
+            logger.info("ID: {}" ,id);
+            logger.info("  Total Debit: {}", summary.getTotalDebit());
+            logger.info("  Total Credit: {}", summary.getTotalCredit());
+        });
+
+
+
         for (TrialBalanceResponse.AccountBalance accountBalance : periodBalance.getAccountBalances()) {
 
             // Obtener el balance final
@@ -228,5 +257,54 @@ public class AccountingClosingService {
         accountingClosingResponse.setNetIncome(accountingClosingEntity.getNetIncome());
         return accountingClosingResponse;
 
+    }
+    //TODO: aqui
+    private static BigDecimal sumAllDebits(TrialBalanceResponse.AccountBalance balance) {
+        Stream<TrialBalanceResponse.Balance> balanceAndPeriod = Stream.concat(
+                balance.getInitialBalance() != null ? balance.getInitialBalance().stream() : Stream.empty(),
+                balance.getBalancePeriod() != null ? balance.getBalancePeriod().stream() : Stream.empty()
+        );
+
+        return Stream.concat(
+                        balanceAndPeriod,
+                        balance.getFinalBalance() != null ? balance.getFinalBalance().stream() : Stream.empty()
+                ).map(TrialBalanceResponse.Balance::getDebit)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    // Método para sumar todos los créditos de una cuenta
+    private static BigDecimal sumAllCredits(TrialBalanceResponse.AccountBalance balance) {
+        Stream<TrialBalanceResponse.Balance> balanceAndPeriod = Stream.concat(
+                balance.getInitialBalance() != null ? balance.getInitialBalance().stream() : Stream.empty(),
+                balance.getBalancePeriod() != null ? balance.getBalancePeriod().stream() : Stream.empty()
+                );
+
+       return Stream.concat(
+                balanceAndPeriod,
+                balance.getFinalBalance() != null ? balance.getFinalBalance().stream() : Stream.empty()
+        ).map(TrialBalanceResponse.Balance::getCredit)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    }
+
+    @Getter
+    static class Summary {
+        private BigDecimal totalDebit;
+        private BigDecimal totalCredit;
+
+        public Summary(BigDecimal totalDebit, BigDecimal totalCredit) {
+            this.totalDebit = totalDebit;
+            this.totalCredit = totalCredit;
+        }
+
+        // Combina dos Summary (para la operación de reducción)
+        public Summary combine(Summary other) {
+            return new Summary(
+                    this.totalDebit.add(other.totalDebit),
+                    this.totalCredit.add(other.totalCredit)
+            );
+        }
     }
 }
