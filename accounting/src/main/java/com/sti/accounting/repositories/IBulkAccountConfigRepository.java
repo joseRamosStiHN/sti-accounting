@@ -8,4 +8,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface IBulkAccountConfigRepository extends ListCrudRepository<BulkAccountConfig, Long> {
 
+
+    BulkAccountConfig findByName(String name);
+
 }

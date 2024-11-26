@@ -1,5 +1,6 @@
 package com.sti.accounting.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,8 +35,8 @@ public class BulkAccountConfig {
     @Column(name = "tenant_id")
     private String tenantId;
 
-    @OneToMany
-    @JoinColumn(name = "bulk_account_config_id", referencedColumnName = "id")
+    @OneToMany(mappedBy = "bulkAccountConfig", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<BulkAccountConfigDetail> details;
 
 }

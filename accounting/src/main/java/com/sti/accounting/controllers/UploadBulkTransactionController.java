@@ -1,13 +1,16 @@
 package com.sti.accounting.controllers;
 
+import com.sti.accounting.models.BulkTransactionRequest;
+import com.sti.accounting.models.BulkTransactionResponse;
+import com.sti.accounting.models.UploadBulkTransactionResponse;
 import com.sti.accounting.services.BulkAccountConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/upload-bulk-transaction")
@@ -20,7 +23,34 @@ public class UploadBulkTransactionController {
     }
 
     @PostMapping
-    public void uploadBulkTransaction(@RequestPart("file") MultipartFile file) {
-        this.bulkAccountConfigService.ExcelToObject(file);
+    public UploadBulkTransactionResponse uploadBulkTransaction(@RequestPart("file") MultipartFile file, @RequestParam Long idConfig ) {
+       return this.bulkAccountConfigService.ExcelToObject(file, idConfig);
     }
+
+    @PostMapping("config")
+    public BulkTransactionResponse createBulkTransaction(@RequestBody BulkTransactionRequest request) {
+      return this.bulkAccountConfigService.createUploadBulkTransaction(request);
+    }
+
+    @GetMapping()
+    public List<BulkTransactionResponse> getAllBulkTransaction() {
+       return this.bulkAccountConfigService.getAllBulk();
+    }
+
+    @GetMapping("/{id}")
+    public BulkTransactionResponse getByIdBulkTransaction(@PathVariable("id") Long id)  {
+        return this.bulkAccountConfigService.getByIdBulkTransaction(id);
+    }
+
+    @PutMapping("/{id}")
+    public BulkTransactionResponse updateBulkTransaction(@PathVariable("id") Long id, @Validated @RequestBody BulkTransactionRequest request) {
+        return bulkAccountConfigService.updateBulkTransaction(id, request);
+    }
+
+
+    @PostMapping("transactions")
+    public UploadBulkTransactionResponse saveTransacions(@RequestBody UploadBulkTransactionResponse request) {
+        return this.bulkAccountConfigService.saveTransacionsUpload(request);
+    }
+
 }
