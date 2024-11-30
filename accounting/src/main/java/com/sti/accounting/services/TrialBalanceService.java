@@ -187,8 +187,8 @@ public class TrialBalanceService {
         List<ControlAccountBalancesEntity> monthlyBalances = controlAccountBalancesService.getControlAccountBalancesForPeriodAndMonth(account.getId(),activePeriod.getId(), startPeriod, endPeriod);
 
         for (ControlAccountBalancesEntity balance : monthlyBalances) {
-            totalDebit = totalDebit.add(balance.getDebit() != null ? new BigDecimal(balance.getDebit()) : BigDecimal.ZERO);
-            totalCredit = totalCredit.add(balance.getCredit() != null ? new BigDecimal(balance.getCredit()) : BigDecimal.ZERO);
+            totalDebit = totalDebit.add(balance.getDebit() != null ? balance.getDebit() : BigDecimal.ZERO);
+            totalCredit = totalCredit.add(balance.getCredit() != null ? balance.getCredit() : BigDecimal.ZERO);
         }
 
         balancePeriodResponse.setDebit(totalDebit);

@@ -4,6 +4,7 @@ package com.sti.accounting.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 
@@ -22,10 +23,10 @@ public class ControlAccountBalancesEntity {
     private Long accountId;
 
     @Column(name = "DEBIT")
-    private String debit;
+    private BigDecimal debit;
 
     @Column(name = "CREDIT")
-    private String credit;
+    private BigDecimal credit;
 
     @ManyToOne
     @JoinColumn(name = "ACCOUNTING_PERIOD_ID", nullable = false)

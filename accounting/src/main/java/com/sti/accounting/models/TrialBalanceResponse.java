@@ -2,6 +2,7 @@ package com.sti.accounting.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ import java.util.List;
 public class TrialBalanceResponse {
 
     private List<PeriodBalanceResponse> periods;
+    private List<AccountFinalBalance> accountFinalBalances;
 
     @Data
     @AllArgsConstructor
@@ -43,32 +45,53 @@ public class TrialBalanceResponse {
         List<FinalBalance> finalBalance;
 
     }
-
+    //TODO: hay que revisar esto Laurent
+    @EqualsAndHashCode(callSuper = true)
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class InitialBalance {
+    public static class InitialBalance extends Balance{
         private BigDecimal debit;
         private BigDecimal credit;
+
+    }
+
+    @EqualsAndHashCode(callSuper = true)
+    @Data
+    // @AllArgsConstructor
+    // @NoArgsConstructor
+    public static class BalancePeriod extends Balance{
+        // private BigDecimal debit;
+        // private BigDecimal credit;
+
+    }
+
+    @EqualsAndHashCode(callSuper = true)
+    @Data
+    // @AllArgsConstructor
+    // @NoArgsConstructor
+    public static class FinalBalance extends Balance{
+        //private BigDecimal debit;
+        // private BigDecimal credit;
 
     }
 
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class BalancePeriod {
+    public static class Balance {
         private BigDecimal debit;
         private BigDecimal credit;
 
     }
 
+    // Nueva clase para representar el saldo final de cada cuenta
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class FinalBalance {
-        private BigDecimal debit;
-        private BigDecimal credit;
-
+    public static class AccountFinalBalance {
+        private Long accountId;
+        private FinalBalance finalBalance;
     }
 
 }

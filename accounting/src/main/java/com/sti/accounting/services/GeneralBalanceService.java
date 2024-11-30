@@ -100,8 +100,8 @@ public class GeneralBalanceService {
         // Si sumViewEntity es null, inicializarlo
         if (sumViewEntity == null) {
             sumViewEntity = new ControlAccountBalancesEntity();
-            sumViewEntity.setDebit("0");
-            sumViewEntity.setCredit("0");
+            sumViewEntity.setDebit(BigDecimal.valueOf(0));
+            sumViewEntity.setCredit(BigDecimal.valueOf(0));
         }
 
         BigDecimal balance = getBalanceWhitInitialBalance(sumViewEntity, account);
@@ -117,15 +117,15 @@ public class GeneralBalanceService {
         BigDecimal totalCredit = BigDecimal.ZERO;
 
         for (ControlAccountBalancesEntity balance : balances) {
-            String debitValue = balance.getDebit() != null ? balance.getDebit() : "0";
-            String creditValue = balance.getCredit() != null ? balance.getCredit() : "0";
+            BigDecimal debitValue = balance.getDebit() != null ? balance.getDebit() : BigDecimal.valueOf(0);
+            BigDecimal creditValue = balance.getCredit() != null ? balance.getCredit() : BigDecimal.valueOf(0);
 
-            totalDebit = totalDebit.add(new BigDecimal(debitValue));
-            totalCredit = totalCredit.add(new BigDecimal(creditValue));
+            totalDebit = totalDebit.add(debitValue);
+            totalCredit = totalCredit.add(creditValue);
         }
 
-        combined.setDebit(totalDebit.toString());
-        combined.setCredit(totalCredit.toString());
+        combined.setDebit(totalDebit);
+        combined.setCredit(totalCredit);
         return combined;
     }
 
@@ -169,10 +169,10 @@ public class GeneralBalanceService {
         }
 
         // Si sumViewEntity no es null, continuar con el cálculo
-        BigDecimal debit = sumViewEntity.getDebit() != null ? new BigDecimal(sumViewEntity.getDebit()) : BigDecimal.ZERO;
+        BigDecimal debit = sumViewEntity.getDebit() != null ? sumViewEntity.getDebit() : BigDecimal.ZERO;
         debit = initialBalanceDebit.add(debit);
 
-        BigDecimal credit = sumViewEntity.getCredit() != null ? new BigDecimal(sumViewEntity.getCredit()) : BigDecimal.ZERO;
+        BigDecimal credit = sumViewEntity.getCredit() != null ? sumViewEntity.getCredit() : BigDecimal.ZERO;
         credit = initialBalanceCredit.add(credit);
 
         if (account.getTypicalBalance().equalsIgnoreCase("D")) {

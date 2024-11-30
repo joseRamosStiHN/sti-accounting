@@ -53,11 +53,11 @@ public class ControlAccountBalancesService {
 
             // Actualizar los débitos y créditos
             if (motion.equals(Motion.D)) {
-                balanceEntity.setDebit(balanceEntity.getDebit() == null ? amount.toString() :
-                        new BigDecimal(balanceEntity.getDebit()).add(amount).toString());
+                balanceEntity.setDebit(balanceEntity.getDebit() == null ? amount :
+                        (balanceEntity.getDebit()).add(amount));
             } else {
-                balanceEntity.setCredit(balanceEntity.getCredit() == null ? amount.toString() :
-                        new BigDecimal(balanceEntity.getCredit()).add(amount).toString());
+                balanceEntity.setCredit(balanceEntity.getCredit() == null ? amount :
+                        (balanceEntity.getCredit()).add(amount));
             }
 
             // Guardar el balance actualizado
@@ -87,11 +87,11 @@ public class ControlAccountBalancesService {
 
 
             if (motion.equals(Motion.D)) {
-                sumViewEntity.setDebit(sumViewEntity.getDebit() == null ? amount.toString() :
-                        new BigDecimal(sumViewEntity.getDebit()).add(amount).toString());
+                sumViewEntity.setDebit(sumViewEntity.getDebit() == null ? amount :
+                        sumViewEntity.getDebit().add(amount));
             } else {
-                sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount.toString() :
-                        new BigDecimal(sumViewEntity.getCredit()).add(amount).toString());
+                sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount :
+                        sumViewEntity.getCredit().add(amount));
             }
 
             controlAccountBalancesRepository.save(sumViewEntity);
@@ -122,11 +122,11 @@ public class ControlAccountBalancesService {
 
 
             if (motion.equals(Motion.D)) {
-                sumViewEntity.setDebit(sumViewEntity.getDebit() == null ? amount.toString() :
-                        new BigDecimal(sumViewEntity.getDebit()).add(amount).toString());
+                sumViewEntity.setDebit(sumViewEntity.getDebit() == null ? amount :
+                        sumViewEntity.getDebit().add(amount));
             } else {
-                sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount.toString() :
-                        new BigDecimal(sumViewEntity.getCredit()).add(amount).toString());
+                sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount :
+                        sumViewEntity.getCredit().add(amount));
             }
 
             controlAccountBalancesRepository.save(sumViewEntity);
@@ -157,11 +157,11 @@ public class ControlAccountBalancesService {
 
 
             if (motion.equals(Motion.D)) {
-                sumViewEntity.setDebit(sumViewEntity.getDebit() == null ? amount.toString() :
-                        new BigDecimal(sumViewEntity.getDebit()).add(amount).toString());
+                sumViewEntity.setDebit(sumViewEntity.getDebit() == null ? amount :
+                        sumViewEntity.getDebit().add(amount));
             } else {
-                sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount.toString() :
-                        new BigDecimal(sumViewEntity.getCredit()).add(amount).toString());
+                sumViewEntity.setCredit(sumViewEntity.getCredit() == null ? amount :
+                        sumViewEntity.getCredit().add(amount));
             }
 
             controlAccountBalancesRepository.save(sumViewEntity);
@@ -173,23 +173,7 @@ public class ControlAccountBalancesService {
         return controlAccountBalancesRepository.findAllByAccountId(accountId);
     }
 
-    public ControlAccountBalancesEntity getControlAccountBalances(Long accountId) {
-        return controlAccountBalancesRepository.findByAccountId(accountId)
-                .orElseGet(() -> {
-                    ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
-                    newEntity.setAccountId(accountId);
-                    return newEntity;
-                });
-    }
 
-    public ControlAccountBalancesEntity getControlAccountBalancesForPeriod(Long accountId, Long accountingPeriodId) {
-        return controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, accountingPeriodId)
-                .orElse(null);
-    }
-
-    public List<ControlAccountBalancesEntity> getControlAccountBalancesForMonth(Long accountId, LocalDate startDate, LocalDate endDate) {
-        return controlAccountBalancesRepository.findAllByAccountIdAndCreateAtDateBetween(accountId, startDate, endDate);
-    }
 
     public List<ControlAccountBalancesEntity> getControlAccountBalancesForPeriodAndMonth(Long accountId, Long accountingPeriodId, LocalDate startDate, LocalDate endDate) {
         return controlAccountBalancesRepository.findAllByAccountIdAndAccountingPeriodIdAndCreateAtDateBetween(accountId,accountingPeriodId, startDate, endDate);

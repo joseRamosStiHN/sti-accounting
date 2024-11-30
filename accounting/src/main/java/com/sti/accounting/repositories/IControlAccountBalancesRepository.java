@@ -11,13 +11,12 @@ import java.util.Optional;
 @Repository
 public interface IControlAccountBalancesRepository extends ListCrudRepository<ControlAccountBalancesEntity, Long> {
 
-    Optional<ControlAccountBalancesEntity> findByAccountId(Long accountId);
 
     Optional<ControlAccountBalancesEntity> findByAccountIdAndAccountingPeriodId(Long accountId, Long accountingPeriodId);
 
     List<ControlAccountBalancesEntity> findAllByAccountId(Long accountId);
 
-    List<ControlAccountBalancesEntity> findAllByAccountIdAndCreateAtDateBetween(Long accountId, LocalDate startDate, LocalDate endDate);
+    List<ControlAccountBalancesEntity> findAllByAccountingPeriodId( Long accountingPeriodId);
 
     Optional<ControlAccountBalancesEntity> findByAccountIdAndCreateAtDateBetween(Long accountId, LocalDate startDate, LocalDate endDate);
 

@@ -72,12 +72,12 @@ public class IncomeStatementService {
         BigDecimal totalCredit = BigDecimal.ZERO;
 
         for (ControlAccountBalancesEntity balance : balances) {
-            totalDebit = totalDebit.add(new BigDecimal(balance.getDebit() != null ? balance.getDebit() : "0"));
-            totalCredit = totalCredit.add(new BigDecimal(balance.getCredit() != null ? balance.getCredit() : "0"));
+            totalDebit = totalDebit.add(balance.getDebit() != null ? balance.getDebit() : BigDecimal.valueOf(0));
+            totalCredit = totalCredit.add(balance.getCredit() != null ? balance.getCredit() : BigDecimal.valueOf(0));
         }
 
-        combined.setDebit(totalDebit.toString());
-        combined.setCredit(totalCredit.toString());
+        combined.setDebit(totalDebit);
+        combined.setCredit(totalCredit);
         return combined;
     }
 
@@ -97,8 +97,8 @@ public class IncomeStatementService {
         if (sumViewEntity == null) {
             return BigDecimal.ZERO;
         }
-        BigDecimal debit = sumViewEntity.getDebit() != null ? new BigDecimal(sumViewEntity.getDebit()) : BigDecimal.ZERO;
-        BigDecimal credit = sumViewEntity.getCredit() != null ? new BigDecimal(sumViewEntity.getCredit()) : BigDecimal.ZERO;
+        BigDecimal debit = sumViewEntity.getDebit() != null ? sumViewEntity.getDebit() : BigDecimal.ZERO;
+        BigDecimal credit = sumViewEntity.getCredit() != null ? sumViewEntity.getCredit() : BigDecimal.ZERO;
         return debit.subtract(credit).abs();
     }
 
