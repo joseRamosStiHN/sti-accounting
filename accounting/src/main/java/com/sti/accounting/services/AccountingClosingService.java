@@ -9,11 +9,14 @@ import com.sti.accounting.repositories.IAccountingClosingRepository;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.repositories.IBalancesRepository;
 import com.sti.accounting.repositories.IControlAccountBalancesRepository;
+import com.sti.accounting.utils.PeriodStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -162,11 +165,32 @@ public class AccountingClosingService {
         accountingClosingRepository.save(closingEntity);
         logger.info("Accounting closing saved for period ID: {}", activePeriod.getId());
 
-        // Cerrar el período contable
+        // Cerrar el período contable actual
         closeActivePeriod(activePeriod);
         logger.info("Accounting period ID {} has been closed.", activePeriod.getId());
+
+        // Activar el siguiente período contable
+        activateNextPeriod(activePeriod);
     }
 
+    private void activateNextPeriod(AccountingPeriodEntity currentPeriod) {
+        // Obtener el siguiente período basado en el order
+        AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByPeriodOrder(currentPeriod.getPeriodOrder() + 1);
+
+        if (nextPeriod != null) {
+            // Cambiar el estado del siguiente periodo a 'ACTIVE'
+            nextPeriod.setPeriodStatus(PeriodStatus.ACTIVE);
+            accountingPeriodRepository.save(nextPeriod);
+            logger.info("Accounting period ID {} has been activated.", nextPeriod.getId());
+        } else {
+            logger.warn("No next period found to activate.");
+        }
+    }
+
+    private void closeActivePeriod(AccountingPeriodEntity activePeriod) {
+        activePeriod.setPeriodStatus(PeriodStatus.CLOSED);
+        accountingPeriodRepository.save(activePeriod);
+    }
 
     private void inactivateExistingBalances(Long accountId) {
         List<BalancesEntity> existingBalances = iBalancesRepository.findByAccountId(accountId);
@@ -236,12 +260,6 @@ public class AccountingClosingService {
         balancesRequest.setIsCurrent(true);
         balancesService.createBalance(balancesRequest);
         logger.info("New balance created for account ID: {}", balancesRequest.getAccountId());
-    }
-
-    private void closeActivePeriod(AccountingPeriodEntity activePeriod) {
-        activePeriod.setStatus(false);
-        activePeriod.setIsClosed(true);
-        this.accountingPeriodRepository.save(activePeriod);
     }
 
     private AccountingClosingResponse toResponse(AccountingClosingEntity accountingClosingEntity) {

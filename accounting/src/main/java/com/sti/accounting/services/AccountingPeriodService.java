@@ -5,6 +5,7 @@ import com.sti.accounting.entities.AccountingPeriodEntity;
 
 import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
+import com.sti.accounting.utils.PeriodStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -48,19 +50,59 @@ public class AccountingPeriodService {
     }
 
     public AccountingPeriodResponse createAccountingPeriod(AccountingPeriodRequest accountingPeriodRequest) {
-        AccountingPeriodEntity entity = new AccountingPeriodEntity();
+        List<AccountingPeriodEntity> periods = generatePeriods(accountingPeriodRequest);
 
-        entity.setPeriodName(accountingPeriodRequest.getPeriodName());
-        entity.setClosureType(accountingPeriodRequest.getClosureType());
-        entity.setStartPeriod(accountingPeriodRequest.getStartPeriod());
-        entity.setEndPeriod(accountingPeriodRequest.getEndPeriod() == null ? calculateEndPeriod(accountingPeriodRequest.getStartPeriod(), accountingPeriodRequest.getClosureType()) : accountingPeriodRequest.getEndPeriod());
-        entity.setDaysPeriod(accountingPeriodRequest.getDaysPeriod());
-        entity.setStatus(false);
-        entity.setIsClosed(false);
-        entity.setIsAnnual(accountingPeriodRequest.getIsAnnual());
-        accountingPeriodRepository.save(entity);
+        // Guardar todos los períodos en la base de datos
+        accountingPeriodRepository.saveAll(periods);
 
-        return toResponse(entity);
+        // El primer período es el activo
+        AccountingPeriodEntity activePeriod = periods.get(0);
+        activePeriod.setPeriodStatus(PeriodStatus.ACTIVE);
+        accountingPeriodRepository.save(activePeriod);
+
+        return toResponse(activePeriod);
+    }
+
+    private List<AccountingPeriodEntity> generatePeriods(AccountingPeriodRequest request) {
+        List<AccountingPeriodEntity> periods = new ArrayList<>();
+
+        LocalDateTime startDate = request.getStartPeriod();
+        int months = getMonthsForClosureType(request.getClosureType());
+        int numberOfPeriods = Math.ceilDiv(12, months);
+
+        for (int i = 0; i < numberOfPeriods; i++) {
+            AccountingPeriodEntity period = new AccountingPeriodEntity();
+
+            period.setPeriodName(String.format("%s %d", request.getPeriodName(), i + 1));
+            period.setClosureType(request.getClosureType());
+            period.setStartPeriod(startDate);
+
+            LocalDateTime endPeriod = startDate.plusMonths(months).minusDays(1);
+            if (endPeriod.getYear() > startDate.getYear()) {
+                endPeriod = LocalDateTime.of(startDate.getYear(), 12, 31, 23, 59, 59);
+            }
+
+            period.setEndPeriod(endPeriod);
+            period.setDaysPeriod((int) java.time.Duration.between(startDate, endPeriod).toDays() + 1);
+            period.setPeriodStatus(PeriodStatus.INACTIVE);
+            period.setPeriodOrder(i + 1);
+            period.setIsAnnual(request.getIsAnnual());
+
+            periods.add(period);
+            startDate = endPeriod.plusDays(1);
+        }
+
+        return periods;
+    }
+
+    private int getMonthsForClosureType(String closureType) {
+        return switch (closureType.toLowerCase()) {
+            case "mensual" -> 1;
+            case "trimestral" -> 3;
+            case "semestral" -> 6;
+            case "anual" -> 12;
+            default -> throw new IllegalArgumentException("Closure type not recognized: " + closureType);
+        };
     }
 
     public AccountingPeriodResponse updateAccountingPeriod(Long id, AccountingPeriodRequest accountingPeriodRequest) {
@@ -71,22 +113,24 @@ public class AccountingPeriodService {
                         String.format("No accounting period found with ID: %d", id)));
 
         // Desactivar los periodos que esten activos cuando se mande activar un periodo
-        if (accountingPeriodRequest.isStatus()) {
-            List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findAllByStatus(true);
+        if (accountingPeriodRequest.getPeriodStatus() == PeriodStatus.ACTIVE) {
+            List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findActivePeriods();
             for (AccountingPeriodEntity activePeriod : activePeriods) {
                 if (!activePeriod.getId().equals(existingAccountingPeriod.getId())) {
-                    activePeriod.setStatus(false);
+                    activePeriod.setPeriodStatus(PeriodStatus.INACTIVE);
                     accountingPeriodRepository.save(activePeriod);
                 }
             }
         }
+
         existingAccountingPeriod.setPeriodName(accountingPeriodRequest.getPeriodName());
         existingAccountingPeriod.setClosureType(accountingPeriodRequest.getClosureType());
         existingAccountingPeriod.setStartPeriod(accountingPeriodRequest.getStartPeriod());
         existingAccountingPeriod.setEndPeriod(accountingPeriodRequest.getEndPeriod() == null ? calculateEndPeriod(accountingPeriodRequest.getStartPeriod(), accountingPeriodRequest.getClosureType()) : accountingPeriodRequest.getEndPeriod());
         existingAccountingPeriod.setDaysPeriod(accountingPeriodRequest.getDaysPeriod());
-        existingAccountingPeriod.setStatus(accountingPeriodRequest.isStatus());
-        existingAccountingPeriod.setIsClosed(false);
+        existingAccountingPeriod.setPeriodStatus(accountingPeriodRequest.getPeriodStatus());
+        existingAccountingPeriod.setPeriodOrder(accountingPeriodRequest.getPeriodOrder());
+
         existingAccountingPeriod.setIsAnnual(accountingPeriodRequest.getIsAnnual());
         accountingPeriodRepository.save(existingAccountingPeriod);
 
@@ -105,7 +149,7 @@ public class AccountingPeriodService {
     }
 
     public boolean isActivePeriodExists() {
-        return accountingPeriodRepository.findByStatusTrue().isPresent();
+        return !accountingPeriodRepository.findActivePeriods().isEmpty();
     }
 
     private LocalDateTime calculateEndPeriod(LocalDateTime startPeriod, String closureType) {
@@ -126,7 +170,9 @@ public class AccountingPeriodService {
 
     @Cacheable("activePeriod")
     public AccountingPeriodEntity getActivePeriod() {
-        return accountingPeriodRepository.findByStatusTrue()
+        return accountingPeriodRepository.findActivePeriods()
+                .stream()
+                .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no active accounting period"));
     }
 
@@ -139,8 +185,8 @@ public class AccountingPeriodService {
         response.setStartPeriod(entity.getStartPeriod());
         response.setEndPeriod(entity.getEndPeriod());
         response.setDaysPeriod(entity.getDaysPeriod());
-        response.setStatus(entity.isStatus());
-        response.setIsClosed(entity.getIsClosed());
+        response.setPeriodStatus(entity.getPeriodStatus().toString());
+        response.setPeriodOrder(entity.getPeriodOrder());
         response.setIsAnnual(entity.getIsAnnual());
         return response;
     }

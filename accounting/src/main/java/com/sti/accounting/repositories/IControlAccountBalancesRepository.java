@@ -16,9 +16,11 @@ public interface IControlAccountBalancesRepository extends ListCrudRepository<Co
 
     List<ControlAccountBalancesEntity> findAllByAccountId(Long accountId);
 
-    List<ControlAccountBalancesEntity> findAllByAccountingPeriodId( Long accountingPeriodId);
+    List<ControlAccountBalancesEntity> findAllByAccountingPeriodId(Long accountingPeriodId);
 
     Optional<ControlAccountBalancesEntity> findByAccountIdAndCreateAtDateBetween(Long accountId, LocalDate startDate, LocalDate endDate);
 
     List<ControlAccountBalancesEntity> findAllByAccountIdAndAccountingPeriodIdAndCreateAtDateBetween(Long accountId, Long accountingPeriodId, LocalDate startDate, LocalDate endDate);
+
+    List<ControlAccountBalancesEntity> findAllByAccountIdAndCreateAtDateBetween(Long accountId, LocalDate startDate, LocalDate endDate);
 }

@@ -1,5 +1,6 @@
 package com.sti.accounting.entities;
 
+import com.sti.accounting.utils.PeriodStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,11 +32,12 @@ public class AccountingPeriodEntity {
     @Column(name = "DAYS_PERIOD")
     private Integer daysPeriod;
 
-    @Column(name = "STATUS")
-    private boolean status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "PERIOD_STATUS")
+    private PeriodStatus periodStatus;
 
-    @Column(name = "IS_CLOSED")
-    private Boolean isClosed;
+    @Column(name = "PERIOD_ORDER")
+    private Integer periodOrder;
 
     @Column(name = "IS_ANNUAL")
     private Boolean isAnnual;

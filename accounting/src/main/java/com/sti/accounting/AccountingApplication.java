@@ -19,6 +19,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import static com.sti.accounting.utils.PeriodStatus.ACTIVE;
+
 
 @SpringBootApplication()
 public class AccountingApplication {
@@ -57,7 +59,7 @@ public class AccountingApplication {
                         new AccountTypeEntity(2L, "Gastos", "Tipo de cuenta para gastos.", new HashSet<>()),
                         new AccountTypeEntity(3L, "Efectivo", "Tipo de cuenta para efectivo.", new HashSet<>()),
                         new AccountTypeEntity(4L, "Bancos", "Tipo de cuenta para bancos.", new HashSet<>()),
-                        new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.", new HashSet<>()) ,
+                        new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.", new HashSet<>()),
                         new AccountTypeEntity(6L, "Patrimonio", "Tipo de cuenta para patrimonio.", new HashSet<>())
 
                 );
@@ -66,7 +68,7 @@ public class AccountingApplication {
 
             long accountingPeriod = accountingPeriodRepository.count();
             LocalDateTime startOfYear = LocalDateTime.of(Year.now().getValue(), 1, 1, 0, 0);
-            LocalDateTime endOfYear = LocalDateTime.of(Year.now().getValue(), 12, 31, 23, 59, 59); // Example end date
+            LocalDateTime endOfYear = LocalDateTime.of(Year.now().getValue(), 12, 31, 23, 59, 59);
 
             if (accountingPeriod == 0) {
                 List<AccountingPeriodEntity> accountingPeriods = List.of(
@@ -76,9 +78,9 @@ public class AccountingApplication {
                                 "Anual",
                                 startOfYear,
                                 endOfYear,
-                                365, 
-                                true,
-                                false,
+                                365,
+                                ACTIVE,
+                                0,
                                 true
                         )
                 );

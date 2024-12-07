@@ -1,5 +1,6 @@
 package com.sti.accounting.models;
 
+import com.sti.accounting.utils.PeriodStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +16,6 @@ import java.util.List;
 public class TrialBalanceResponse {
 
     private List<PeriodBalanceResponse> periods;
-    private List<AccountFinalBalance> accountFinalBalances;
 
     @Data
     @AllArgsConstructor
@@ -26,7 +26,7 @@ public class TrialBalanceResponse {
         private String closureType;
         private LocalDateTime startPeriod;
         private LocalDateTime endPeriod;
-        private boolean status;
+        private PeriodStatus periodStatus;
         private List<AccountBalance> accountBalances;
     }
 
@@ -83,15 +83,6 @@ public class TrialBalanceResponse {
         private BigDecimal debit;
         private BigDecimal credit;
 
-    }
-
-    // Nueva clase para representar el saldo final de cada cuenta
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class AccountFinalBalance {
-        private Long accountId;
-        private FinalBalance finalBalance;
     }
 
 }

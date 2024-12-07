@@ -48,6 +48,7 @@ public class ControlAccountBalancesService {
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
                         newEntity.setCreateAtDate(startOfMonth);
+
                         return newEntity;
                     });
 
@@ -151,7 +152,6 @@ public class ControlAccountBalancesService {
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
                         newEntity.setCreateAtDate(detail.getCreditNote().getCreateAtDate());
-
                         return newEntity;
                     });
 
@@ -173,9 +173,11 @@ public class ControlAccountBalancesService {
         return controlAccountBalancesRepository.findAllByAccountId(accountId);
     }
 
-
-
     public List<ControlAccountBalancesEntity> getControlAccountBalancesForPeriodAndMonth(Long accountId, Long accountingPeriodId, LocalDate startDate, LocalDate endDate) {
-        return controlAccountBalancesRepository.findAllByAccountIdAndAccountingPeriodIdAndCreateAtDateBetween(accountId,accountingPeriodId, startDate, endDate);
+        return controlAccountBalancesRepository.findAllByAccountIdAndAccountingPeriodIdAndCreateAtDateBetween(accountId, accountingPeriodId, startDate, endDate);
+    }
+
+    public List<ControlAccountBalancesEntity> getControlAccountBalancesForDateRange(Long accountId, LocalDate startDate, LocalDate endDate) {
+        return controlAccountBalancesRepository.findAllByAccountIdAndCreateAtDateBetween(accountId, startDate, endDate);
     }
 }

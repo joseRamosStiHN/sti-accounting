@@ -1,5 +1,6 @@
 package com.sti.accounting.models;
 
+import com.sti.accounting.utils.PeriodStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -27,9 +28,9 @@ public class AccountingPeriodRequest {
 
     private Integer daysPeriod;
 
-    private boolean status;
+    private PeriodStatus periodStatus;
 
-    private Boolean isClosed;
+    private Integer periodOrder;
 
     private Boolean isAnnual;
 
