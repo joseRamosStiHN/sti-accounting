@@ -29,17 +29,31 @@ public class TrialBalanceService {
         TrialBalanceResponse trialBalanceResponse = new TrialBalanceResponse();
         List<TrialBalanceResponse.PeriodBalanceResponse> periodBalances = new ArrayList<>();
         List<AccountResponse> allAccounts = accountService.getAllAccount();
-        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
+        // Obtener el período activo
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
         // Crear la respuesta del balance del período activo
+        TrialBalanceResponse.PeriodBalanceResponse activePeriodBalanceResponse = createPeriodBalanceResponse(activePeriod, allAccounts);
+        periodBalances.add(activePeriodBalanceResponse);
+
+        // Obtener los períodos cerrados
+        List<AccountingPeriodEntity> closedPeriods = accountingPeriodService.getClosedPeriods();
+        for (AccountingPeriodEntity closedPeriod : closedPeriods) {
+            TrialBalanceResponse.PeriodBalanceResponse closedPeriodBalanceResponse = createPeriodBalanceResponse(closedPeriod, allAccounts);
+            periodBalances.add(closedPeriodBalanceResponse);
+        }
+
+        trialBalanceResponse.setPeriods(periodBalances);
+        return trialBalanceResponse;
+    }
+
+    private TrialBalanceResponse.PeriodBalanceResponse createPeriodBalanceResponse(AccountingPeriodEntity period, List<AccountResponse> allAccounts) {
         TrialBalanceResponse.PeriodBalanceResponse periodBalanceResponse = new TrialBalanceResponse.PeriodBalanceResponse();
-        periodBalanceResponse.setPeriodName(activePeriod.getPeriodName());
-        periodBalanceResponse.setStartPeriod(activePeriod.getStartPeriod());
-        periodBalanceResponse.setEndPeriod(activePeriod.getEndPeriod());
+        periodBalanceResponse.setPeriodName(period.getPeriodName());
+        periodBalanceResponse.setStartPeriod(period.getStartPeriod());
+        periodBalanceResponse.setEndPeriod(period.getEndPeriod());
 
         List<TrialBalanceResponse.AccountBalance> accountBalances = new ArrayList<>();
-
-        // Mapa para almacenar el balance final de cada cuenta
         Map<Long, TrialBalanceResponse.FinalBalance> finalBalancesMap = new HashMap<>();
 
         for (AccountResponse account : allAccounts) {
@@ -51,7 +65,7 @@ public class TrialBalanceService {
                 accountBalance.setInitialBalance(Collections.singletonList(initialBalanceResponse));
 
                 // Calcular el balance para el rango de fechas
-                TrialBalanceResponse.BalancePeriod balancePeriodResponse = calculateBalanceForDateRange(account, activePeriod.getStartPeriod(), activePeriod.getEndPeriod());
+                TrialBalanceResponse.BalancePeriod balancePeriodResponse = calculateBalanceForDateRange(account, period.getStartPeriod(), period.getEndPeriod());
                 accountBalance.setBalancePeriod(Collections.singletonList(balancePeriodResponse));
 
                 // Calcular el balance final
@@ -66,13 +80,8 @@ public class TrialBalanceService {
         }
 
         periodBalanceResponse.setAccountBalances(accountBalances);
-        periodBalances.add(periodBalanceResponse);
-
-        trialBalanceResponse.setPeriods(periodBalances);
-        return trialBalanceResponse;
+        return periodBalanceResponse;
     }
-
-
     private boolean isSupportEntry(AccountResponse account) {
         return account.getSupportEntry() != null && account.getSupportEntry();
     }

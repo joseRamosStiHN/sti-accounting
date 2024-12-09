@@ -1,6 +1,7 @@
 package com.sti.accounting.repositories;
 
 import com.sti.accounting.entities.AccountingPeriodEntity;
+import com.sti.accounting.utils.PeriodStatus;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Repository;
@@ -15,6 +16,9 @@ public interface IAccountingPeriodRepository extends ListCrudRepository<Accounti
     List<AccountingPeriodEntity> findActivePeriods();
 
     List<AccountingPeriodEntity> findByStartPeriodBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+    @Query(value = "SELECT * FROM accounting_period WHERE period_status = 'CLOSED'", nativeQuery = true)
+    List<AccountingPeriodEntity> findByPeriodStatus();
 
     AccountingPeriodEntity findByPeriodOrder(int periodOrder);
 

@@ -176,6 +176,10 @@ public class AccountingPeriodService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no active accounting period"));
     }
 
+    public List<AccountingPeriodEntity> getClosedPeriods() {
+        return accountingPeriodRepository.findByPeriodStatus();
+    }
+
     private AccountingPeriodResponse toResponse(AccountingPeriodEntity entity) {
         AccountingPeriodResponse response = new AccountingPeriodResponse();
 
