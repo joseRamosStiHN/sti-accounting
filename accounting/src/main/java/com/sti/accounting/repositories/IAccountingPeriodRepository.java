@@ -1,7 +1,6 @@
 package com.sti.accounting.repositories;
 
 import com.sti.accounting.entities.AccountingPeriodEntity;
-import com.sti.accounting.utils.PeriodStatus;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Repository;

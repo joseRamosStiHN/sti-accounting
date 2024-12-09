@@ -180,6 +180,19 @@ public class AccountingPeriodService {
         return accountingPeriodRepository.findByPeriodStatus();
     }
 
+    public AccountingPeriodResponse getNextPeriodInfo() {
+        AccountingPeriodEntity activePeriod = getActivePeriod();
+
+        AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByPeriodOrder(activePeriod.getPeriodOrder() + 1);
+
+        if (nextPeriod != null) {
+            return toResponse(nextPeriod);
+        } else {
+            logger.warn("No next period found to retrieve information.");
+            return null;
+        }
+    }
+
     private AccountingPeriodResponse toResponse(AccountingPeriodEntity entity) {
         AccountingPeriodResponse response = new AccountingPeriodResponse();
 
