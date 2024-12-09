@@ -110,8 +110,8 @@ public class AccountingClosingService {
         return accountingClosingResponse;
     }
 
-    public void closeAccountingPeriod() {
-        logger.info("Closing accounting period");
+    public void closeAccountingPeriod(String newClosureType) {
+        logger.info("Closing accounting period with new closure type: {}", newClosureType);
 
         // Obtener el período contable activo
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
@@ -167,21 +167,21 @@ public class AccountingClosingService {
         closeActivePeriod(activePeriod);
         logger.info("Accounting period ID {} has been closed.", activePeriod.getId());
 
-        // Activar el siguiente período contable
-        activateNextPeriod(activePeriod);
+        // Activar el siguiente período contable basado en el nuevo tipo de cierre
+        activateNextPeriod(activePeriod, newClosureType);
     }
 
-    private void activateNextPeriod(AccountingPeriodEntity currentPeriod) {
-        // Obtener el siguiente período basado en el order
-        AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByPeriodOrder(currentPeriod.getPeriodOrder() + 1);
+    private void activateNextPeriod(AccountingPeriodEntity currentPeriod, String newClosureType) {
+        // Obtener el siguiente período basado en el nuevo tipo de cierre
+        List<AccountingPeriodEntity> nextPeriods = accountingPeriodRepository.findNextPeriod(currentPeriod.getEndPeriod(), newClosureType);
 
-        if (nextPeriod != null) {
-            // Cambiar el estado del siguiente periodo a 'ACTIVE'
+        if (!nextPeriods.isEmpty()) {
+            AccountingPeriodEntity nextPeriod = nextPeriods.get(0);
             nextPeriod.setPeriodStatus(PeriodStatus.ACTIVE);
             accountingPeriodRepository.save(nextPeriod);
             logger.info("Accounting period ID {} has been activated.", nextPeriod.getId());
         } else {
-            logger.warn("No next period found to activate.");
+            logger.warn("No next period found to activate for closure type: {}", newClosureType);
         }
     }
 

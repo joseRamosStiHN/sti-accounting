@@ -29,9 +29,9 @@ public class AccountingClosingController {
     }
 
     @PostMapping("/close")
-    public ResponseEntity<String> closeAccountingPeriod() {
+    public ResponseEntity<String> closeAccountingPeriod(@RequestParam String newClosureType) {
         try {
-            accountingClosingService.closeAccountingPeriod();
+            accountingClosingService.closeAccountingPeriod(newClosureType);
             return ResponseEntity.ok("Accounting period closed successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error closing accounting period: " + e.getMessage());
