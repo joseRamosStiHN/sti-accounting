@@ -7,5 +7,4 @@ public enum PeriodStatus {
     CLOSED,
     EARRING,
 
-
 }

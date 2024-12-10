@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import static com.sti.accounting.utils.PeriodStatus.ACTIVE;
+import static com.sti.accounting.utils.PeriodStatus.INACTIVE;
 
 
 @SpringBootApplication()
@@ -79,7 +79,7 @@ public class AccountingApplication {
                                 startOfYear,
                                 endOfYear,
                                 365,
-                                ACTIVE,
+                                INACTIVE,
                                 0,
                                 true
                         )
