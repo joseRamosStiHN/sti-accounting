@@ -50,6 +50,13 @@ public class AccountingPeriodService {
     }
 
     public AccountingPeriodResponse createAccountingPeriod(AccountingPeriodRequest accountingPeriodRequest) {
+        // Inactivar todos los períodos activos antes de crear nuevos
+        List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findActivePeriods();
+        for (AccountingPeriodEntity activePeriod : activePeriods) {
+            activePeriod.setPeriodStatus(PeriodStatus.INACTIVE);
+            accountingPeriodRepository.save(activePeriod);
+        }
+
         List<AccountingPeriodEntity> periods = generatePeriods(accountingPeriodRequest);
 
         // Guardar todos los períodos en la base de datos
@@ -183,13 +190,12 @@ public class AccountingPeriodService {
     public AccountingPeriodResponse getNextPeriodInfo() {
         AccountingPeriodEntity activePeriod = getActivePeriod();
 
-        AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByPeriodOrder(activePeriod.getPeriodOrder() + 1);
+        AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByClosureTypeAndPeriodOrder(activePeriod.getClosureType(),activePeriod.getPeriodOrder() + 1);
 
         if (nextPeriod != null) {
             return toResponse(nextPeriod);
         } else {
-            logger.warn("No next period found to retrieve information.");
-            return null;
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No next period found to retrieve information.");
         }
     }
 

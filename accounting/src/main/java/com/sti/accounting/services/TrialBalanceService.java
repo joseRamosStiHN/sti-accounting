@@ -32,15 +32,22 @@ public class TrialBalanceService {
 
         // Obtener el período activo
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
-        // Crear la respuesta del balance del período activo
-        TrialBalanceResponse.PeriodBalanceResponse activePeriodBalanceResponse = createPeriodBalanceResponse(activePeriod, allAccounts);
-        periodBalances.add(activePeriodBalanceResponse);
+        if (activePeriod != null && activePeriod.getStartPeriod() != null) {
+            // Crear la respuesta del balance del período activo
+            TrialBalanceResponse.PeriodBalanceResponse activePeriodBalanceResponse = createPeriodBalanceResponse(activePeriod, allAccounts);
+            periodBalances.add(activePeriodBalanceResponse);
 
-        // Obtener los períodos cerrados
-        List<AccountingPeriodEntity> closedPeriods = accountingPeriodService.getClosedPeriods();
-        for (AccountingPeriodEntity closedPeriod : closedPeriods) {
-            TrialBalanceResponse.PeriodBalanceResponse closedPeriodBalanceResponse = createPeriodBalanceResponse(closedPeriod, allAccounts);
-            periodBalances.add(closedPeriodBalanceResponse);
+            // Obtener el año del período activo
+            int activeYear = activePeriod.getStartPeriod().getYear();
+
+            // Obtener los períodos cerrados y filtrar por el año activo
+            List<AccountingPeriodEntity> closedPeriods = accountingPeriodService.getClosedPeriods();
+            for (AccountingPeriodEntity closedPeriod : closedPeriods) {
+                if (closedPeriod.getStartPeriod() != null && closedPeriod.getStartPeriod().getYear() == activeYear) {
+                    TrialBalanceResponse.PeriodBalanceResponse closedPeriodBalanceResponse = createPeriodBalanceResponse(closedPeriod, allAccounts);
+                    periodBalances.add(closedPeriodBalanceResponse);
+                }
+            }
         }
 
         trialBalanceResponse.setPeriods(periodBalances);
@@ -82,6 +89,7 @@ public class TrialBalanceService {
         periodBalanceResponse.setAccountBalances(accountBalances);
         return periodBalanceResponse;
     }
+
     private boolean isSupportEntry(AccountResponse account) {
         return account.getSupportEntry() != null && account.getSupportEntry();
     }

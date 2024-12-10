@@ -23,6 +23,6 @@ public interface IAccountingPeriodRepository extends ListCrudRepository<Accounti
     @Query("SELECT p FROM AccountingPeriodEntity p WHERE p.startPeriod > :endPeriod AND p.closureType = :closureType AND p.periodStatus = 'INACTIVE' ORDER BY p.startPeriod ASC")
     List<AccountingPeriodEntity> findNextPeriod(@Param("endPeriod") LocalDateTime endPeriod, @Param("closureType") String closureType);
 
-    AccountingPeriodEntity findByPeriodOrder(int periodOrder);
+    AccountingPeriodEntity findByClosureTypeAndPeriodOrder(String closureType, int periodOrder);
 
 }
