@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,46 +72,64 @@ public class AccountingPeriodService {
         return toResponse(activePeriod);
     }
 
-    private List<AccountingPeriodEntity> generatePeriods(AccountingPeriodRequest request) {
+    public List<AccountingPeriodEntity> generatePeriods(AccountingPeriodRequest request) {
         List<AccountingPeriodEntity> periods = new ArrayList<>();
 
         LocalDateTime startDate = request.getStartPeriod();
-        int months = getMonthsForClosureType(request.getClosureType());
-        int numberOfPeriods = Math.ceilDiv(12, months);
+        LocalDate endOfYear = startDate.toLocalDate().with(TemporalAdjusters.lastDayOfYear());
 
-        for (int i = 0; i < numberOfPeriods; i++) {
+        while (startDate.toLocalDate().isBefore(endOfYear.plusDays(1))) {
             AccountingPeriodEntity period = new AccountingPeriodEntity();
 
-            period.setPeriodName(String.format("%s %d", request.getPeriodName(), i + 1));
+            period.setPeriodName(String.format("%s %d", request.getPeriodName(), periods.size() + 1));
             period.setClosureType(request.getClosureType());
             period.setStartPeriod(startDate);
 
-            LocalDateTime endPeriod = startDate.plusMonths(months).minusDays(1);
-            if (endPeriod.getYear() > startDate.getYear()) {
-                endPeriod = LocalDateTime.of(startDate.getYear(), 12, 31, 23, 59, 59);
+            LocalDate endPeriod;
+            switch (request.getClosureType().toLowerCase()) {
+                case "mensual":
+                    // Fin del mes actual
+                    endPeriod = startDate.toLocalDate().with(TemporalAdjusters.lastDayOfMonth());
+                    break;
+
+                case "trimestral":
+                    // Calcular el fin del trimestre como 3 meses desde el inicio, pero limitado al fin del año
+                    endPeriod = startDate.toLocalDate().plusMonths(3).withDayOfMonth(1).minusDays(1);
+                    if (endPeriod.isAfter(endOfYear)) {
+                        endPeriod = endOfYear;
+                    }
+                    break;
+
+                case "semestral":
+                    // Calcular el fin del semestre como 6 meses desde el inicio, pero limitado al fin del año
+                    endPeriod = startDate.toLocalDate().plusMonths(6).withDayOfMonth(1).minusDays(1);
+                    if (endPeriod.isAfter(endOfYear)) {
+                        endPeriod = endOfYear;
+                    }
+                    break;
+
+
+                case "anual":
+                    // Fin del año
+                    endPeriod = endOfYear;
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("Tipo de cierre no soportado: " + request.getClosureType());
             }
 
-            period.setEndPeriod(endPeriod);
-            period.setDaysPeriod((int) java.time.Duration.between(startDate, endPeriod).toDays() + 1);
-            period.setPeriodStatus(PeriodStatus.INACTIVE);
-            period.setPeriodOrder(i + 1);
+            period.setEndPeriod(endPeriod.atTime(23, 59, 59));
+            period.setDaysPeriod((int) java.time.Duration.between(period.getStartPeriod(), period.getEndPeriod()).toDays() + 1);
+            period.setPeriodStatus(periods.isEmpty() ? PeriodStatus.ACTIVE : PeriodStatus.INACTIVE);
+            period.setPeriodOrder(periods.size() + 1);
             period.setIsAnnual(request.getIsAnnual());
 
             periods.add(period);
-            startDate = endPeriod.plusDays(1);
+
+            startDate = endPeriod.plusDays(1).atStartOfDay();
         }
 
         return periods;
-    }
-
-    private int getMonthsForClosureType(String closureType) {
-        return switch (closureType.toLowerCase()) {
-            case "mensual" -> 1;
-            case "trimestral" -> 3;
-            case "semestral" -> 6;
-            case "anual" -> 12;
-            default -> throw new IllegalArgumentException("Closure type not recognized: " + closureType);
-        };
     }
 
     public AccountingPeriodResponse updateAccountingPeriod(Long id, AccountingPeriodRequest accountingPeriodRequest) {
@@ -190,7 +210,7 @@ public class AccountingPeriodService {
     public AccountingPeriodResponse getNextPeriodInfo() {
         AccountingPeriodEntity activePeriod = getActivePeriod();
 
-        AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByClosureTypeAndPeriodOrder(activePeriod.getClosureType(),activePeriod.getPeriodOrder() + 1);
+        AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByClosureTypeAndPeriodOrder(activePeriod.getClosureType(), activePeriod.getPeriodOrder() + 1);
 
         if (nextPeriod != null) {
             return toResponse(nextPeriod);
