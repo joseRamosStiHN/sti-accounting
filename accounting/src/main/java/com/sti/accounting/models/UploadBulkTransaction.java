@@ -11,8 +11,6 @@ import java.util.List;
 @Data
 public class UploadBulkTransaction {
 
-    private String id;
-
     private Integer row;
 
     private String date;
@@ -24,8 +22,6 @@ public class UploadBulkTransaction {
     private Status status;
     private BigDecimal exchangeRate;
     private String typeSale;
-    private BigDecimal cashValue;
-    private BigDecimal creditValue;
     private String typePayment;
     private String rtn;
     private String supplierName;

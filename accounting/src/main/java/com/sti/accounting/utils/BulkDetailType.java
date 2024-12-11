@@ -7,4 +7,7 @@ public enum BulkDetailType {
     S,      // string
     D,      // Decimal
     B,      // Boolean
+    VC,  // valor credito
+    VD, // valor debito
+
 }

@@ -36,9 +36,6 @@ public class BulkAccountConfigDetail {
     private String operation; // DEBE/HABER
 
 
-    @Column(name = "field")
-    private String field;
-
     @ManyToOne
     @JoinColumn(name = "bulk_account_config_id", referencedColumnName = "id")
     @JsonIgnore

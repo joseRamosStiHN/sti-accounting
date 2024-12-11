@@ -17,7 +17,7 @@ public class BulkTransactionRequestList {
 
     private BulkDetailType bulkTypeData;
 
-    private String field;
+
 
 
 

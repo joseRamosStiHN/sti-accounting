@@ -78,13 +78,11 @@ public class BulkAccountConfigService {
                 //get cell value
                 boolean error = false;
                 UploadBulkTransaction uploadBulkTransactionData = new UploadBulkTransaction();
-                UUID uuid = UUID.randomUUID();
-                uploadBulkTransactionData.setId(uuid.toString());
-                uploadBulkTransactionData.setRow(i);
+
+                uploadBulkTransactionData.setRow(i +1 );
                 for (BulkAccountConfigDetail detail : configs.getDetails()) {
                     DataFormatter formatter = new DataFormatter();
-                    String  header = formatter.formatCellValue(sheet.getRow(configs.getRowStart()-2).getCell(detail.getColIndex()));
-                    if (header.equalsIgnoreCase(detail.getTitle())) {
+
                         CellType cellType = sheet.getRow(i).getCell(detail.getColIndex()).getCellType();
                         String strValue = "";
                         if (cellType == CellType.FORMULA) {
@@ -92,32 +90,12 @@ public class BulkAccountConfigService {
                         } else {
                             strValue = formatter.formatCellValue(sheet.getRow(i).getCell(detail.getColIndex()));
                         }
-
-                            String field = detail.getField()!= null? detail.getField(): "";
+                            String field = detail.getTitle();
                             switch (field) {
-                                case "CASH":
-                                    if (esNumeroValido(strValue)){
-                                        uploadBulkTransactionData.setCashValue(new BigDecimal(strValue).setScale(4, RoundingMode.HALF_UP));
-                                    }else{
-                                        String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(),"Tipo de dato de Contado debería ser numérico");
-                                        uploadBulkTransactionData.setErrors(errorMessage);
-                                        error = true;
-                                    }
-                                    break;
-                                case "CREDIT_VALUE":
-                                    if (esNumeroValido(strValue)){
-                                        uploadBulkTransactionData.setCreditValue(new BigDecimal(strValue).setScale(4, RoundingMode.HALF_UP));
-                                    }else{
-                                        String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(),"Tipo de dato de Credito debería ser numérico");
-                                        uploadBulkTransactionData.setErrors(errorMessage);
-                                        error = true;
-                                    }
-                                    break;
                                 case "CURRENCY":
                                     uploadBulkTransactionData.setCurrency(strValue);
                                     break;
-                                case "DATE":
-
+                                case "FECHA":
                                     if (esFechaValida(strValue)){
                                         uploadBulkTransactionData.setDate(strValue);
                                     }else{
@@ -126,7 +104,7 @@ public class BulkAccountConfigService {
                                         error = true;
                                     }
                                     break;
-                                case "DESCRIPTION":
+                                case "DETALLE":
 
                                     if (strValue.equalsIgnoreCase("NULO")){
                                         continue outerLoop;
@@ -142,27 +120,26 @@ public class BulkAccountConfigService {
                                         error = true;
                                     }
                                     break;
-                                case "REFERENCE":
+                                case "FACTURA":
                                     uploadBulkTransactionData.setReference(strValue);
                                     break;
-                                case "RTN":
+                                case "CON-RTN":
                                     uploadBulkTransactionData.setRtn(strValue);
                                     break;
                                 case "SUPPLIER_value":
                                     uploadBulkTransactionData.setSupplierName(strValue);
                                     break;
-                                case "TYPE_PAYMENT":
+                                case "TIPO-VENTA":
 
                                     uploadBulkTransactionData.setTypePayment(strValue);
                                     break;
-                                case "TYPE_SALE":
+                                case "TIPO-PAGO":
                                     uploadBulkTransactionData.setTypeSale(strValue);
                                     break;
                                 default:
-                                    if (detail.getAccountId()!= null){
+                                    if ( BulkDetailType.ACC.equals(detail.getDetailType())){
 
-
-                                        UploadBulkAccountsListResponse uploadAccounts = getAccountsListResponse(detail, header, strValue);
+                                        UploadBulkAccountsListResponse uploadAccounts = getAccountsListResponse(detail, strValue);
                                         List<UploadBulkAccountsListResponse> accountsList = uploadBulkTransactionData.getAccounts();
                                         if (accountsList == null || accountsList.isEmpty()) {
                                             accountsList = new ArrayList<>();
@@ -171,7 +148,7 @@ public class BulkAccountConfigService {
                                         uploadBulkTransactionData.setAccounts(accountsList);
 
                                     }else {
-                                        UploadBulkOthersFieldsList uploadOthersFields = getAnotherFields(header, strValue);
+                                        UploadBulkOthersFieldsList uploadOthersFields = getAnotherFields(detail.getTitle(), strValue);
                                         List<UploadBulkOthersFieldsList> uploadOthersFieldsList = uploadBulkTransactionData.getOtherFields();
                                         if (uploadOthersFieldsList == null || uploadOthersFieldsList.isEmpty()) {
                                             uploadOthersFieldsList = new ArrayList<>();
@@ -180,15 +157,6 @@ public class BulkAccountConfigService {
                                         uploadBulkTransactionData.setOtherFields(uploadOthersFieldsList);
                                     }
                             }
-
-
-
-                    }else{
-                        String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(),"No se encontro el titulo "+detail.getTitle());
-                        uploadBulkTransactionData.setErrors(errorMessage);
-                        error = true;
-                    }
-
                 }
 
 
@@ -200,39 +168,8 @@ public class BulkAccountConfigService {
                         totalDebit = totalDebit.add(account.getDebit());
                         totalCredit = totalCredit.add(account.getCredit());
                     }
-                    if (totalDebit.compareTo(totalCredit) == 0) {
+                    if (totalDebit.compareTo(totalCredit) != 0) {
 
-                       if (uploadBulkTransactionData.getTypeSale()!=null){
-                           if (uploadBulkTransactionData.getTypeSale().equalsIgnoreCase("CREDITO")){
-                               if (uploadBulkTransactionData.getCashValue()!= null){
-                                   if (totalCredit.compareTo(uploadBulkTransactionData.getCreditValue()) != 0) {
-                                       String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(),"Total de la partida no coincide con el total de credito");
-                                       uploadBulkTransactionData.setErrors(errorMessage);
-                                       error = true;
-                                   }
-                               }else{
-                                   String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(),"Ingresar valor de credito");
-                                   uploadBulkTransactionData.setErrors(errorMessage);
-                                   error = true;
-                               }
-
-
-                           }else  if (uploadBulkTransactionData.getTypeSale().equalsIgnoreCase("CONTADO")){
-                               if (uploadBulkTransactionData.getCashValue()!= null){
-                                   if (totalDebit.compareTo(uploadBulkTransactionData.getCashValue()) != 0) {
-                                       String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(),"Total de la partidad no coincide con el total de contado");
-                                       uploadBulkTransactionData.setErrors(errorMessage);
-                                       error = true;
-                                   }
-                               }else{
-                                   String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(),"Ingresar valor de credito contado");
-                                   uploadBulkTransactionData.setErrors(errorMessage);
-                                   error = true;
-                               }
-                           }
-                       }
-
-                    }else{
                         String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(),"Partida No cuadra");
                         uploadBulkTransactionData.setErrors(errorMessage);
                         error = true;
@@ -255,7 +192,6 @@ public class BulkAccountConfigService {
                 uploadBulkTransactionResponse.setData(data);
                 uploadBulkTransactionResponse.setErrors(errors);
 
-
             }
 
 
@@ -266,16 +202,16 @@ public class BulkAccountConfigService {
         }
     }
 
-    private static UploadBulkAccountsListResponse getAccountsListResponse(BulkAccountConfigDetail detail, String header, String strValue) {
+    private static UploadBulkAccountsListResponse getAccountsListResponse(BulkAccountConfigDetail detail, String strValue) {
         UploadBulkAccountsListResponse uploadAccounts = new UploadBulkAccountsListResponse();
 
-        uploadAccounts.setTitle(header);
+        uploadAccounts.setTitle(detail.getTitle());
         uploadAccounts.setAccount(detail.getAccountId());
         if (detail.getOperation().equalsIgnoreCase("D") && isNumeric(strValue)){
-            uploadAccounts.setDebit(new BigDecimal(strValue).setScale(4, RoundingMode.HALF_UP));
+            uploadAccounts.setDebit(new BigDecimal(strValue).setScale(2, RoundingMode.HALF_UP));
             uploadAccounts.setCredit(BigDecimal.ZERO);
         }else if (detail.getOperation().equalsIgnoreCase("C") && isNumeric(strValue) ){
-            uploadAccounts.setCredit(new BigDecimal(strValue).setScale(4, RoundingMode.HALF_UP));
+            uploadAccounts.setCredit(new BigDecimal(strValue).setScale(2, RoundingMode.HALF_UP));
             uploadAccounts.setDebit(BigDecimal.ZERO);
         }else{
             uploadAccounts.setCredit(BigDecimal.ZERO);
@@ -430,8 +366,6 @@ public class BulkAccountConfigService {
                     entity.setTypeSale(transaction.getTypeSale());
                 }
 
-                entity.setCashValue(transaction.getCashValue());
-                entity.setCreditValue(transaction.getCreditValue());
                 entity.setTypePayment(transaction.getTypePayment());
 
                 if(transaction.getRtn() == null || transaction.getRtn().isEmpty()){
@@ -509,16 +443,19 @@ public class BulkAccountConfigService {
                     entity.setAmount(detail.getCredit());
                     entity.setMotion(Motion.C);
                     entity.setTransaction(transactionEntity);
+                  result.add(entity);
                 }else  if (detail.getDebit().compareTo(BigDecimal.ZERO) != 0){
                   entity.setAmount(detail.getDebit());
                   entity.setMotion(Motion.D);
                   entity.setTransaction(transactionEntity);
-                }else {
-                  entity.setAmount(BigDecimal.ZERO);
-                  entity.setMotion(null);
-                  entity.setTransaction(transactionEntity);
-              }
-                result.add(entity);
+                  result.add(entity);
+                }
+//              else {
+//                  entity.setAmount(BigDecimal.ZERO);
+//                  entity.setMotion(null);
+//                  entity.setTransaction(transactionEntity);
+//              }
+
             }
             return result;
         } catch (Exception e) {
@@ -534,7 +471,6 @@ public class BulkAccountConfigService {
         bulkAccountConfigDetail.setDetailType(details.getBulkTypeData());
         bulkAccountConfigDetail.setTitle(details.getTitle());
         bulkAccountConfigDetail.setOperation(details.getOperation());
-        bulkAccountConfigDetail.setField(details.getField());
         bulkAccountConfigDetail.setBulkAccountConfig(bulkAccountConfigRequest);
         return bulkAccountConfigDetail;
     }
@@ -616,7 +552,6 @@ public class BulkAccountConfigService {
         uploadBulkTransactionRequestList.setBulkTypeData(bulkAccountConfigDetail.getDetailType());
         uploadBulkTransactionRequestList.setTitle(bulkAccountConfigDetail.getTitle());
         uploadBulkTransactionRequestList.setOperation(bulkAccountConfigDetail.getOperation());
-        uploadBulkTransactionRequestList.setField(bulkAccountConfigDetail.getField());
 
         return uploadBulkTransactionRequestList;
     }
