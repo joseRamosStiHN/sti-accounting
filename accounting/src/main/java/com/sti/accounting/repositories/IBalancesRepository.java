@@ -13,7 +13,7 @@ public interface IBalancesRepository extends ListCrudRepository<BalancesEntity, 
 
     List<BalancesEntity> findByAccountId(Long accountId);
 
-    @Query(value = "SELECT * FROM BALANCES WHERE ACCOUNT_ID = :accountId ORDER BY DATE DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM balances WHERE account_id = :accountId ORDER BY DATE DESC LIMIT 1", nativeQuery = true)
     BalancesEntity findMostRecentBalanceByAccountId(@Param("accountId") Long accountId);
 
 
