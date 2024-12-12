@@ -219,7 +219,7 @@ public class AccountingPeriodService {
         }
     }
 
-    private AccountingPeriodResponse toResponse(AccountingPeriodEntity entity) {
+    public AccountingPeriodResponse toResponse(AccountingPeriodEntity entity) {
         AccountingPeriodResponse response = new AccountingPeriodResponse();
 
         response.setId(entity.getId());

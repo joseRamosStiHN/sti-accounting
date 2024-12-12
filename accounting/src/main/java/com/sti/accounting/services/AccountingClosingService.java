@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,9 +25,6 @@ import java.util.stream.Collectors;
 public class AccountingClosingService {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountingClosingService.class);
-    private static final String CLOSURE_TYPE_MENSUAL = "mensual";
-    private static final String CLOSURE_TYPE_TRIMESTRAL = "trimestral";
-    private static final String CLOSURE_TYPE_SEMESTRAL = "semestral";
 
 
     private final IAccountingClosingRepository accountingClosingRepository;
@@ -136,114 +132,26 @@ public class AccountingClosingService {
     }
 
     private void activateOrCreateNextPeriod(AccountingPeriodEntity currentPeriod, String newClosureType) {
-        List<AccountingPeriodEntity> nextPeriods = accountingPeriodRepository.findNextPeriod(currentPeriod.getEndPeriod(), newClosureType);
+        try {
+            AccountingPeriodResponse nextPeriodResponse = accountingPeriodService.getNextPeriodInfo();
+            AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findById(nextPeriodResponse.getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se encontró el siguiente periodo."));
 
-        // Verifica si hay más de un período siguiente
-        if (nextPeriods.size() > 1) {
-            logger.warn("Se encontraron múltiples períodos siguientes. Activando el primero: {}", nextPeriods.get(0).getId());
-        }
-
-        // Toma el primer período siguiente si existe
-        if (!nextPeriods.isEmpty()) {
-            AccountingPeriodEntity nextPeriod = nextPeriods.get(0);
             nextPeriod.setPeriodStatus(PeriodStatus.ACTIVE);
             accountingPeriodRepository.save(nextPeriod);
-            logger.info("El período contable ID {} ha sido activado.", nextPeriod.getId());
-        } else {
-            // Verifica si el período actual es diciembre
-            if (currentPeriod.getEndPeriod().getMonthValue() == 12) {
-                logger.info("Cerrando el último mes del año. Creando nuevos períodos para el siguiente año.");
-                createMissingAccountingPeriods(currentPeriod.getEndPeriod(), newClosureType);
-            } else {
-                logger.warn("No se encontró ningún período siguiente. Creando nuevos períodos contables.");
-                createMissingAccountingPeriods(currentPeriod.getEndPeriod(), newClosureType);
-            }
+            logger.info("El periodo contable ID {} ha sido activado.", nextPeriod.getId());
+        } catch (ResponseStatusException e) {
+            logger.warn("No se encontró un periodo siguiente. Creando nuevos periodos.");
+
+            AccountingPeriodRequest request = new AccountingPeriodRequest();
+            request.setStartPeriod(currentPeriod.getEndPeriod().plusDays(1));
+            request.setClosureType(newClosureType);
+            request.setPeriodName("Periodo " + newClosureType.substring(0, 1).toUpperCase() + newClosureType.substring(1).toLowerCase());
+            request.setIsAnnual(false);
+
+            AccountingPeriodResponse newPeriodResponse = accountingPeriodService.createAccountingPeriod(request);
+            logger.info("Se creó un nuevo periodo contable con ID {}", newPeriodResponse.getId());
         }
-    }
-
-    private void createMissingAccountingPeriods(LocalDateTime startPeriod, String closureType) {
-        int currentMonth = startPeriod.getMonthValue();
-        int periodsToCreate;
-
-        // Si estamos en diciembre, creamos períodos para el siguiente año
-        if (currentMonth == 12) {
-            switch (closureType.toLowerCase()) {
-                case CLOSURE_TYPE_MENSUAL:
-                    periodsToCreate = 12;
-                    break;
-                case CLOSURE_TYPE_TRIMESTRAL:
-                    periodsToCreate = 4;
-                    break;
-                case CLOSURE_TYPE_SEMESTRAL:
-                    periodsToCreate = 2;
-                    break;
-                default:
-                    logger.warn("Closure type not supported for period creation: {}", closureType);
-                    return;
-            }
-        } else {
-            // Si no es diciembre, se puede seguir con la lógica anterior
-            int remainingMonths = 12 - currentMonth;
-            switch (closureType.toLowerCase()) {
-                case CLOSURE_TYPE_MENSUAL:
-                    periodsToCreate = remainingMonths;
-                    break;
-                case CLOSURE_TYPE_TRIMESTRAL:
-                    if (remainingMonths < 3) {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                String.format("No hay suficientes meses restantes en el año contable para crear un período trimestral. Quedan %d meses.", remainingMonths));
-                    }
-                    periodsToCreate = 3;
-                    break;
-                case CLOSURE_TYPE_SEMESTRAL:
-                    if (remainingMonths < 6) {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                String.format("No hay suficientes meses restantes en el año contable para crear un período semestral. Quedan %d meses.", remainingMonths));
-                    }
-                    periodsToCreate = 6;
-                    break;
-                default:
-                    logger.warn("Closure type not supported for period creation: {}", closureType);
-                    return;
-            }
-        }
-
-        createAndSavePeriods(startPeriod, closureType, currentMonth, periodsToCreate);
-    }
-
-    private void createAndSavePeriods(LocalDateTime startPeriod, String closureType, int currentMonth, int periodsToCreate) {
-        int monthsToAdd = getMonthsForClosureType(closureType); // Obtener el número de meses según el tipo de cierre
-
-        // Si el mes actual es diciembre, comenzamos desde el 1 de enero del siguiente año
-        LocalDateTime newStartPeriod = startPeriod.getMonthValue() == 12
-                ? LocalDateTime.of(startPeriod.getYear() + 1, 1, 1, 0, 0)
-                : startPeriod;
-
-        for (int i = 0; i < periodsToCreate; i++) {
-            LocalDateTime periodStart = newStartPeriod.plusMonths((long) i * monthsToAdd);
-            LocalDateTime periodEnd = periodStart.plusMonths(monthsToAdd).minusDays(1);
-
-            // Crear el nuevo período
-            AccountingPeriodEntity newPeriod = new AccountingPeriodEntity();
-            newPeriod.setStartPeriod(periodStart);
-            newPeriod.setEndPeriod(periodEnd);
-            newPeriod.setClosureType(closureType);
-            newPeriod.setPeriodName(String.format("%s %d", "Periodo " + closureType.substring(0, 1).toUpperCase() + closureType.substring(1).toLowerCase(), (currentMonth / monthsToAdd + i + 1)));
-            newPeriod.setDaysPeriod((int) java.time.Duration.between(periodStart, periodEnd).toDays() + 1);
-            newPeriod.setPeriodStatus(i == 0 ? PeriodStatus.ACTIVE : PeriodStatus.INACTIVE);
-            newPeriod.setPeriodOrder(i + 1);
-            newPeriod.setIsAnnual(false);
-            accountingPeriodRepository.save(newPeriod);
-        }
-    }
-
-    private int getMonthsForClosureType(String closureType) {
-        return switch (closureType.toLowerCase()) {
-            case CLOSURE_TYPE_MENSUAL -> 1;
-            case CLOSURE_TYPE_TRIMESTRAL -> 3;
-            case CLOSURE_TYPE_SEMESTRAL -> 6;
-            default -> throw new IllegalArgumentException("Closure type not recognized: " + closureType);
-        };
     }
 
     private void processBalances(AccountingPeriodEntity activePeriod) {
