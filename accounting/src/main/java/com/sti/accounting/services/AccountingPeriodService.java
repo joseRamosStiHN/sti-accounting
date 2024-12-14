@@ -205,9 +205,11 @@ public class AccountingPeriodService {
     public AccountingPeriodResponse getNextPeriodInfo() {
         AccountingPeriodEntity activePeriod = getActivePeriod();
 
+        int currentYear = LocalDate.now().getYear();
+
         // Intenta obtener el próximo período
-        AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByClosureTypeAndPeriodOrder(
-                activePeriod.getClosureType(), activePeriod.getPeriodOrder() + 1
+        AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByClosureTypeAndPeriodOrderForYear(
+                activePeriod.getClosureType(), activePeriod.getPeriodOrder() + 1,currentYear
         );
 
         // Si existe, devuelve su información

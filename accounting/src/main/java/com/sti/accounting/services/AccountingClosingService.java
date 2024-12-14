@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -136,8 +137,10 @@ public class AccountingClosingService {
 
     private void activateOrCreateNextPeriod(AccountingPeriodEntity currentPeriod, String newClosureType) {
 
+        int currentYear = LocalDate.now().getYear();
+
         AccountingPeriodEntity nextPeriod = accountingPeriodRepository
-                .findByClosureTypeAndPeriodOrder(newClosureType, currentPeriod.getPeriodOrder() + 1);
+                .findByClosureTypeAndPeriodOrderForYear(newClosureType, currentPeriod.getPeriodOrder() + 1,currentYear);
 
 
         if (nextPeriod != null) {
