@@ -271,6 +271,7 @@ public class AccountingClosingService {
     private AccountingClosingResponse toResponse(AccountingClosingEntity accountingClosingEntity) {
         AccountingClosingResponse accountingClosingResponse = new AccountingClosingResponse();
 
+        accountingClosingResponse.setId(accountingClosingEntity.getId());
         accountingClosingResponse.setAccountingPeriodId(accountingClosingEntity.getAccountingPeriod().getId());
         accountingClosingResponse.setStartPeriod(accountingClosingEntity.getStartPeriod());
         accountingClosingResponse.setEndPeriod(accountingClosingEntity.getEndPeriod());
@@ -280,6 +281,7 @@ public class AccountingClosingService {
         accountingClosingResponse.setTotalIncome(accountingClosingEntity.getTotalIncome());
         accountingClosingResponse.setTotalExpenses(accountingClosingEntity.getTotalExpenses());
         accountingClosingResponse.setNetIncome(accountingClosingEntity.getNetIncome());
+        accountingClosingResponse.setClosureReportPdf(accountingClosingEntity.getClosureReportPdf());
         return accountingClosingResponse;
     }
 }

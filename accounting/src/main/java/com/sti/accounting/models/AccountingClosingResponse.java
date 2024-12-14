@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class AccountingClosingResponse {
 
+    private Long id;
     private Long accountingPeriodId;
     private String periodName;
     private String typePeriod;
