@@ -21,5 +21,4 @@ public class GeneralBalanceController {
     public List<GeneralBalanceResponse> getBalanceGeneral(@RequestParam(required = false) Long periodId) {
         return generalBalanceService.getBalanceGeneral(periodId);
     }
-
 }

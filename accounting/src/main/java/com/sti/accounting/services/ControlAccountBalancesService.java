@@ -47,7 +47,7 @@ public class ControlAccountBalancesService {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
-                        newEntity.setCreateAtDate(startOfMonth);
+                        newEntity.setCreateAtDate(detail.getTransaction().getCreateAtDate());
 
                         return newEntity;
                     });

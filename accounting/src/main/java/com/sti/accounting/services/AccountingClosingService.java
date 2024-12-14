@@ -5,6 +5,7 @@ import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.entities.BalancesEntity;
 import com.sti.accounting.entities.ControlAccountBalancesEntity;
 import com.sti.accounting.models.*;
+import com.sti.accounting.reports.ReportPdfGenerator;
 import com.sti.accounting.repositories.IAccountingClosingRepository;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.repositories.IBalancesRepository;
@@ -12,10 +13,9 @@ import com.sti.accounting.repositories.IControlAccountBalancesRepository;
 import com.sti.accounting.utils.PeriodStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +35,9 @@ public class AccountingClosingService {
     private final BalancesService balancesService;
     private final IBalancesRepository iBalancesRepository;
     private final IControlAccountBalancesRepository controlAccountBalancesRepository;
+    private final ReportPdfGenerator reportPdfGenerator;
 
-    public AccountingClosingService(IAccountingClosingRepository accountingClosingRepository, AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository, BalancesService balancesService, IBalancesRepository iBalancesRepository, IControlAccountBalancesRepository controlAccountBalancesRepository) {
+    public AccountingClosingService(IAccountingClosingRepository accountingClosingRepository, AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository, BalancesService balancesService, IBalancesRepository iBalancesRepository, IControlAccountBalancesRepository controlAccountBalancesRepository, ReportPdfGenerator reportPdfGenerator) {
         this.accountingClosingRepository = accountingClosingRepository;
         this.accountingPeriodService = accountingPeriodService;
         this.generalBalanceService = generalBalanceService;
@@ -45,6 +46,7 @@ public class AccountingClosingService {
         this.balancesService = balancesService;
         this.iBalancesRepository = iBalancesRepository;
         this.controlAccountBalancesRepository = controlAccountBalancesRepository;
+        this.reportPdfGenerator = reportPdfGenerator;
     }
 
     public List<AccountingClosingResponse> getAllAccountingClosing() {
@@ -99,7 +101,7 @@ public class AccountingClosingService {
         BigDecimal totalExpenses = incomeStatementResponses.stream()
                 .filter(item -> "D".equals(item.getTypicalBalance()))
                 .map(IncomeStatementResponse::getAmount)
-                .reduce (BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Asignar totales de ingresos y gastos al response
         accountingClosingResponse.setTotalIncome(totalIncome);
@@ -129,18 +131,21 @@ public class AccountingClosingService {
 
         // Activate or create the next accounting period
         activateOrCreateNextPeriod(activePeriod, newClosureType);
+
     }
 
     private void activateOrCreateNextPeriod(AccountingPeriodEntity currentPeriod, String newClosureType) {
-        try {
-            AccountingPeriodResponse nextPeriodResponse = accountingPeriodService.getNextPeriodInfo();
-            AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findById(nextPeriodResponse.getId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se encontró el siguiente periodo."));
 
+        AccountingPeriodEntity nextPeriod = accountingPeriodRepository
+                .findByClosureTypeAndPeriodOrder(newClosureType, currentPeriod.getPeriodOrder() + 1);
+
+
+        if (nextPeriod != null) {
             nextPeriod.setPeriodStatus(PeriodStatus.ACTIVE);
             accountingPeriodRepository.save(nextPeriod);
             logger.info("El periodo contable ID {} ha sido activado.", nextPeriod.getId());
-        } catch (ResponseStatusException e) {
+
+        } else {
             logger.warn("No se encontró un periodo siguiente. Creando nuevos periodos.");
 
             AccountingPeriodRequest request = new AccountingPeriodRequest();
@@ -151,7 +156,10 @@ public class AccountingClosingService {
 
             AccountingPeriodResponse newPeriodResponse = accountingPeriodService.createAccountingPeriod(request);
             logger.info("Se creó un nuevo periodo contable con ID {}", newPeriodResponse.getId());
+
         }
+
+
     }
 
     private void processBalances(AccountingPeriodEntity activePeriod) {
@@ -187,6 +195,18 @@ public class AccountingClosingService {
         closingEntity.setTotalIncome(closingDetails.getTotalIncome());
         closingEntity.setTotalExpenses(closingDetails.getTotalExpenses());
         closingEntity.setNetIncome(closingDetails.getNetIncome());
+
+        // Generar el PDF y guardar su contenido como byte[]
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            // Genera el PDF usando el generador
+            reportPdfGenerator.generateReportPdf(outputStream);
+
+            // Guarda los bytes del PDF en la entidad
+            closingEntity.setClosureReportPdf(outputStream.toByteArray());
+            logger.info("PDF generado y almacenado en la base de datos");
+        } catch (Exception e) {
+            logger.info("Error al generar el PDF");
+        }
 
         accountingClosingRepository.save(closingEntity);
         logger.info("Accounting closing saved for period ID: {}", activePeriod.getId());
@@ -239,6 +259,13 @@ public class AccountingClosingService {
 
         balancesRequest.setIsCurrent(true);
         balancesService.createBalance(balancesRequest);
+    }
+
+    public AccountingClosingResponse getAccountingClosingById(Long id) {
+        AccountingClosingEntity closingEntity = accountingClosingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cierre contable no encontrado con id: " + id));
+
+        return toResponse(closingEntity);
     }
 
     private AccountingClosingResponse toResponse(AccountingClosingEntity accountingClosingEntity) {

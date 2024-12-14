@@ -46,4 +46,8 @@ public class AccountingClosingEntity {
 
     @Column(name = "NET_INCOME")
     private BigDecimal netIncome;
+
+    @Lob
+    @Column(name = "CLOSURE_REPORT_PDF", columnDefinition = "LONGBLOB")
+    private byte[] closureReportPdf;
 }

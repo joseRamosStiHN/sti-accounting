@@ -23,5 +23,6 @@ public class AccountingClosingResponse {
     private BigDecimal totalIncome;
     private BigDecimal totalExpenses;
     private BigDecimal netIncome;
+    private byte[] closureReportPdf;
 
 }
