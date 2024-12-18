@@ -64,6 +64,12 @@ public class AccountingPeriodService {
     }
 
     public AccountingPeriodResponse createAccountingPeriod(AccountingPeriodRequest accountingPeriodRequest) {
+
+        // Verificar si ya existe un periodo igual
+        if (isAccountingPeriodExists(accountingPeriodRequest)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is already an equal accounting period.");
+        }
+
         // Inactivar todos los períodos activos antes de crear nuevos
         List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findActivePeriods();
         for (AccountingPeriodEntity activePeriod : activePeriods) {
@@ -150,6 +156,11 @@ public class AccountingPeriodService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No accounting period found with ID: %d", id)));
 
+        // Verificar si ya existe un periodo igual (excluyendo el actual)
+        if (isAccountingPeriodExists(accountingPeriodRequest, existingAccountingPeriod.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is already an equal accounting period.");
+        }
+
         // Desactivar los periodos que esten activos cuando se mande activar un periodo
         if (accountingPeriodRequest.getPeriodStatus() == PeriodStatus.ACTIVE) {
             List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findActivePeriods();
@@ -209,7 +220,7 @@ public class AccountingPeriodService {
 
         // Intenta obtener el próximo período
         AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByClosureTypeAndPeriodOrderForYear(
-                activePeriod.getClosureType(), activePeriod.getPeriodOrder() + 1,currentYear
+                activePeriod.getClosureType(), activePeriod.getPeriodOrder() + 1, currentYear
         );
 
         // Si existe, devuelve su información
@@ -248,7 +259,7 @@ public class AccountingPeriodService {
 
         // Retornar información del siguiente período calculado
         AccountingPeriodResponse response = new AccountingPeriodResponse();
-        response.setPeriodName(String.format("Periodo %s %d", activePeriod.getClosureType(),  1));
+        response.setPeriodName(String.format("Periodo %s %d", activePeriod.getClosureType(), 1));
         response.setClosureType(activePeriod.getClosureType());
         response.setStartPeriod(startPeriod);
         response.setEndPeriod(endPeriod);
@@ -258,6 +269,14 @@ public class AccountingPeriodService {
         response.setIsAnnual(activePeriod.getIsAnnual());
 
         return response;
+    }
+
+    private boolean isAccountingPeriodExists(AccountingPeriodRequest request) {
+        return accountingPeriodRepository.existsByClosureTypeAndStartPeriod(request.getClosureType(), request.getStartPeriod());
+    }
+
+    private boolean isAccountingPeriodExists(AccountingPeriodRequest request, Long excludeId) {
+        return accountingPeriodRepository.existsByClosureTypeAndStartPeriodAndIdNot(request.getClosureType(), request.getStartPeriod(), excludeId);
     }
 
     public AccountingPeriodResponse toResponse(AccountingPeriodEntity entity) {

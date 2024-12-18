@@ -140,7 +140,7 @@ public class AccountingClosingService {
         int currentYear = LocalDate.now().getYear();
 
         AccountingPeriodEntity nextPeriod = accountingPeriodRepository
-                .findByClosureTypeAndPeriodOrderForYear(newClosureType, currentPeriod.getPeriodOrder() + 1,currentYear);
+                .findByClosureTypeAndPeriodOrderForYear(newClosureType, currentPeriod.getPeriodOrder() + 1, currentYear);
 
 
         if (nextPeriod != null) {

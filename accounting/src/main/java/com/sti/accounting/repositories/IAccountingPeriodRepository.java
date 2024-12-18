@@ -30,4 +30,8 @@ public interface IAccountingPeriodRepository extends ListCrudRepository<Accounti
     AccountingPeriodEntity findByClosureTypeAndPeriodOrderForYear(@Param("closureType") String closureType,
                                                                   @Param("periodOrder") int periodOrder,
                                                                   @Param("year") int year);
+
+    boolean existsByClosureTypeAndStartPeriod( String closureType, LocalDateTime startPeriod);
+
+    boolean existsByClosureTypeAndStartPeriodAndIdNot( String closureType, LocalDateTime startPeriod, Long id);
 }
