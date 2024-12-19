@@ -33,5 +33,7 @@ public class CreditNotesResponse {
 
     private String user;
 
+    private Long accountingPeriodId;
+
     private Set<CreditNotesDetailResponse> detailNote;
 }

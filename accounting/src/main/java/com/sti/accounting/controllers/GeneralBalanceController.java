@@ -2,10 +2,7 @@ package com.sti.accounting.controllers;
 
 import com.sti.accounting.models.GeneralBalanceResponse;
 import com.sti.accounting.services.GeneralBalanceService;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,8 +18,7 @@ public class GeneralBalanceController {
     }
 
     @GetMapping("/general")
-    public List<GeneralBalanceResponse> getBalanceGeneral() {
-        return generalBalanceService.getBalanceGeneral();
+    public List<GeneralBalanceResponse> getBalanceGeneral(@RequestParam(required = false) Long periodId) {
+        return generalBalanceService.getBalanceGeneral(periodId);
     }
-
 }

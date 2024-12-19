@@ -13,5 +13,8 @@ public class AccountingPeriodResponse {
     private LocalDateTime startPeriod;
     private LocalDateTime endPeriod;
     private Integer daysPeriod;
-    private boolean status;
+    private String periodStatus;
+    private Integer periodOrder;
+    private Boolean isAnnual;
+
 }

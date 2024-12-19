@@ -52,9 +52,6 @@ public class BalancesService {
         AccountEntity accountEntity = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No account were found with the id %s", balancesRequest.getAccountId())));
 
-        if (balancesRequest.getInitialBalance().compareTo(BigDecimal.ZERO) < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The initial account balance cannot be negative");
-        }
 
         balanceEntity.setAccount(accountEntity);
         balanceEntity.setTypicalBalance(balancesRequest.getTypicalBalance());
@@ -86,7 +83,6 @@ public class BalancesService {
         existingBalance.setCreateAtDate(LocalDateTime.now());
         existingBalance.setIsCurrent(balancesRequest.getIsCurrent());
         iBalancesRepository.save(existingBalance);
-
         return toResponse(existingBalance);
 
     }

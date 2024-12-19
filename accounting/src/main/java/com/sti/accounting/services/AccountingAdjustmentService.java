@@ -27,16 +27,23 @@ public class AccountingAdjustmentService {
     private final IAccountRepository iAccountRepository;
     private final ITransactionRepository transactionRepository;
     private final ControlAccountBalancesService controlAccountBalancesService;
+    private final AccountingPeriodService accountingPeriodService;
 
-    public AccountingAdjustmentService(IAccountingAdjustmentsRepository accountingAdjustmentsRepository, IAccountRepository iAccountRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService) {
+    public AccountingAdjustmentService(IAccountingAdjustmentsRepository accountingAdjustmentsRepository, IAccountRepository iAccountRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService, AccountingPeriodService accountingPeriodService) {
         this.accountingAdjustmentsRepository = accountingAdjustmentsRepository;
         this.iAccountRepository = iAccountRepository;
         this.transactionRepository = transactionRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
+        this.accountingPeriodService = accountingPeriodService;
     }
 
     public List<AccountingAdjustmentResponse> getAllAccountingAdjustments() {
-        return accountingAdjustmentsRepository.findAll().stream().map(this::entityToResponse).toList();
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
+        return accountingAdjustmentsRepository.findAll().stream()
+                .filter(adjustment -> adjustment.getAccountingPeriod().equals(activePeriod))
+                .map(this::entityToResponse)
+                .toList();
     }
 
     public AccountingAdjustmentResponse getAccountingAdjustmentsById(Long id) {
@@ -68,10 +75,13 @@ public class AccountingAdjustmentService {
                 )
         );
 
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
         entity.setTransaction(transactionEntity);
         entity.setReference(accountingAdjustmentRequest.getReference());
         entity.setDescriptionAdjustment(accountingAdjustmentRequest.getDescriptionAdjustment());
         entity.setStatus(StatusTransaction.DRAFT);
+        entity.setAccountingPeriod(activePeriod);
 
         //Adjustment detail validations
         validateAdjustmentTranDetail(accountingAdjustmentRequest.getDetailAdjustment());
@@ -180,6 +190,7 @@ public class AccountingAdjustmentService {
         response.setStatus(entity.getStatus().toString());
         response.setCreationDate(entity.getCreationDate());
         response.setUser("user.mock");
+        response.setAccountingPeriodId(entity.getAccountingPeriod().getId());
 
         Set<AdjustmentDetailResponse> detailResponseSet = new HashSet<>();
         for (AdjustmentDetailEntity detail : entity.getAdjustmentDetail()) {

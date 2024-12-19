@@ -44,6 +44,10 @@ public class CreditNotesEntity {
     @Column(name = "CREATION_DATE")
     private LocalDateTime createAtTime;
 
+    @ManyToOne
+    @JoinColumn(name = "accounting_period_id")
+    private AccountingPeriodEntity accountingPeriod;
+
     @OneToMany(mappedBy = "creditNote", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CreditNotesDetailEntity> creditNoteDetail;
 }

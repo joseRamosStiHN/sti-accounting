@@ -20,6 +20,7 @@ public class AccountingAdjustmentResponse {
     private String status;
     private LocalDateTime creationDate;
     private String user;
+    private Long accountingPeriodId;
 
     private Set<AdjustmentDetailResponse> adjustmentDetails;
 

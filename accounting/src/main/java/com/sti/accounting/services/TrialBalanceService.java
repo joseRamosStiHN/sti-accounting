@@ -1,257 +1,193 @@
 package com.sti.accounting.services;
 
 import com.sti.accounting.entities.AccountingPeriodEntity;
+import com.sti.accounting.entities.ControlAccountBalancesEntity;
 import com.sti.accounting.models.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
-
 
 @Service
 public class TrialBalanceService {
 
-    private final TransactionService transactionService;
     private final AccountingPeriodService accountingPeriodService;
-    private final AccountingAdjustmentService accountingAdjustmentService;
-    private final CreditNotesService creditNotesService;
-    private final DebitNotesService debitNotesService;
+    private final ControlAccountBalancesService controlAccountBalancesService;
+    private final AccountService accountService;
 
-    public TrialBalanceService(TransactionService transactionService, AccountingPeriodService accountingPeriodService, AccountingAdjustmentService accountingAdjustmentService, CreditNotesService creditNotesService, DebitNotesService debitNotesService) {
-        this.transactionService = transactionService;
+    public TrialBalanceService(AccountingPeriodService accountingPeriodService,
+                               ControlAccountBalancesService controlAccountBalancesService,
+                               AccountService accountService) {
         this.accountingPeriodService = accountingPeriodService;
-        this.accountingAdjustmentService = accountingAdjustmentService;
-        this.creditNotesService = creditNotesService;
-        this.debitNotesService = debitNotesService;
+        this.controlAccountBalancesService = controlAccountBalancesService;
+        this.accountService = accountService;
     }
 
     public TrialBalanceResponse getTrialBalance() {
-        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
-
-        // Seteo de valores del periodo activo
         TrialBalanceResponse trialBalanceResponse = new TrialBalanceResponse();
-        trialBalanceResponse.setId(activePeriod.getId());
-        trialBalanceResponse.setPeriodName(activePeriod.getPeriodName());
-        trialBalanceResponse.setClosureType(activePeriod.getClosureType());
-        trialBalanceResponse.setStartPeriod(activePeriod.getStartPeriod());
-        trialBalanceResponse.setEndPeriod(activePeriod.getEndPeriod());
+        List<TrialBalanceResponse.PeriodBalanceResponse> periodBalances = new ArrayList<>();
+        List<AccountResponse> allAccounts = accountService.getAllAccount();
 
-        // Obtener transacciones y ajustes para el periodo activo
-        //Utilizando el servicio de asientos y apuntes que trae todas las transacciones y ajustes
-        AccountingEntriesNotesResponse transactionAdjustment = new AccountingEntriesNotesService(transactionService,accountingAdjustmentService, accountingPeriodService, creditNotesService, debitNotesService).getAccountingEntriesNotes();
+        // Obtener el período activo
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+        if (activePeriod != null && activePeriod.getStartPeriod() != null) {
+            // Crear la respuesta del balance del período activo
+            TrialBalanceResponse.PeriodBalanceResponse activePeriodBalanceResponse = createPeriodBalanceResponse(activePeriod, allAccounts);
+            periodBalances.add(activePeriodBalanceResponse);
 
-        // Agregar balance diario al response
-        List<TrialBalanceResponse.BalanceDiary> balanceDiaries = calculateInitialBalance(transactionAdjustment);
+            // Obtener el año del período activo
+            int activeYear = activePeriod.getStartPeriod().getYear();
 
-        trialBalanceResponse.setBalanceDiaries(balanceDiaries);
+            // Obtener los períodos cerrados y filtrar por el año activo
+            List<AccountingPeriodEntity> closedPeriods = accountingPeriodService.getClosedPeriods();
+            for (AccountingPeriodEntity closedPeriod : closedPeriods) {
+                if (closedPeriod.getStartPeriod() != null && closedPeriod.getStartPeriod().getYear() == activeYear) {
+                    TrialBalanceResponse.PeriodBalanceResponse closedPeriodBalanceResponse = createPeriodBalanceResponse(closedPeriod, allAccounts);
+                    periodBalances.add(closedPeriodBalanceResponse);
+                }
+            }
+        }
 
-        // Agregar el balance del periodo y el valance final para cada diario
-        trialBalanceResponse.getBalanceDiaries().forEach(balanceDiary -> {
-            TrialBalanceResponse.BalancePeriod balancePeriod = calculateBalancePeriod(balanceDiary.getDiaryName(), transactionAdjustment);
-            balanceDiary.setBalancePeriod(Collections.singletonList(balancePeriod));
-
-            TrialBalanceResponse.FinalBalance finalBalance = calculateFinalBalance(balancePeriod, balanceDiary);
-            balanceDiary.setFinalBalance(Collections.singletonList(finalBalance));
-        });
-
-        trialBalanceResponse.setBalanceDiaries(balanceDiaries);
-
+        trialBalanceResponse.setPeriods(periodBalances);
         return trialBalanceResponse;
     }
 
-    private List<TrialBalanceResponse.BalanceDiary> calculateInitialBalance(AccountingEntriesNotesResponse transactionAdjustment) {
-        Map<String, Map<String, BigDecimal>> balanceMap = new HashMap<>();
+    private TrialBalanceResponse.PeriodBalanceResponse createPeriodBalanceResponse(AccountingPeriodEntity period, List<AccountResponse> allAccounts) {
+        TrialBalanceResponse.PeriodBalanceResponse periodBalanceResponse = new TrialBalanceResponse.PeriodBalanceResponse();
+        periodBalanceResponse.setPeriodName(period.getPeriodName());
+        periodBalanceResponse.setStartPeriod(period.getStartPeriod());
+        periodBalanceResponse.setEndPeriod(period.getEndPeriod());
 
-        // Procesar transacciones
-        transactionAdjustment.getTransactions().forEach(transaction -> {
-            String diaryName = transaction.getDiaryName();
+        List<TrialBalanceResponse.AccountBalance> accountBalances = new ArrayList<>();
+        Map<Long, TrialBalanceResponse.FinalBalance> finalBalancesMap = new HashMap<>();
 
-            if (!balanceMap.containsKey(diaryName)) {
-                balanceMap.put(diaryName, new HashMap<>());
+        for (AccountResponse account : allAccounts) {
+            if (isSupportEntry(account)) {
+                TrialBalanceResponse.AccountBalance accountBalance = createAccountBalance(account);
+
+                // Calcular el balance inicial
+                TrialBalanceResponse.InitialBalance initialBalanceResponse = calculateInitialBalance(account);
+                accountBalance.setInitialBalance(Collections.singletonList(initialBalanceResponse));
+
+                // Calcular el balance para el rango de fechas
+                TrialBalanceResponse.BalancePeriod balancePeriodResponse = calculateBalanceForDateRange(account, period.getStartPeriod(), period.getEndPeriod());
+                accountBalance.setBalancePeriod(Collections.singletonList(balancePeriodResponse));
+
+                // Calcular el balance final
+                TrialBalanceResponse.FinalBalance finalBalanceResponse = calculateFinalBalance(balancePeriodResponse, initialBalanceResponse, account);
+                accountBalance.setFinalBalance(Collections.singletonList(finalBalanceResponse));
+
+                // Almacenar el balance final en el mapa
+                finalBalancesMap.put(account.getId(), finalBalanceResponse);
+
+                accountBalances.add(accountBalance);
             }
-
-            Map<String, BigDecimal> diaryBalanceMap = balanceMap.get(diaryName);
-
-            transaction.getTransactionDetails().forEach(detail -> {
-                String accountName = detail.getAccountName();
-                BigDecimal initialBalance = detail.getInitialBalance();
-
-                if (!diaryBalanceMap.containsKey(accountName)) {
-                    diaryBalanceMap.put(accountName, initialBalance);
-                }
-            });
-        });
-
-        // Procesar ajustes
-        transactionAdjustment.getAdjustments().forEach(adjustment -> {
-            String diaryName = adjustment.getDiaryName();
-
-            if (!balanceMap.containsKey(diaryName)) {
-                balanceMap.put(diaryName, new HashMap<>());
-            }
-
-            Map<String, BigDecimal> diaryBalanceMap = balanceMap.get(diaryName);
-
-            adjustment.getAdjustmentDetails().forEach(detail -> {
-                String accountName = detail.getAccountName();
-                BigDecimal initialBalance = detail.getInitialBalance();
-
-                if (!diaryBalanceMap.containsKey(accountName)) {
-                    diaryBalanceMap.put(accountName, initialBalance);
-                }
-            });
-        });
-
-        // Procesar Debit Notes
-        transactionAdjustment.getDebitNotes().forEach(debitNote -> {
-            String diaryName = debitNote.getDiaryName();
-
-            if (!balanceMap.containsKey(diaryName)) {
-                balanceMap.put(diaryName, new HashMap<>());
-            }
-
-            Map<String, BigDecimal> diaryBalanceMap = balanceMap.get(diaryName);
-
-            debitNote.getDetailNote().forEach(detail -> {
-                String accountName = detail.getAccountName();
-                BigDecimal initialBalance = detail.getInitialBalance();
-
-                if (!diaryBalanceMap.containsKey(accountName)) {
-                    diaryBalanceMap.put(accountName, initialBalance);
-                }
-            });
-        });
-
-        // Procesar Credit Notes
-        transactionAdjustment.getCreditNotes().forEach(creditNote -> {
-            String diaryName = creditNote.getDiaryName();
-
-            if (!balanceMap.containsKey(diaryName)) {
-                balanceMap.put(diaryName, new HashMap<>());
-            }
-
-            Map<String, BigDecimal> diaryBalanceMap = balanceMap.get(diaryName);
-
-            creditNote.getDetailNote().forEach(detail -> {
-                String accountName = detail.getAccountName();
-                BigDecimal initialBalance = detail.getInitialBalance();
-
-                if (!diaryBalanceMap.containsKey(accountName)) {
-                    diaryBalanceMap.put(accountName, initialBalance);
-                }
-            });
-        });
-
-
-        // Crear BalanceDiary para cada diario
-        List<TrialBalanceResponse.BalanceDiary> balanceDiaries = new ArrayList<>();
-
-        balanceMap.forEach((diaryName, diaryBalanceMap) -> {
-            TrialBalanceResponse.BalanceDiary balanceDiary = new TrialBalanceResponse.BalanceDiary();
-            balanceDiary.setDiaryName(diaryName);
-
-            final BigDecimal[] totalCredit = new BigDecimal[]{BigDecimal.ZERO};
-            final BigDecimal[] totalDebit = new BigDecimal[]{BigDecimal.ZERO};
-
-            diaryBalanceMap.forEach((accountName, initialBalance) -> {
-                if (initialBalance.compareTo(BigDecimal.ZERO) > 0) {
-                    totalCredit[0] = totalCredit[0].add(initialBalance);
-                } else {
-                    totalDebit[0] = totalDebit[0].add(initialBalance);
-                }
-            });
-
-            TrialBalanceResponse.InitialBalance initialBalance = new TrialBalanceResponse.InitialBalance();
-            initialBalance.setDebit(totalDebit[0]);
-            initialBalance.setCredit(totalCredit[0]);
-            balanceDiary.setInitialBalance(Collections.singletonList(initialBalance));
-
-            balanceDiaries.add(balanceDiary);
-        });
-
-        return balanceDiaries;
-    }
-
-    private TrialBalanceResponse.BalancePeriod calculateBalancePeriod(String diaryName, AccountingEntriesNotesResponse transactionAdjustment) {
-        final BigDecimal[] balancePeriodCredit = new BigDecimal[]{BigDecimal.ZERO};
-        final BigDecimal[] balancePeriodDebit = new BigDecimal[]{BigDecimal.ZERO};
-
-        transactionAdjustment.getTransactions().forEach(transaction -> {
-            if (transaction.getDiaryName().equals(diaryName)) {
-                transaction.getTransactionDetails().forEach(detail -> {
-                    if (detail.getShortEntryType().equals("C")) {
-                        balancePeriodCredit[0] = balancePeriodCredit[0].add(detail.getAmount());
-                    } else {
-                        balancePeriodDebit[0] = balancePeriodDebit[0].add(detail.getAmount());
-                    }
-                });
-            }
-        });
-
-        transactionAdjustment.getAdjustments().forEach(adjustment -> {
-            if (adjustment.getDiaryName().equals(diaryName)) {
-                adjustment.getAdjustmentDetails().forEach(detail -> {
-                    if (detail.getShortEntryType().equals("C")) {
-                        balancePeriodCredit[0] = balancePeriodCredit[0].add(detail.getAmount());
-                    } else {
-                        balancePeriodDebit[0] = balancePeriodDebit[0].add(detail.getAmount());
-                    }
-                });
-            }
-        });
-
-        transactionAdjustment.getDebitNotes().forEach(debitNotes -> {
-            if (debitNotes.getDiaryName().equals(diaryName)) {
-                debitNotes.getDetailNote().forEach(detail -> {
-                    if (detail.getShortEntryType().equals("C")) {
-                        balancePeriodCredit[0] = balancePeriodCredit[0].add(detail.getAmount());
-                    } else {
-                        balancePeriodDebit[0] = balancePeriodDebit[0].add(detail.getAmount());
-                    }
-                });
-            }
-        });
-        transactionAdjustment.getCreditNotes().forEach(creditNotes -> {
-            if (creditNotes.getDiaryName().equals(diaryName)) {
-                creditNotes.getDetailNote().forEach(detail -> {
-                    if (detail.getShortEntryType().equals("C")) {
-                        balancePeriodCredit[0] = balancePeriodCredit[0].add(detail.getAmount());
-                    } else {
-                        balancePeriodDebit[0] = balancePeriodDebit[0].add(detail.getAmount());
-                    }
-                });
-            }
-        });
-
-
-        TrialBalanceResponse.BalancePeriod balancePeriod = new TrialBalanceResponse.BalancePeriod();
-        balancePeriod.setCredit(balancePeriodCredit[0]);
-        balancePeriod.setDebit(balancePeriodDebit[0]);
-
-        return balancePeriod;
-    }
-
-    private TrialBalanceResponse.FinalBalance calculateFinalBalance(TrialBalanceResponse.BalancePeriod balancePeriod, TrialBalanceResponse.BalanceDiary balanceDiary) {
-        TrialBalanceResponse.FinalBalance finalBalance = new TrialBalanceResponse.FinalBalance();
-
-        BigDecimal debit = balancePeriod.getDebit();
-        BigDecimal credit = balancePeriod.getCredit();
-
-        // Sumar el valor del initialBalance al balancePeriod
-        if (balanceDiary.getInitialBalance().getFirst().getCredit().compareTo(BigDecimal.ZERO) > 0) {
-            credit = credit.add(balanceDiary.getInitialBalance().getFirst().getCredit());
-        } else {
-            debit = debit.add(balanceDiary.getInitialBalance().getFirst().getDebit());
         }
 
-        if (debit.compareTo(credit) > 0) {
-            finalBalance.setDebit(debit.subtract(credit));
-            finalBalance.setCredit(BigDecimal.ZERO);
+        periodBalanceResponse.setAccountBalances(accountBalances);
+        return periodBalanceResponse;
+    }
+
+    private boolean isSupportEntry(AccountResponse account) {
+        return account.getSupportEntry() != null && account.getSupportEntry();
+    }
+
+    private TrialBalanceResponse.AccountBalance createAccountBalance(AccountResponse account) {
+        TrialBalanceResponse.AccountBalance accountBalance = new TrialBalanceResponse.AccountBalance();
+        accountBalance.setId(account.getId());
+        accountBalance.setName(account.getName());
+        accountBalance.setAccountCode(account.getAccountCode());
+        accountBalance.setParentName(account.getParentName());
+        accountBalance.setParentId(account.getParentId());
+        return accountBalance;
+    }
+
+    private TrialBalanceResponse.InitialBalance calculateInitialBalance(AccountResponse account) {
+        TrialBalanceResponse.InitialBalance initialBalanceResponse = new TrialBalanceResponse.InitialBalance();
+        BigDecimal initialBalance = BigDecimal.ZERO;
+
+        if (account.getBalances() != null && !account.getBalances().isEmpty()) {
+            Optional<AccountBalance> currentBalanceOpt = account.getBalances().stream()
+                    .filter(balance -> Boolean.TRUE.equals(balance.getIsCurrent()))
+                    .findFirst();
+
+            if (currentBalanceOpt.isPresent()) {
+                AccountBalance currentBalance = currentBalanceOpt.get();
+                initialBalance = Optional.ofNullable(currentBalance.getInitialBalance()).orElse(BigDecimal.ZERO);
+                String typicalBalance = currentBalance.getTypicalBalance();
+
+                if ("D".equalsIgnoreCase(typicalBalance)) {
+                    initialBalanceResponse.setDebit(initialBalance);
+                    initialBalanceResponse.setCredit(BigDecimal.ZERO);
+                } else {
+                    initialBalanceResponse.setDebit(BigDecimal.ZERO);
+                    initialBalanceResponse.setCredit(initialBalance);
+                }
+            }
+        }
+
+        if (initialBalance.equals(BigDecimal.ZERO)) {
+            initialBalanceResponse.setDebit(BigDecimal.ZERO);
+            initialBalanceResponse.setCredit(BigDecimal.ZERO);
+        }
+
+        return initialBalanceResponse;
+    }
+
+    private TrialBalanceResponse.BalancePeriod calculateBalanceForDateRange(AccountResponse account, LocalDateTime startDate, LocalDateTime endDate) {
+        TrialBalanceResponse.BalancePeriod balancePeriodResponse = new TrialBalanceResponse.BalancePeriod();
+        LocalDate startLocalDate = startDate.toLocalDate();
+        LocalDate endLocalDate = endDate.toLocalDate();
+
+        List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForDateRange(account.getId(), startLocalDate, endLocalDate);
+
+        BigDecimal totalDebit = BigDecimal.ZERO;
+        BigDecimal totalCredit = BigDecimal.ZERO;
+
+        for (ControlAccountBalancesEntity balance : balances) {
+            totalDebit = totalDebit.add(Optional.ofNullable(balance.getDebit()).orElse(BigDecimal.ZERO));
+            totalCredit = totalCredit.add(Optional.ofNullable(balance.getCredit()).orElse(BigDecimal.ZERO));
+        }
+
+        balancePeriodResponse.setDebit(totalDebit);
+        balancePeriodResponse.setCredit(totalCredit);
+
+        return balancePeriodResponse;
+    }
+
+    private TrialBalanceResponse.FinalBalance calculateFinalBalance(
+            TrialBalanceResponse.BalancePeriod balancePeriod,
+            TrialBalanceResponse.InitialBalance initialBalance,
+            AccountResponse account) {
+
+        TrialBalanceResponse.FinalBalance finalBalance = new TrialBalanceResponse.FinalBalance();
+
+        // Determina el tipo de balance típico (debe ser "D" o "C")
+        String typicalBalance = account.getBalances().stream()
+                .filter(balance -> Boolean.TRUE.equals(balance.getIsCurrent()))
+                .findFirst()
+                .map(AccountBalance::getTypicalBalance)
+                .orElse("D");
+
+        // Suma los débitos y créditos
+        BigDecimal totalDebit = initialBalance.getDebit().add(balancePeriod.getDebit());
+        BigDecimal totalCredit = initialBalance.getCredit().add(balancePeriod.getCredit());
+
+        // Calcula el balance neto
+        BigDecimal netBalance;
+        if ("D".equalsIgnoreCase(typicalBalance)) {
+            netBalance = totalDebit.subtract(totalCredit);
+            finalBalance.setDebit(netBalance.max(BigDecimal.ZERO));
+            finalBalance.setCredit(netBalance.min(BigDecimal.ZERO).abs());
         } else {
-            finalBalance.setDebit(BigDecimal.ZERO);
-            finalBalance.setCredit(credit.subtract(debit));
+            netBalance = totalCredit.subtract(totalDebit);
+            finalBalance.setCredit(netBalance.max(BigDecimal.ZERO));
+            finalBalance.setDebit(netBalance.min(BigDecimal.ZERO).abs());
         }
 
         return finalBalance;
     }
+
 }

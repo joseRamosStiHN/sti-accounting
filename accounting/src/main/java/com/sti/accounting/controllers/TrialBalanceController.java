@@ -21,4 +21,5 @@ public class TrialBalanceController {
     public TrialBalanceResponse getTrialBalance() {
         return trialBalanceService.getTrialBalance();
     }
+
 }

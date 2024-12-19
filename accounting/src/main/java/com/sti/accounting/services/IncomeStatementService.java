@@ -1,6 +1,7 @@
 package com.sti.accounting.services;
 
 import com.sti.accounting.entities.AccountEntity;
+import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.entities.ControlAccountBalancesEntity;
 import com.sti.accounting.models.IncomeStatementResponse;
 import com.sti.accounting.repositories.IAccountRepository;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -20,33 +22,63 @@ public class IncomeStatementService {
 
     private final IAccountRepository accountRepository;
     private final ControlAccountBalancesService controlAccountBalancesService;
+    private final AccountingPeriodService accountingPeriodService;
 
-    public IncomeStatementService(IAccountRepository accountRepository, ControlAccountBalancesService controlAccountBalancesService) {
+    public IncomeStatementService(IAccountRepository accountRepository, ControlAccountBalancesService controlAccountBalancesService, AccountingPeriodService accountingPeriodService) {
         this.accountRepository = accountRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
+        this.accountingPeriodService = accountingPeriodService;
     }
 
-    public List<IncomeStatementResponse> getIncomeStatement() {
+    public List<IncomeStatementResponse> getIncomeStatement(Long periodId) {
         logger.info("Generating income statement");
 
         List<AccountEntity> accounts = accountRepository.findAll();
-
         accounts = accounts.stream()
                 .filter(account -> account.getAccountCategory().getName().equalsIgnoreCase("Estado de Resultados"))
                 .toList();
 
         List<IncomeStatementResponse> transactions = new ArrayList<>();
 
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+
+        // Obtener el inicio y el final del periodo mensual
+        LocalDate startPeriod = activePeriod.getStartPeriod().toLocalDate();
+        LocalDate endPeriod = activePeriod.getEndPeriod().toLocalDate();
+
+
         for (AccountEntity account : accounts) {
-            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesService.getControlAccountBalances(account.getId());
+            ControlAccountBalancesEntity sumViewEntity;
+
+            if (periodId != null) {
+                List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForPeriodAndMonth(account.getId(), activePeriod.getId(), startPeriod, endPeriod);
+                sumViewEntity = combineBalances(balances);
+            } else {
+                List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForAllPeriods(account.getId());
+                sumViewEntity = combineBalances(balances);
+            }
+
             BigDecimal balance = getBalance(sumViewEntity);
-
             IncomeStatementResponse transaction = getIncomeStatementResponse(account, balance);
-
             transactions.add(transaction);
         }
 
         return transactions;
+    }
+
+    private ControlAccountBalancesEntity combineBalances(List<ControlAccountBalancesEntity> balances) {
+        ControlAccountBalancesEntity combined = new ControlAccountBalancesEntity();
+        BigDecimal totalDebit = BigDecimal.ZERO;
+        BigDecimal totalCredit = BigDecimal.ZERO;
+
+        for (ControlAccountBalancesEntity balance : balances) {
+            totalDebit = totalDebit.add(balance.getDebit() != null ? balance.getDebit() : BigDecimal.valueOf(0));
+            totalCredit = totalCredit.add(balance.getCredit() != null ? balance.getCredit() : BigDecimal.valueOf(0));
+        }
+
+        combined.setDebit(totalDebit);
+        combined.setCredit(totalCredit);
+        return combined;
     }
 
     private static IncomeStatementResponse getIncomeStatementResponse(AccountEntity account, BigDecimal balance) {
@@ -62,8 +94,11 @@ public class IncomeStatementService {
     }
 
     private BigDecimal getBalance(ControlAccountBalancesEntity sumViewEntity) {
-        BigDecimal debit = sumViewEntity.getDebit() != null ? new BigDecimal(sumViewEntity.getDebit()) : BigDecimal.ZERO;
-        BigDecimal credit = sumViewEntity.getCredit() != null ? new BigDecimal(sumViewEntity.getCredit()) : BigDecimal.ZERO;
+        if (sumViewEntity == null) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal debit = sumViewEntity.getDebit() != null ? sumViewEntity.getDebit() : BigDecimal.ZERO;
+        BigDecimal credit = sumViewEntity.getCredit() != null ? sumViewEntity.getCredit() : BigDecimal.ZERO;
         return debit.subtract(credit).abs();
     }
 

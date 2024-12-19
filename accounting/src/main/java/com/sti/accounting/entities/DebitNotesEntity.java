@@ -44,6 +44,10 @@ public class DebitNotesEntity {
     @Column(name = "CREATION_DATE")
     private LocalDateTime createAtTime;
 
+    @ManyToOne
+    @JoinColumn(name = "accounting_period_id")
+    private AccountingPeriodEntity accountingPeriod;
+
     @OneToMany(mappedBy = "debitNote", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DebitNotesDetailEntity> debitNoteDetail;
 }

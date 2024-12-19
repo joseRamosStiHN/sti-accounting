@@ -56,4 +56,14 @@ public class AccountingPeriodController {
         boolean existsPeriod = accountingPeriodService.isActivePeriodExists();
         return new ResponseEntity<>(existsPeriod, HttpStatus.OK);
     }
+
+    @GetMapping("/next-period")
+    public ResponseEntity<AccountingPeriodResponse> getNextPeriodInfo() {
+        AccountingPeriodResponse nextPeriodInfo = accountingPeriodService.getNextPeriodInfo();
+        if (nextPeriodInfo != null) {
+            return new ResponseEntity<>(nextPeriodInfo, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 }
