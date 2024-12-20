@@ -56,9 +56,6 @@ public class AccountingClosingController {
             return ResponseEntity.notFound().build();
         }
 
-        // Guardar el PDF en `src/main/resources/generated-pdfs`
-        savePdfOnResources(id, pdfData);
-
         // Configurar encabezados para la respuesta HTTP
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
@@ -69,29 +66,13 @@ public class AccountingClosingController {
                 .body(pdfData);
     }
 
-    /**
-     * Método privado para guardar el PDF en `src/main/resources/generated-pdfs`.
-     */
-    private void savePdfOnResources(Long id, byte[] pdfData) {
-        // Ruta del directorio de destino dentro de `resources`
-        String directoryPath = "src/main/resources/generated-pdfs";
-        File directory = new File(directoryPath);
-
-        // Crear el directorio si no existe
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        // Nombre del archivo
-        String pdfFileName = directoryPath + File.separator + "closure-report-" + id + ".pdf";
-
-        // Escribir el archivo en el sistema
-        try (FileOutputStream fileOutputStream = new FileOutputStream(pdfFileName)) {
-            fileOutputStream.write(pdfData);
-            fileOutputStream.flush();
-        } catch (IOException e) {
-            throw new RuntimeException("Error al guardar el archivo PDF en " + pdfFileName, e);
+    @PostMapping("/annual-close")
+    public ResponseEntity<String> closePeriodAnnualClosing() {
+        try {
+            accountingClosingService.performAnnualClosing();
+            return ResponseEntity.ok("Annual closing completed successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error during annual closing: " + e.getMessage());
         }
     }
-
 }

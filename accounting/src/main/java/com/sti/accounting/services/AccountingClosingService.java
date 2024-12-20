@@ -13,11 +13,16 @@ import com.sti.accounting.repositories.IControlAccountBalancesRepository;
 import com.sti.accounting.utils.PeriodStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -121,11 +126,11 @@ public class AccountingClosingService {
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
         logger.info("Active accounting period ID: {}", activePeriod.getId());
 
-        // Process balances for the active accounting period
-        processBalances(activePeriod);
-
         // Save the accounting closing record
         saveAccountingClosing(activePeriod);
+
+        // Process balances for the active accounting period
+        processBalances(activePeriod);
 
         // Close the active accounting period
         closeActivePeriod(activePeriod);
@@ -266,7 +271,7 @@ public class AccountingClosingService {
 
     public AccountingClosingResponse getAccountingClosingById(Long id) {
         AccountingClosingEntity closingEntity = accountingClosingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cierre contable no encontrado con id: " + id));
+                .orElseThrow(() -> new RuntimeException("Accounting closing not found with id: " + id));
 
         return toResponse(closingEntity);
     }
@@ -286,5 +291,142 @@ public class AccountingClosingService {
         accountingClosingResponse.setNetIncome(accountingClosingEntity.getNetIncome());
         accountingClosingResponse.setClosureReportPdf(accountingClosingEntity.getClosureReportPdf());
         return accountingClosingResponse;
+    }
+
+
+    //Cierre anual
+    public void performAnnualClosing() {
+        logger.info("Iniciando proceso de cierre anual");
+
+        // 1. Obtener todos los períodos del año actual
+        List<AccountingPeriodEntity> yearPeriods = accountingPeriodService.getClosedPeriods();
+
+        // 2. Verificar que todos los períodos, excepto el anual, estén cerrados
+        boolean allPeriodsClosed = yearPeriods.stream()
+                .allMatch(period -> period.getPeriodStatus() == PeriodStatus.CLOSED || period.getIsAnnual());
+
+        if (!allPeriodsClosed) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "All periods must be closed before performing the annual closing."
+            );
+        }
+
+        // 3. Obtener el período anual
+        AccountingPeriodEntity annualPeriod = accountingPeriodService.getAnnualPeriod();
+        if (annualPeriod == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "There is no annual period available to perform the annual closing"
+            );
+        }
+
+        try {
+            // 4. Generar el PDF anual con todos los períodos
+            ByteArrayOutputStream pdfOutputStream = new ByteArrayOutputStream();
+            generateAnnualReport(pdfOutputStream, yearPeriods);
+
+            // 5. Crear el registro de cierre anual
+            AccountingClosingEntity annualClosing = new AccountingClosingEntity();
+            annualClosing.setAccountingPeriod(annualPeriod);
+            annualClosing.setStartPeriod(yearPeriods.get(0).getStartPeriod());
+            annualClosing.setEndPeriod(annualPeriod.getEndPeriod());
+            annualClosing.setClosureReportPdf(pdfOutputStream.toByteArray());
+
+            // Calcular totales anuales
+            calculateAnnualTotals(annualClosing, yearPeriods);
+
+            // Guardar el cierre anual
+            accountingClosingRepository.save(annualClosing);
+
+            // 6. Cerrar el período anual
+            closeAnnualPeriod(annualPeriod);
+
+            // 7. Crear el nuevo período anual para el siguiente año
+            createNextYearPeriod(annualPeriod);
+
+        } catch (Exception e) {
+            logger.error("Error during annual closing", e);
+
+        }
+    }
+
+    public void closeAnnualPeriod(AccountingPeriodEntity annualPeriod) {
+        if (annualPeriod == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The annual period cannot be null");
+        }
+
+        annualPeriod.setPeriodStatus(PeriodStatus.CLOSED);
+        accountingPeriodRepository.save(annualPeriod);
+    }
+
+
+    private void calculateAnnualTotals(AccountingClosingEntity annualClosing, List<AccountingPeriodEntity> yearPeriods) {
+        BigDecimal totalAssets = BigDecimal.ZERO;
+        BigDecimal totalLiabilities = BigDecimal.ZERO;
+        BigDecimal totalCapital = BigDecimal.ZERO;
+        BigDecimal totalIncome = BigDecimal.ZERO;
+        BigDecimal totalExpenses = BigDecimal.ZERO;
+
+        for (AccountingPeriodEntity period : yearPeriods) {
+            List<GeneralBalanceResponse> balances = generalBalanceService.getBalanceGeneral(period.getId());
+            List<IncomeStatementResponse> incomeStatement = incomeStatementService.getIncomeStatement(period.getId());
+
+            // Acumular totales del balance general
+            for (GeneralBalanceResponse balance : balances) {
+                switch (balance.getCategory()) {
+                    case "ACTIVO":
+                        totalAssets = totalAssets.add(balance.getBalance());
+                        break;
+                    case "PASIVO":
+                        totalLiabilities = totalLiabilities.add(balance.getBalance());
+                        break;
+                    case "PATRIMONIO":
+                        totalCapital = totalCapital.add(balance.getBalance());
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // Acumular totales del estado de resultados
+            for (IncomeStatementResponse item : incomeStatement) {
+                if ("C".equals(item.getTypicalBalance())) {
+                    totalIncome = totalIncome.add(item.getAmount());
+                } else if ("D".equals(item.getTypicalBalance())) {
+                    totalExpenses = totalExpenses.add(item.getAmount());
+                }
+            }
+        }
+
+        annualClosing.setTotalAssets(totalAssets);
+        annualClosing.setTotalLiabilities(totalLiabilities);
+        annualClosing.setTotalCapital(totalCapital);
+        annualClosing.setTotalIncome(totalIncome);
+        annualClosing.setTotalExpenses(totalExpenses);
+        annualClosing.setNetIncome(totalIncome.subtract(totalExpenses));
+    }
+
+    private void createNextYearPeriod(AccountingPeriodEntity currentPeriod) {
+        LocalDateTime startOfNextYear = currentPeriod.getEndPeriod()
+                .plusDays(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0);
+
+        AccountingPeriodRequest request = new AccountingPeriodRequest();
+        request.setStartPeriod(startOfNextYear);
+        request.setPeriodName("Periodo Anual " + startOfNextYear.getYear());
+        request.setClosureType("Anual");
+        request.setDaysPeriod(365);
+        request.setPeriodStatus(PeriodStatus.INACTIVE);
+        request.setPeriodOrder(0);
+        request.setIsAnnual(true);
+
+        accountingPeriodService.createAccountingPeriod(request);
+    }
+
+    private void generateAnnualReport(OutputStream outputStream, List<AccountingPeriodEntity> yearPeriods) throws MalformedURLException {
+        reportPdfGenerator.generateAnnualReportPdf(outputStream, yearPeriods);
     }
 }

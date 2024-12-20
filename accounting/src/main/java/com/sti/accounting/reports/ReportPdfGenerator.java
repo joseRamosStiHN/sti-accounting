@@ -10,6 +10,7 @@ import com.itextpdf.layout.*;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.*;
+import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.models.GeneralBalanceResponse;
 import com.sti.accounting.models.IncomeStatementResponse;
 import com.sti.accounting.models.TrialBalanceResponse;
@@ -54,7 +55,7 @@ public class ReportPdfGenerator {
         Document document = new Document(pdfDoc);
 
         // 1. Sección de "Reportes Financieros"
-        addFinancialReportHeader(document, "Reportes Financieros");
+        addFinancialReportHeader(document, "Reportes Financieros",false);
 
         // 2. Sección de "Balanza de Comprobación"
         generateTrialBalanceSection(document);
@@ -73,10 +74,16 @@ public class ReportPdfGenerator {
     /**
      * Agrega el encabezado principal reutilizable con texto personalizado.
      */
-    private void addFinancialReportHeader(Document document, String reportTitle) throws MalformedURLException {
-        String periodRange = accountingPeriodService.getActivePeriod().getStartPeriod().toLocalDate() +
-                " al " + accountingPeriodService.getActivePeriod().getEndPeriod().toLocalDate();
+    private void addFinancialReportHeader(Document document, String reportTitle, boolean isAnnual) throws MalformedURLException {
+        String periodRange;
 
+        if (isAnnual) {
+            periodRange = accountingPeriodService.getAnnualPeriod().getStartPeriod().toLocalDate() +
+                    " al " + accountingPeriodService.getAnnualPeriod().getEndPeriod().toLocalDate();
+        } else {
+            periodRange = accountingPeriodService.getActivePeriod().getStartPeriod().toLocalDate() +
+                    " al " + accountingPeriodService.getActivePeriod().getEndPeriod().toLocalDate();
+        }
         // Cargar el recurso desde el directorio src/main/resources
         String logoPath = getClass().getClassLoader().getResource("logo.jpg").getPath();
         Image logo = new Image(ImageDataFactory.create(logoPath)).setWidth(150).setHeight(70);
@@ -198,7 +205,7 @@ public class ReportPdfGenerator {
      */
     private void generateBalanceSection(Document document) throws MalformedURLException {
         // Agregar encabezado reutilizando addFinancialReportHeader con texto personalizado
-        addFinancialReportHeader(document, "Balance General");
+        addFinancialReportHeader(document, "Balance General",false);
 
         // Definir colores
         Color headerColor = new DeviceRgb(7, 43, 84); // Azul oscuro para encabezados
@@ -289,12 +296,11 @@ public class ReportPdfGenerator {
 
     private void generateIncomeStatementSection(Document document) throws MalformedURLException {
         // Usar el encabezado genérico reutilizando el método de encabezado
-        addFinancialReportHeader(document, "Estado de Resultados");
+        addFinancialReportHeader(document, "Estado de Resultados",false);
 
         // Definir colores
         Color headerColor = new DeviceRgb(7, 43, 84); // Azul para encabezados
         Color totalColor = new DeviceRgb(240, 248, 255); // Fondo del total (igual al de la balanza de comprobación)
-        Color totalFontColor = new DeviceRgb(0, 0, 0); // Color negro para el texto de totales
 
         // Obtener los datos del estado de resultados
         List<IncomeStatementResponse> incomeStatement = incomeStatementService.getIncomeStatement(
@@ -480,5 +486,318 @@ public class ReportPdfGenerator {
                 .setTextAlignment(TextAlignment.CENTER)
                 .setVerticalAlignment(VerticalAlignment.MIDDLE)
                 .setBackgroundColor(new DeviceRgb(173, 216, 230));
+    }
+
+    //CIERRE ANUAL
+    public void generateAnnualReportPdf(OutputStream outputStream, List<AccountingPeriodEntity> yearPeriods) throws MalformedURLException {
+        PdfWriter writer = new PdfWriter(outputStream);
+        PdfDocument pdfDoc = new PdfDocument(writer);
+        pdfDoc.setDefaultPageSize(PageSize.A4.rotate());
+        Document document = new Document(pdfDoc);
+
+        // Agregar encabezado
+        addFinancialReportHeader(document, "Resumen Anual", true);
+
+        // Generar la sección de Balanza de Comprobación
+        generateTrialBalanceSectionAnnual(document);
+
+        // Generar la sección de Balance General
+        document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        generateBalanceSectionAnnual(document);
+
+        // Generar la sección de Estado de Resultados
+        document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+        generateIncomeStatementSectionAnnual(document);
+
+        document.close();
+    }
+
+    private void generateTrialBalanceSectionAnnual(Document document) {
+        document.add(new Paragraph("\nBalanza de Comprobación")
+                .setTextAlignment(TextAlignment.CENTER)
+                .setBold()
+                .setFontSize(18));
+
+        // Agregar dos espacios entre el título y la tabla
+        document.add(new Paragraph("\n"));
+
+        // Obtener rango de fechas del período activo
+        String periodRange = accountingPeriodService.getAnnualPeriod().getStartPeriod().toLocalDate() +
+                " al " + accountingPeriodService.getActivePeriod().getEndPeriod().toLocalDate();
+
+        // Obtener los datos de la balanza de comprobación para el año completo
+        TrialBalanceResponse trialBalance = trialBalanceService.getAllTrialBalances();
+
+        // Usar contenedores mutables para los totales
+        BigDecimal[] totalInitialDebit = {BigDecimal.ZERO};
+        BigDecimal[] totalInitialCredit = {BigDecimal.ZERO};
+        BigDecimal[] totalPeriodDebit = {BigDecimal.ZERO};
+        BigDecimal[] totalPeriodCredit = {BigDecimal.ZERO};
+        BigDecimal[] totalFinalDebit = {BigDecimal.ZERO};
+        BigDecimal[] totalFinalCredit = {BigDecimal.ZERO};
+
+        // Crear una tabla con estructura adecuada: 7 columnas totales
+        Table table = new Table(UnitValue.createPercentArray(new float[]{3, 2, 2, 2, 2, 2, 2}))
+                .useAllAvailableWidth();
+
+        // Encabezados principales
+        table.addHeaderCell(createHeaderCell("Cuenta", 1, 2)); // Celda de "Cuenta"
+        table.addHeaderCell(createHeaderCell("Balance Inicial", 2, 1)); // Celda fusionada de "Balance Inicial"
+        table.addHeaderCell(createHeaderCell(periodRange, 2, 1));
+        table.addHeaderCell(createHeaderCell("Balance Final", 2, 1)); // Celda fusionada de "Balance Final"
+
+        // Subencabezados para cada sección
+        table.addHeaderCell(createSubHeaderCell("Debe"));
+        table.addHeaderCell(createSubHeaderCell("Haber"));
+        table.addHeaderCell(createSubHeaderCell("Debe"));
+        table.addHeaderCell(createSubHeaderCell("Haber"));
+        table.addHeaderCell(createSubHeaderCell("Debe"));
+        table.addHeaderCell(createSubHeaderCell("Haber"));
+
+        // Llenar las filas de la tabla con los datos
+        trialBalance.getPeriods().forEach(period -> period.getAccountBalances().forEach(account -> {
+            TrialBalanceResponse.InitialBalance initialBalance = account.getInitialBalance().getFirst();
+            TrialBalanceResponse.BalancePeriod balancePeriod = account.getBalancePeriod().getFirst();
+            TrialBalanceResponse.FinalBalance finalBalance = account.getFinalBalance().getFirst();
+
+            // Alinear la columna de cuentas a la izquierda
+            table.addCell(createCell(account.getName()).setTextAlignment(TextAlignment.LEFT));
+            table.addCell(createCell(formatCurrency(initialBalance.getDebit())));
+            table.addCell(createCell(formatCurrency(initialBalance.getCredit())));
+            table.addCell(createCell(formatCurrency(balancePeriod.getDebit())));
+            table.addCell(createCell(formatCurrency(balancePeriod.getCredit())));
+            table.addCell(createCell(formatCurrency(finalBalance.getDebit())));
+            table.addCell(createCell(formatCurrency(finalBalance.getCredit())));
+
+            // Sumar a los totales utilizando índices del arreglo
+            totalInitialDebit[0] = totalInitialDebit[0].add(initialBalance.getDebit());
+            totalInitialCredit[0] = totalInitialCredit[0].add(initialBalance.getCredit());
+            totalPeriodDebit[0] = totalPeriodDebit[0].add(balancePeriod.getDebit());
+            totalPeriodCredit[0] = totalPeriodCredit[0].add(balancePeriod.getCredit());
+            totalFinalDebit[0] = totalFinalDebit[0].add(finalBalance.getDebit());
+            totalFinalCredit[0] = totalFinalCredit[0].add(finalBalance.getCredit());
+        }));
+
+        // Agregar los totales al final de la tabla
+        table.addFooterCell(createFooterCell("Totales"));
+        table.addFooterCell(createFooterCell(formatCurrency(totalInitialDebit[0])));
+        table.addFooterCell(createFooterCell(formatCurrency(totalInitialCredit[0])));
+        table.addFooterCell(createFooterCell(formatCurrency(totalPeriodDebit[0])));
+        table.addFooterCell(createFooterCell(formatCurrency(totalPeriodCredit[0])));
+        table.addFooterCell(createFooterCell(formatCurrency(totalFinalDebit[0])));
+        table.addFooterCell(createFooterCell(formatCurrency(totalFinalCredit[0])));
+
+        // Añadir la tabla al documento
+        document.add(table);
+    }
+
+    private void generateBalanceSectionAnnual(Document document) throws MalformedURLException {
+        // Agregar encabezado reutilizando addFinancialReportHeader con texto personalizado
+        addFinancialReportHeader(document, "Balance General", true);
+
+        // Obtener datos del Balance General para el año completo
+        List<GeneralBalanceResponse> balances = generalBalanceService.getBalanceGeneral(accountingPeriodService.getAnnualPeriod().getId());
+
+        // Definir colores
+        Color headerColor = new DeviceRgb(7, 43, 84); // Azul oscuro para encabezados
+        Color rowBgColor = ColorConstants.WHITE; // Blanco para filas
+        Color totalColor = new DeviceRgb(240, 248, 255); // Color para totales
+
+        // Variables para totales
+        BigDecimal totalActivosCorrientes = BigDecimal.ZERO;
+        BigDecimal totalActivosNoCorrientes = BigDecimal.ZERO;
+        BigDecimal totalPasivos = BigDecimal.ZERO;
+        BigDecimal totalPatrimonio = BigDecimal.ZERO;
+
+        // Tablas para cada sección
+        Table activosTable = new Table(UnitValue.createPercentArray(new float[]{3, 1})).useAllAvailableWidth();
+        Table pasivoPatrimonioTable = new Table(UnitValue.createPercentArray(new float[]{3, 1})).useAllAvailableWidth();
+
+        // Encabezados iniciales
+        addSectionTitle(activosTable, "ACTIVO", headerColor);
+        addSectionTitle(pasivoPatrimonioTable, "PASIVO", headerColor);
+
+        // Clasificar los datos por categorías
+        for (GeneralBalanceResponse balance : balances) {
+            String category = balance.getCategory();
+            String accountName = balance.getAccountName();
+            BigDecimal balanceAmount = balance.getBalance();
+
+            switch (category) {
+                case "ACTIVO":
+                    totalActivosCorrientes = totalActivosCorrientes.add(balanceAmount);
+                    addTableRow(activosTable, accountName, balanceAmount, rowBgColor);
+                    break;
+                case "ACTIVO NO CORRIENTE":
+                    totalActivosNoCorrientes = totalActivosNoCorrientes.add(balanceAmount);
+                    addTableRow(activosTable, accountName, balanceAmount, rowBgColor);
+                    break;
+                case "PASIVO":
+                    totalPasivos = totalPasivos.add(balanceAmount);
+                    addTableRow(pasivoPatrimonioTable, accountName, balanceAmount, rowBgColor);
+                    break;
+                case "PATRIMONIO":
+                    totalPatrimonio = totalPatrimonio.add(balanceAmount);
+                    break;
+                default:
+
+            }
+        }
+
+        // Totales de Activos
+        addSummaryRow(activosTable, "Total Activos Corrientes", totalActivosCorrientes, totalColor);
+        addSummaryRow(activosTable, "Total Activos No Corrientes", totalActivosNoCorrientes, totalColor);
+        addSummaryRow(activosTable, "Total Activos", totalActivosCorrientes.add(totalActivosNoCorrientes), totalColor);
+
+        // Totales de Pasivos
+        addSummaryRow(pasivoPatrimonioTable, "Total Pasivos", totalPasivos, totalColor);
+
+        // Espacio entre Pasivo y Patrimonio
+        pasivoPatrimonioTable.addCell(new Cell(1, 2)
+                .setBorder(Border.NO_BORDER)
+                .add(new Paragraph("")));
+
+        // Agregar contenido de Patrimonio
+        addSectionTitle(pasivoPatrimonioTable, "PATRIMONIO", headerColor);
+        for (GeneralBalanceResponse balance : balances) {
+            if ("PATRIMONIO".equals(balance.getCategory())) {
+                addTableRow(pasivoPatrimonioTable, balance.getAccountName(), balance.getBalance(), rowBgColor);
+            }
+        }
+
+        // Total Patrimonio
+        addSummaryRow(pasivoPatrimonioTable, "Total Patrimonio", totalPatrimonio, totalColor);
+
+        // Suma Total (Pasivo + Patrimonio)
+        addSummaryRow(pasivoPatrimonioTable, "Total Pasivo + Patrimonio", totalPasivos.add(totalPatrimonio), totalColor);
+
+        // Estructura final: Activos a la izquierda, Pasivo y Patrimonio a la derecha
+        Table layoutTable = new Table(UnitValue.createPercentArray(new float[]{1, 0.02f, 1})).useAllAvailableWidth();
+
+        layoutTable.addCell(new Cell().add(activosTable).setBorder(Border.NO_BORDER).setPaddingRight(20));
+        layoutTable.addCell(new Cell().setBorder(Border.NO_BORDER).add(new Paragraph("")));
+        layoutTable.addCell(new Cell().add(pasivoPatrimonioTable).setBorder(Border.NO_BORDER).setPaddingLeft(20));
+
+        // Agregar la tabla al documento
+        document.add(layoutTable);
+    }
+
+    private void generateIncomeStatementSectionAnnual(Document document) throws MalformedURLException {
+        // Usar el encabezado genérico reutilizando el método de encabezado
+        addFinancialReportHeader(document, "Estado de Resultados", true);
+
+        // Obtener los datos del estado de resultados para el año completo
+        List<IncomeStatementResponse> incomeStatement = incomeStatementService.getIncomeStatement(null);
+
+        // Definir colores
+        Color headerColor = new DeviceRgb(7, 43, 84); // Azul para encabezados
+        Color totalColor = new DeviceRgb(240, 248, 255); // Fondo del total
+
+        // Crear tabla para el estado de resultados
+        Table incomeStatementTable = new Table(UnitValue.createPercentArray(new float[]{4, 2})).useAllAvailableWidth();
+
+        // Encabezado de la tabla
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("Descripción").setBold().setFontSize(12).setTextAlignment(TextAlignment.CENTER))
+                .setBackgroundColor(headerColor).setFontColor(ColorConstants.WHITE));
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("Monto").setBold().setFontSize(12).setTextAlignment(TextAlignment.CENTER))
+                .setBackgroundColor(headerColor).setFontColor(ColorConstants.WHITE));
+
+        // Variables para acumulados
+        BigDecimal totalVentas = BigDecimal.ZERO;
+        BigDecimal devoluciones = BigDecimal.ZERO;
+        BigDecimal rebajas = BigDecimal.ZERO;
+        BigDecimal costoVentas = BigDecimal.ZERO;
+        BigDecimal gastosGenerales = BigDecimal.ZERO;
+        BigDecimal otrosIngresosYGastos = BigDecimal.ZERO;
+        BigDecimal resultadoFinanciero = BigDecimal.ZERO;
+        BigDecimal impuesto = BigDecimal.ZERO;
+
+        // Clasificar y agregar datos
+        for (IncomeStatementResponse item : incomeStatement) {
+            String category = item.getAccountParent();
+
+            // Validar si el campo category es nulo
+            if (category == null) {
+                continue;
+            }
+
+            // Lógica de clasificación
+            switch (category) {
+                case "VENTAS":
+                    totalVentas = totalVentas.add(item.getAmount());
+                    break;
+                case "COMPRAS":
+                    devoluciones = devoluciones.add(item.getAmount());
+                    break;
+                case "GASTOS":
+                    rebajas = rebajas.add(item.getAmount());
+                    break;
+                case "GASTOS ADMINISTRATIVOS":
+                    costoVentas = costoVentas.add(item.getAmount());
+                    break;
+                case "GASTOS FINANCIEROS":
+                    gastosGenerales = gastosGenerales.add(item.getAmount());
+                    break;
+                case "GASTOS GENERALES":
+                    otrosIngresosYGastos = otrosIngresosYGastos.add(item.getAmount());
+                    break;
+                case "GASTOS POR DEPRECIACION":
+                    resultadoFinanciero = resultadoFinanciero.add(item.getAmount());
+                    break;
+                case "IMPUESTO":
+                    impuesto = impuesto.add(item.getAmount());
+                    break;
+                default:
+            }
+        }
+
+        // Calcular totales
+        BigDecimal ventasNetas = totalVentas.subtract(devoluciones).subtract(rebajas);
+        BigDecimal utilidadBruta = ventasNetas.subtract(costoVentas);
+        BigDecimal utilidadAntesImpuestos = utilidadBruta.subtract(gastosGenerales).add(otrosIngresosYGastos).add(resultadoFinanciero);
+        BigDecimal utilidadNeta = utilidadAntesImpuestos.subtract(impuesto);
+
+        // Llenar los datos en la tabla
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("Ventas totales")));
+        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(totalVentas))));
+
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Devoluciones s/ventas")));
+        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(devoluciones))));
+
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Rebajas sobre ventas")));
+        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(rebajas))));
+
+        // Aplicar diseño de totales: Ventas Netas
+        addSummaryRow(incomeStatementTable, "Ventas netas", ventasNetas, totalColor);
+
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Costo de ventas")));
+        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(costoVentas))));
+
+        // Aplicar diseño de totales: Utilidad Bruta
+        addSummaryRow(incomeStatementTable, "(=) Utilidad (pérdida) bruta", utilidadBruta, totalColor);
+
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Total de gastos generales")));
+        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(gastosGenerales))));
+
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("(+/–) Otros ingresos y gastos")));
+        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(otrosIngresosYGastos))));
+
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("(+/–) Resultado integral de financiamiento")));
+        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(resultadoFinanciero))));
+
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("(+/–) Partidas no ordinarias")));
+        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(BigDecimal.ZERO)))); // Ejemplo fijo 0
+
+        // Aplicar diseño de totales: Utilidad Antes de Impuestos
+        addSummaryRow(incomeStatementTable, "(=) Utilidad antes de impuestos", utilidadAntesImpuestos, totalColor);
+
+        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Impuesto a la utilidad (28%)")));
+        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(impuesto))));
+
+        // Aplicar diseño de totales: Utilidad Neta
+        addSummaryRow(incomeStatementTable, "(=) Utilidad (pérdida) neta", utilidadNeta, totalColor);
+
+        // Agregar la tabla al documento
+        document.add(incomeStatementTable);
     }
 }
