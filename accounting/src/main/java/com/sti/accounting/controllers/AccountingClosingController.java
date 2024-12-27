@@ -7,9 +7,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -67,9 +64,9 @@ public class AccountingClosingController {
     }
 
     @PostMapping("/annual-close")
-    public ResponseEntity<String> closePeriodAnnualClosing() {
+    public ResponseEntity<String> closePeriodAnnualClosing(@RequestParam String newClosureType) {
         try {
-            accountingClosingService.performAnnualClosing();
+            accountingClosingService.performAnnualClosing(newClosureType);
             return ResponseEntity.ok("Annual closing completed successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error during annual closing: " + e.getMessage());

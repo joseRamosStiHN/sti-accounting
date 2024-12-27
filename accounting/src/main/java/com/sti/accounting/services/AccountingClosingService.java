@@ -136,38 +136,24 @@ public class AccountingClosingService {
         closeActivePeriod(activePeriod);
 
         // Activate or create the next accounting period
-        activateOrCreateNextPeriod(activePeriod, newClosureType);
+        activateNextPeriod(activePeriod, newClosureType);
 
     }
 
-    private void activateOrCreateNextPeriod(AccountingPeriodEntity currentPeriod, String newClosureType) {
-
+    private void activateNextPeriod(AccountingPeriodEntity currentPeriod, String newClosureType) {
         int currentYear = LocalDate.now().getYear();
 
         AccountingPeriodEntity nextPeriod = accountingPeriodRepository
                 .findByClosureTypeAndPeriodOrderForYear(newClosureType, currentPeriod.getPeriodOrder() + 1, currentYear);
 
-
         if (nextPeriod != null) {
             nextPeriod.setPeriodStatus(PeriodStatus.ACTIVE);
             accountingPeriodRepository.save(nextPeriod);
-            logger.info("El periodo contable ID {} ha sido activado.", nextPeriod.getId());
-
+            logger.info("Accounting period ID: {} has been activated.", nextPeriod.getId());
         } else {
-            logger.warn("No se encontró un periodo siguiente. Creando nuevos periodos.");
-
-            AccountingPeriodRequest request = new AccountingPeriodRequest();
-            request.setStartPeriod(currentPeriod.getEndPeriod().plusDays(1));
-            request.setClosureType(newClosureType);
-            request.setPeriodName("Periodo " + newClosureType.substring(0, 1).toUpperCase() + newClosureType.substring(1).toLowerCase());
-            request.setIsAnnual(false);
-
-            AccountingPeriodResponse newPeriodResponse = accountingPeriodService.createAccountingPeriod(request);
-            logger.info("Se creó un nuevo periodo contable con ID {}", newPeriodResponse.getId());
+            logger.warn("No next period found. New periods will not be created.");
 
         }
-
-
     }
 
     private void processBalances(AccountingPeriodEntity activePeriod) {
@@ -260,9 +246,13 @@ public class AccountingClosingService {
                 }
             }
 
-            balancesRequest
-                    .setTypicalBalance(totalDebit.compareTo(totalCredit) > 0 ? "D" : "C");
-            balancesRequest.setInitialBalance(totalDebit.subtract(totalCredit));
+            if (totalDebit.compareTo(totalCredit) > 0) {
+                balancesRequest.setTypicalBalance("D");
+                balancesRequest.setInitialBalance(totalDebit.subtract(totalCredit));
+            } else {
+                balancesRequest.setTypicalBalance("C");
+                balancesRequest.setInitialBalance(totalCredit.subtract(totalDebit));
+            }
         }
 
         balancesRequest.setIsCurrent(true);
@@ -295,13 +285,13 @@ public class AccountingClosingService {
 
 
     //Cierre anual
-    public void performAnnualClosing() {
+    public void performAnnualClosing(String newClosureType) {
         logger.info("Iniciando proceso de cierre anual");
 
-        // 1. Obtener todos los períodos del año actual
+        // Obtener todos los períodos del año actual
         List<AccountingPeriodEntity> yearPeriods = accountingPeriodService.getClosedPeriods();
 
-        // 2. Verificar que todos los períodos, excepto el anual, estén cerrados
+        // Verificar que todos los períodos, excepto el anual, estén cerrados
         boolean allPeriodsClosed = yearPeriods.stream()
                 .allMatch(period -> period.getPeriodStatus() == PeriodStatus.CLOSED || period.getIsAnnual());
 
@@ -312,7 +302,7 @@ public class AccountingClosingService {
             );
         }
 
-        // 3. Obtener el período anual
+        // Obtener el período anual
         AccountingPeriodEntity annualPeriod = accountingPeriodService.getAnnualPeriod();
         if (annualPeriod == null) {
             throw new ResponseStatusException(
@@ -322,11 +312,11 @@ public class AccountingClosingService {
         }
 
         try {
-            // 4. Generar el PDF anual con todos los períodos
+            // Generar el PDF anual con todos los períodos
             ByteArrayOutputStream pdfOutputStream = new ByteArrayOutputStream();
             generateAnnualReport(pdfOutputStream, yearPeriods);
 
-            // 5. Crear el registro de cierre anual
+            // Crear el registro de cierre anual
             AccountingClosingEntity annualClosing = new AccountingClosingEntity();
             annualClosing.setAccountingPeriod(annualPeriod);
             annualClosing.setStartPeriod(yearPeriods.get(0).getStartPeriod());
@@ -339,11 +329,14 @@ public class AccountingClosingService {
             // Guardar el cierre anual
             accountingClosingRepository.save(annualClosing);
 
-            // 6. Cerrar el período anual
+            // Cerrar el período anual
             closeAnnualPeriod(annualPeriod);
 
-            // 7. Crear el nuevo período anual para el siguiente año
+            // Crear el nuevo período anual para el siguiente año
             createNextYearPeriod(annualPeriod);
+
+            // Crear los nuevos periodos para el siguiente año
+            createNextYearPeriods(annualPeriod,newClosureType);
 
         } catch (Exception e) {
             logger.error("Error during annual closing", e);
@@ -424,6 +417,19 @@ public class AccountingClosingService {
         request.setIsAnnual(true);
 
         accountingPeriodService.createAccountingPeriod(request);
+    }
+
+    private void createNextYearPeriods(AccountingPeriodEntity currentPeriod, String newClosureType) {
+
+        AccountingPeriodRequest request = new AccountingPeriodRequest();
+        request.setStartPeriod(currentPeriod.getEndPeriod().plusDays(1));
+        request.setClosureType(newClosureType);
+        request.setPeriodName("Periodo " + newClosureType.substring(0, 1).toUpperCase() + newClosureType.substring(1).toLowerCase());
+        request.setIsAnnual(false);
+
+        AccountingPeriodResponse newPeriodResponse = accountingPeriodService.createAccountingPeriod(request);
+        logger.info("Se creó un nuevo periodo contable con ID {}", newPeriodResponse.getId());
+
     }
 
     private void generateAnnualReport(OutputStream outputStream, List<AccountingPeriodEntity> yearPeriods) throws MalformedURLException {

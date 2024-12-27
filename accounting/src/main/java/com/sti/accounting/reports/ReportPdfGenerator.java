@@ -18,6 +18,8 @@ import com.sti.accounting.services.AccountingPeriodService;
 import com.sti.accounting.services.GeneralBalanceService;
 import com.sti.accounting.services.IncomeStatementService;
 import com.sti.accounting.services.TrialBalanceService;
+import com.sti.accounting.utils.IncomeStatementCalculator;
+import com.sti.accounting.utils.IncomeStatementFormatter;
 import org.springframework.stereotype.Component;
 
 import java.io.OutputStream;
@@ -26,6 +28,7 @@ import java.net.MalformedURLException;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Component
 public class ReportPdfGenerator {
@@ -295,124 +298,117 @@ public class ReportPdfGenerator {
     }
 
     private void generateIncomeStatementSection(Document document) throws MalformedURLException {
-        // Usar el encabezado genérico reutilizando el método de encabezado
-        addFinancialReportHeader(document, "Estado de Resultados",false);
+        addFinancialReportHeader(document, "Estado de Resultados", false);
 
-        // Definir colores
-        Color headerColor = new DeviceRgb(7, 43, 84); // Azul para encabezados
-        Color totalColor = new DeviceRgb(240, 248, 255); // Fondo del total (igual al de la balanza de comprobación)
+        Color headerColor = new DeviceRgb(7, 43, 84);
+        Color totalColor = new DeviceRgb(240, 248, 255);
 
-        // Obtener los datos del estado de resultados
         List<IncomeStatementResponse> incomeStatement = incomeStatementService.getIncomeStatement(
                 accountingPeriodService.getActivePeriod().getId()
         );
 
-        // Crear tabla para el estado de resultados
         Table incomeStatementTable = new Table(UnitValue.createPercentArray(new float[]{4, 2})).useAllAvailableWidth();
+        setupTableHeader(incomeStatementTable, headerColor);
 
-        // Encabezado de la tabla
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("Descripción").setBold().setFontSize(12).setTextAlignment(TextAlignment.CENTER))
-                .setBackgroundColor(headerColor).setFontColor(ColorConstants.WHITE));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("Monto").setBold().setFontSize(12).setTextAlignment(TextAlignment.CENTER))
-                .setBackgroundColor(headerColor).setFontColor(ColorConstants.WHITE));
+        IncomeStatementCalculator calculator = new IncomeStatementCalculator();
+        IncomeStatementFormatter formatter = new IncomeStatementFormatter();
 
-        // Variables para acumulados
-        BigDecimal totalVentas = BigDecimal.ZERO;
-        BigDecimal devoluciones = BigDecimal.ZERO;
-        BigDecimal rebajas = BigDecimal.ZERO;
-        BigDecimal costoVentas = BigDecimal.ZERO;
-        BigDecimal gastosGenerales = BigDecimal.ZERO;
-        BigDecimal otrosIngresosYGastos = BigDecimal.ZERO;
-        BigDecimal resultadoFinanciero = BigDecimal.ZERO;
-        BigDecimal impuesto = BigDecimal.ZERO;
+        Map<String, List<IncomeStatementResponse>> groupedAccounts = calculator.groupAccountsByParent(incomeStatement);
 
-        // Clasificar y agregar datos
-        for (IncomeStatementResponse item : incomeStatement) {
-            String category = item.getAccountParent();
+        // 1. Sección de Ventas
+        formatter.addGroupHeader(incomeStatementTable, "VENTAS");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("VENTAS"));
+        BigDecimal totalVentas = calculator.calculateTotalForGroup(groupedAccounts.get("VENTAS"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL VENTAS", totalVentas, totalColor);
 
-            // Validar si el campo category es nulo
-            if (category == null) {
+        // Devoluciones sobre ventas
+        formatter.addSubGroupHeader(incomeStatementTable, "(-) Devoluciones sobre Ventas");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("DEVOLUCIONES SOBRE VENTAS"));
 
-                continue;
-            }
+        // Descuentos sobre ventas
+        formatter.addSubGroupHeader(incomeStatementTable, "(-) Descuentos sobre Ventas");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("DESCUENTOS SOBRE VENTAS"));
 
-            // Lógica de clasificación
-            switch (category) {
-                case "VENTAS":
-                    totalVentas = totalVentas.add(item.getAmount());
-                    break;
-                case "COMPRAS":
-                    devoluciones = devoluciones.add(item.getAmount());
-                    break;
-                case "GASTOS":
-                    rebajas = rebajas.add(item.getAmount());
-                    break;
-                case "GASTOS ADMINISTRATIVOS":
-                    costoVentas = costoVentas.add(item.getAmount());
-                    break;
-                case "GASTOS FINANCIEROS":
-                    gastosGenerales = gastosGenerales.add(item.getAmount());
-                    break;
-                case "GASTOS GENERALES":
-                    otrosIngresosYGastos = otrosIngresosYGastos.add(item.getAmount());
-                    break;
-                case "GASTOS POR DEPRECIACION":
-                    resultadoFinanciero = resultadoFinanciero.add(item.getAmount());
-                    break;
-                case "IMPUESTO":
-                    impuesto = impuesto.add(item.getAmount());
-                    break;
-                default:
-            }
+        // Ventas Netas
+        BigDecimal ventasNetas = calculator.calculateNetSales(groupedAccounts);
+        formatter.addSummaryRow(incomeStatementTable, "VENTAS NETAS", ventasNetas, totalColor);
+
+        // 2. Sección de Compras
+        formatter.addGroupHeader(incomeStatementTable, "COMPRAS");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("COMPRAS"));
+        BigDecimal totalCompras = calculator.calculateTotalForGroup(groupedAccounts.get("COMPRAS"));
+
+        // Importaciones
+        if (groupedAccounts.containsKey("IMPORTACIONES")) {
+            formatter.addGroupHeader(incomeStatementTable, "IMPORTACIONES");
+            formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("IMPORTACIONES"));
+            BigDecimal totalImportaciones = calculator.calculateTotalForGroup(groupedAccounts.get("IMPORTACIONES"));
+            totalCompras = totalCompras.add(totalImportaciones);
         }
-        // Calcular totales
-        BigDecimal ventasNetas = totalVentas.subtract(devoluciones).subtract(rebajas);
-        BigDecimal utilidadBruta = ventasNetas.subtract(costoVentas);
-        BigDecimal utilidadAntesImpuestos = utilidadBruta.subtract(gastosGenerales).add(otrosIngresosYGastos).add(resultadoFinanciero);
-        BigDecimal utilidadNeta = utilidadAntesImpuestos.subtract(impuesto);
 
-        // Llenar los datos en la tabla
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("Ventas totales")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(totalVentas))));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL COMPRAS", totalCompras, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Devoluciones s/ventas")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(devoluciones))));
+        // Mercadería disponible
+        BigDecimal mercaderiaDisponible = ventasNetas.add(totalCompras);
+        formatter.addSummaryRow(incomeStatementTable, "MERCADERÍA DISPONIBLE PARA LA VENTA", mercaderiaDisponible, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Rebajas sobre ventas")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(rebajas))));
+        // 3. Sección de Gastos
 
-        // Aplicar diseño de totales: Ventas Netas
-        addSummaryRow(incomeStatementTable, "Ventas netas", ventasNetas, totalColor);
+        // Gastos Administrativos
+        formatter.addGroupHeader(incomeStatementTable, "GASTOS ADMINISTRATIVOS");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS ADMINISTRATIVOS"));
+        BigDecimal totalGastonAdmin = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS ADMINISTRATIVOS"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS ADMINISTRATIVOS", totalGastonAdmin, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Costo de ventas")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(costoVentas))));
+        // Gastos Financieros
+        formatter.addGroupHeader(incomeStatementTable, "GASTOS FINANCIEROS");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS FINANCIEROS"));
+        BigDecimal totalGastosFinancieros = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS FINANCIEROS"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS FINANCIEROS", totalGastosFinancieros, totalColor);
 
-        // Aplicar diseño de totales: Utilidad Bruta
-        addSummaryRow(incomeStatementTable, "(=) Utilidad (pérdida) bruta", utilidadBruta, totalColor);
+        // Gastos Generales
+        formatter.addGroupHeader(incomeStatementTable, "GASTOS GENERALES");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS GENERALES"));
+        BigDecimal totalGastosGenerales = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS GENERALES"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS GENERALES", totalGastosGenerales, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Total de gastos generales")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(gastosGenerales))));
+        // Gastos por Depreciación
+        formatter.addGroupHeader(incomeStatementTable, "GASTOS POR DEPRECIACION");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS POR DEPRECIACION"));
+        BigDecimal totalGastosDepreciacion = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS POR DEPRECIACION"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS POR DEPRECIACION", totalGastosDepreciacion, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(+/–) Otros ingresos y gastos")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(otrosIngresosYGastos))));
+        // Total Gastos Operativos
+        BigDecimal totalGastosOperativos = calculator.calculateOperatingExpenses(groupedAccounts);
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS OPERATIVOS", totalGastosOperativos, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(+/–) Resultado integral de financiamiento")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(resultadoFinanciero))));
+        // Utilidad antes de impuestos
+        BigDecimal utilidadAntesImpuestos = mercaderiaDisponible.subtract(totalGastosOperativos);
+        formatter.addSummaryRow(incomeStatementTable, "UTILIDAD ANTES DE IMPUESTOS", utilidadAntesImpuestos, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(+/–) Partidas no ordinarias")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(BigDecimal.ZERO)))); // Ejemplo fijo 0
+        // Impuesto sobre la renta (25%)
+        BigDecimal impuestoRenta = utilidadAntesImpuestos.multiply(new BigDecimal("0.25"));
+        formatter.addSummaryRow(incomeStatementTable, "Impuesto Sobre la Renta (25%)", impuestoRenta, null);
 
-        // Aplicar diseño de totales: Utilidad Antes de Impuestos
-        addSummaryRow(incomeStatementTable, "(=) Utilidad antes de impuestos", utilidadAntesImpuestos, totalColor);
+        // Utilidad neta
+        BigDecimal utilidadNeta = utilidadAntesImpuestos.subtract(impuestoRenta);
+        formatter.addSummaryRow(incomeStatementTable, "UTILIDAD O PERDIDA NETA DEL EJERCICIO", utilidadNeta, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Impuesto a la utilidad (28%)")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(impuesto))));
-
-        // Aplicar diseño de totales: Utilidad Neta
-        addSummaryRow(incomeStatementTable, "(=) Utilidad (pérdida) neta", utilidadNeta, totalColor);
-
-        // Agregar la tabla al documento
         document.add(incomeStatementTable);
+    }
+
+    private void setupTableHeader(Table table, Color headerColor) {
+        table.addCell(new Cell()
+                .add(new Paragraph("Descripción").setBold().setFontSize(12)
+                        .setTextAlignment(TextAlignment.CENTER))
+                .setBackgroundColor(headerColor)
+                .setFontColor(ColorConstants.WHITE));
+
+        table.addCell(new Cell()
+                .add(new Paragraph("Monto").setBold().setFontSize(12)
+                        .setTextAlignment(TextAlignment.CENTER))
+                .setBackgroundColor(headerColor)
+                .setFontColor(ColorConstants.WHITE));
     }
 
     private void addSectionTitle(Table table, String title, Color headerColor) {
@@ -523,7 +519,7 @@ public class ReportPdfGenerator {
 
         // Obtener rango de fechas del período activo
         String periodRange = accountingPeriodService.getAnnualPeriod().getStartPeriod().toLocalDate() +
-                " al " + accountingPeriodService.getActivePeriod().getEndPeriod().toLocalDate();
+                " al " + accountingPeriodService.getAnnualPeriod().getEndPeriod().toLocalDate();
 
         // Obtener los datos de la balanza de comprobación para el año completo
         TrialBalanceResponse trialBalance = trialBalanceService.getAllTrialBalances();
@@ -683,121 +679,101 @@ public class ReportPdfGenerator {
     }
 
     private void generateIncomeStatementSectionAnnual(Document document) throws MalformedURLException {
-        // Usar el encabezado genérico reutilizando el método de encabezado
         addFinancialReportHeader(document, "Estado de Resultados", true);
 
-        // Obtener los datos del estado de resultados para el año completo
+        Color headerColor = new DeviceRgb(7, 43, 84);
+        Color totalColor = new DeviceRgb(240, 248, 255);
+
         List<IncomeStatementResponse> incomeStatement = incomeStatementService.getIncomeStatement(null);
 
-        // Definir colores
-        Color headerColor = new DeviceRgb(7, 43, 84); // Azul para encabezados
-        Color totalColor = new DeviceRgb(240, 248, 255); // Fondo del total
 
-        // Crear tabla para el estado de resultados
         Table incomeStatementTable = new Table(UnitValue.createPercentArray(new float[]{4, 2})).useAllAvailableWidth();
+        setupTableHeader(incomeStatementTable, headerColor);
 
-        // Encabezado de la tabla
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("Descripción").setBold().setFontSize(12).setTextAlignment(TextAlignment.CENTER))
-                .setBackgroundColor(headerColor).setFontColor(ColorConstants.WHITE));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("Monto").setBold().setFontSize(12).setTextAlignment(TextAlignment.CENTER))
-                .setBackgroundColor(headerColor).setFontColor(ColorConstants.WHITE));
+        IncomeStatementCalculator calculator = new IncomeStatementCalculator();
+        IncomeStatementFormatter formatter = new IncomeStatementFormatter();
 
-        // Variables para acumulados
-        BigDecimal totalVentas = BigDecimal.ZERO;
-        BigDecimal devoluciones = BigDecimal.ZERO;
-        BigDecimal rebajas = BigDecimal.ZERO;
-        BigDecimal costoVentas = BigDecimal.ZERO;
-        BigDecimal gastosGenerales = BigDecimal.ZERO;
-        BigDecimal otrosIngresosYGastos = BigDecimal.ZERO;
-        BigDecimal resultadoFinanciero = BigDecimal.ZERO;
-        BigDecimal impuesto = BigDecimal.ZERO;
+        Map<String, List<IncomeStatementResponse>> groupedAccounts = calculator.groupAccountsByParent(incomeStatement);
 
-        // Clasificar y agregar datos
-        for (IncomeStatementResponse item : incomeStatement) {
-            String category = item.getAccountParent();
+        // 1. Sección de Ventas
+        formatter.addGroupHeader(incomeStatementTable, "VENTAS");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("VENTAS"));
+        BigDecimal totalVentas = calculator.calculateTotalForGroup(groupedAccounts.get("VENTAS"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL VENTAS", totalVentas, totalColor);
 
-            // Validar si el campo category es nulo
-            if (category == null) {
-                continue;
-            }
+        // Devoluciones sobre ventas
+        formatter.addSubGroupHeader(incomeStatementTable, "(-) Devoluciones sobre Ventas");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("DEVOLUCIONES SOBRE VENTAS"));
 
-            // Lógica de clasificación
-            switch (category) {
-                case "VENTAS":
-                    totalVentas = totalVentas.add(item.getAmount());
-                    break;
-                case "COMPRAS":
-                    devoluciones = devoluciones.add(item.getAmount());
-                    break;
-                case "GASTOS":
-                    rebajas = rebajas.add(item.getAmount());
-                    break;
-                case "GASTOS ADMINISTRATIVOS":
-                    costoVentas = costoVentas.add(item.getAmount());
-                    break;
-                case "GASTOS FINANCIEROS":
-                    gastosGenerales = gastosGenerales.add(item.getAmount());
-                    break;
-                case "GASTOS GENERALES":
-                    otrosIngresosYGastos = otrosIngresosYGastos.add(item.getAmount());
-                    break;
-                case "GASTOS POR DEPRECIACION":
-                    resultadoFinanciero = resultadoFinanciero.add(item.getAmount());
-                    break;
-                case "IMPUESTO":
-                    impuesto = impuesto.add(item.getAmount());
-                    break;
-                default:
-            }
+        // Descuentos sobre ventas
+        formatter.addSubGroupHeader(incomeStatementTable, "(-) Descuentos sobre Ventas");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("DESCUENTOS SOBRE VENTAS"));
+
+        // Ventas Netas
+        BigDecimal ventasNetas = calculator.calculateNetSales(groupedAccounts);
+        formatter.addSummaryRow(incomeStatementTable, "VENTAS NETAS", ventasNetas, totalColor);
+
+        // 2. Sección de Compras
+        formatter.addGroupHeader(incomeStatementTable, "COMPRAS");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("COMPRAS"));
+        BigDecimal totalCompras = calculator.calculateTotalForGroup(groupedAccounts.get("COMPRAS"));
+
+        // Importaciones
+        if (groupedAccounts.containsKey("IMPORTACIONES")) {
+            formatter.addGroupHeader(incomeStatementTable, "IMPORTACIONES");
+            formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("IMPORTACIONES"));
+            BigDecimal totalImportaciones = calculator.calculateTotalForGroup(groupedAccounts.get("IMPORTACIONES"));
+            totalCompras = totalCompras.add(totalImportaciones);
         }
 
-        // Calcular totales
-        BigDecimal ventasNetas = totalVentas.subtract(devoluciones).subtract(rebajas);
-        BigDecimal utilidadBruta = ventasNetas.subtract(costoVentas);
-        BigDecimal utilidadAntesImpuestos = utilidadBruta.subtract(gastosGenerales).add(otrosIngresosYGastos).add(resultadoFinanciero);
-        BigDecimal utilidadNeta = utilidadAntesImpuestos.subtract(impuesto);
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL COMPRAS", totalCompras, totalColor);
 
-        // Llenar los datos en la tabla
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("Ventas totales")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(totalVentas))));
+        // Mercadería disponible
+        BigDecimal mercaderiaDisponible = ventasNetas.add(totalCompras);
+        formatter.addSummaryRow(incomeStatementTable, "MERCADERÍA DISPONIBLE PARA LA VENTA", mercaderiaDisponible, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Devoluciones s/ventas")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(devoluciones))));
+        // 3. Sección de Gastos
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Rebajas sobre ventas")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(rebajas))));
+        // Gastos Administrativos
+        formatter.addGroupHeader(incomeStatementTable, "GASTOS ADMINISTRATIVOS");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS ADMINISTRATIVOS"));
+        BigDecimal totalGastonAdmin = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS ADMINISTRATIVOS"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS ADMINISTRATIVOS", totalGastonAdmin, totalColor);
 
-        // Aplicar diseño de totales: Ventas Netas
-        addSummaryRow(incomeStatementTable, "Ventas netas", ventasNetas, totalColor);
+        // Gastos Financieros
+        formatter.addGroupHeader(incomeStatementTable, "GASTOS FINANCIEROS");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS FINANCIEROS"));
+        BigDecimal totalGastosFinancieros = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS FINANCIEROS"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS FINANCIEROS", totalGastosFinancieros, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Costo de ventas")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(costoVentas))));
+        // Gastos Generales
+        formatter.addGroupHeader(incomeStatementTable, "GASTOS GENERALES");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS GENERALES"));
+        BigDecimal totalGastosGenerales = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS GENERALES"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS GENERALES", totalGastosGenerales, totalColor);
 
-        // Aplicar diseño de totales: Utilidad Bruta
-        addSummaryRow(incomeStatementTable, "(=) Utilidad (pérdida) bruta", utilidadBruta, totalColor);
+        // Gastos por Depreciación
+        formatter.addGroupHeader(incomeStatementTable, "GASTOS POR DEPRECIACION");
+        formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS POR DEPRECIACION"));
+        BigDecimal totalGastosDepreciacion = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS POR DEPRECIACION"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS POR DEPRECIACION", totalGastosDepreciacion, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Total de gastos generales")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(gastosGenerales))));
+        // Total Gastos Operativos
+        BigDecimal totalGastosOperativos = calculator.calculateOperatingExpenses(groupedAccounts);
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS OPERATIVOS", totalGastosOperativos, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(+/–) Otros ingresos y gastos")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(otrosIngresosYGastos))));
+        // Utilidad antes de impuestos
+        BigDecimal utilidadAntesImpuestos = mercaderiaDisponible.subtract(totalGastosOperativos);
+        formatter.addSummaryRow(incomeStatementTable, "UTILIDAD ANTES DE IMPUESTOS", utilidadAntesImpuestos, totalColor);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(+/–) Resultado integral de financiamiento")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(resultadoFinanciero))));
+        // Impuesto sobre la renta (25%)
+        BigDecimal impuestoRenta = utilidadAntesImpuestos.multiply(new BigDecimal("0.25"));
+        formatter.addSummaryRow(incomeStatementTable, "Impuesto Sobre la Renta (25%)", impuestoRenta, null);
 
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(+/–) Partidas no ordinarias")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(BigDecimal.ZERO)))); // Ejemplo fijo 0
+        // Utilidad neta
+        BigDecimal utilidadNeta = utilidadAntesImpuestos.subtract(impuestoRenta);
+        formatter.addSummaryRow(incomeStatementTable, "UTILIDAD O PERDIDA NETA DEL EJERCICIO", utilidadNeta, totalColor);
 
-        // Aplicar diseño de totales: Utilidad Antes de Impuestos
-        addSummaryRow(incomeStatementTable, "(=) Utilidad antes de impuestos", utilidadAntesImpuestos, totalColor);
-
-        incomeStatementTable.addCell(new Cell().add(new Paragraph("(–) Impuesto a la utilidad (28%)")));
-        incomeStatementTable.addCell(new Cell().add(new Paragraph(formatCurrency(impuesto))));
-
-        // Aplicar diseño de totales: Utilidad Neta
-        addSummaryRow(incomeStatementTable, "(=) Utilidad (pérdida) neta", utilidadNeta, totalColor);
-
-        // Agregar la tabla al documento
         document.add(incomeStatementTable);
     }
 }
