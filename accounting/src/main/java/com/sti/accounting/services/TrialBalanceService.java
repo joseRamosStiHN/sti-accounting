@@ -34,7 +34,7 @@ public class TrialBalanceService {
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
         if (activePeriod != null && activePeriod.getStartPeriod() != null) {
             // Crear la respuesta del balance del período activo
-            TrialBalanceResponse.PeriodBalanceResponse activePeriodBalanceResponse = createPeriodBalanceResponse(activePeriod, allAccounts);
+            TrialBalanceResponse.PeriodBalanceResponse activePeriodBalanceResponse = createPeriodBalanceResponse(activePeriod, allAccounts, false);
             periodBalances.add(activePeriodBalanceResponse);
 
             // Obtener el año del período activo
@@ -43,8 +43,10 @@ public class TrialBalanceService {
             // Obtener los períodos cerrados y filtrar por el año activo
             List<AccountingPeriodEntity> closedPeriods = accountingPeriodService.getClosedPeriods();
             for (AccountingPeriodEntity closedPeriod : closedPeriods) {
-                if (closedPeriod.getStartPeriod() != null && closedPeriod.getStartPeriod().getYear() == activeYear) {
-                    TrialBalanceResponse.PeriodBalanceResponse closedPeriodBalanceResponse = createPeriodBalanceResponse(closedPeriod, allAccounts);
+                if (closedPeriod.getStartPeriod() != null
+                        && closedPeriod.getStartPeriod().getYear() == activeYear
+                        && Boolean.TRUE.equals(!closedPeriod.getIsAnnual())) {
+                    TrialBalanceResponse.PeriodBalanceResponse closedPeriodBalanceResponse = createPeriodBalanceResponse(closedPeriod, allAccounts, false);
                     periodBalances.add(closedPeriodBalanceResponse);
                 }
             }
@@ -54,7 +56,34 @@ public class TrialBalanceService {
         return trialBalanceResponse;
     }
 
-    private TrialBalanceResponse.PeriodBalanceResponse createPeriodBalanceResponse(AccountingPeriodEntity period, List<AccountResponse> allAccounts) {
+
+    public TrialBalanceResponse getAllTrialBalances() {
+        TrialBalanceResponse trialBalanceResponse = new TrialBalanceResponse();
+        List<TrialBalanceResponse.PeriodBalanceResponse> periodBalances = new ArrayList<>();
+        List<AccountResponse> allAccounts = accountService.getAllAccount();
+
+        // Obtener todos los períodos contables
+        List<AccountingPeriodResponse> allAccountingPeriods = accountingPeriodService.getAllAccountingPeriod();
+
+        for (AccountingPeriodResponse periodResponse : allAccountingPeriods) {
+            if (periodResponse.getStartPeriod() != null) {
+                // Convertir AccountingPeriodResponse a AccountingPeriodEntity
+                AccountingPeriodEntity period = new AccountingPeriodEntity();
+                period.setId(periodResponse.getId());
+                period.setPeriodName(periodResponse.getPeriodName());
+                period.setStartPeriod(periodResponse.getStartPeriod());
+                period.setEndPeriod(periodResponse.getEndPeriod());
+
+                TrialBalanceResponse.PeriodBalanceResponse periodBalanceResponse = createPeriodBalanceResponse(period, allAccounts, true);
+                periodBalances.add(periodBalanceResponse);
+            }
+        }
+
+        trialBalanceResponse.setPeriods(periodBalances);
+        return trialBalanceResponse;
+    }
+
+    private TrialBalanceResponse.PeriodBalanceResponse createPeriodBalanceResponse(AccountingPeriodEntity period, List<AccountResponse> allAccounts, boolean useFirstBalance) {
         TrialBalanceResponse.PeriodBalanceResponse periodBalanceResponse = new TrialBalanceResponse.PeriodBalanceResponse();
         periodBalanceResponse.setPeriodName(period.getPeriodName());
         periodBalanceResponse.setStartPeriod(period.getStartPeriod());
@@ -68,7 +97,12 @@ public class TrialBalanceService {
                 TrialBalanceResponse.AccountBalance accountBalance = createAccountBalance(account);
 
                 // Calcular el balance inicial
-                TrialBalanceResponse.InitialBalance initialBalanceResponse = calculateInitialBalance(account);
+                TrialBalanceResponse.InitialBalance initialBalanceResponse;
+                if (useFirstBalance) {
+                    initialBalanceResponse = calculateInitialBalanceUsingOldest(account);
+                } else {
+                    initialBalanceResponse = calculateInitialBalance(account);
+                }
                 accountBalance.setInitialBalance(Collections.singletonList(initialBalanceResponse));
 
                 // Calcular el balance para el rango de fechas
@@ -125,6 +159,40 @@ public class TrialBalanceService {
                     initialBalanceResponse.setDebit(BigDecimal.ZERO);
                     initialBalanceResponse.setCredit(initialBalance);
                 }
+            }
+        }
+
+        if (initialBalance.equals(BigDecimal.ZERO)) {
+            initialBalanceResponse.setDebit(BigDecimal.ZERO);
+            initialBalanceResponse.setCredit(BigDecimal.ZERO);
+        }
+
+        return initialBalanceResponse;
+    }
+
+    private TrialBalanceResponse.InitialBalance calculateInitialBalanceUsingOldest(AccountResponse account) {
+        TrialBalanceResponse.InitialBalance initialBalanceResponse = new TrialBalanceResponse.InitialBalance();
+        BigDecimal initialBalance = BigDecimal.ZERO;
+
+        if (account.getBalances() != null && !account.getBalances().isEmpty()) {
+            // Convertir el Set a una List y ordenar por createAtDate
+            List<AccountBalance> balancesList = new ArrayList<>(account.getBalances());
+
+            // Ordenar los balances por la fecha de creación (createAtDate)
+            balancesList.sort(Comparator.comparing(AccountBalance::getCreateAtDate));
+
+            // Tomar el balance más antiguo
+            AccountBalance oldestBalance = balancesList.get(0);
+
+            initialBalance = Optional.ofNullable(oldestBalance.getInitialBalance()).orElse(BigDecimal.ZERO);
+            String typicalBalance = oldestBalance.getTypicalBalance();
+
+            if ("D".equalsIgnoreCase(typicalBalance)) {
+                initialBalanceResponse.setDebit(initialBalance);
+                initialBalanceResponse.setCredit(BigDecimal.ZERO);
+            } else {
+                initialBalanceResponse.setDebit(BigDecimal.ZERO);
+                initialBalanceResponse.setCredit(initialBalance);
             }
         }
 

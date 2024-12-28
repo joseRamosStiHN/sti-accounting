@@ -70,11 +70,16 @@ public class AccountingPeriodService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is already an equal accounting period.");
         }
 
-        // Inactivar todos los períodos activos antes de crear nuevos
-        List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findActivePeriods();
-        for (AccountingPeriodEntity activePeriod : activePeriods) {
-            activePeriod.setPeriodStatus(PeriodStatus.INACTIVE);
-            accountingPeriodRepository.save(activePeriod);
+        // Verificar si el periodo a crear es anual
+        boolean isAnnualPeriod = accountingPeriodRequest.getIsAnnual() != null && accountingPeriodRequest.getIsAnnual();
+
+        // Inactivar todos los períodos activos solo si el nuevo periodo no es anual
+        if (!isAnnualPeriod) {
+            List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findActivePeriods();
+            for (AccountingPeriodEntity activePeriod : activePeriods) {
+                activePeriod.setPeriodStatus(PeriodStatus.INACTIVE);
+                accountingPeriodRepository.save(activePeriod);
+            }
         }
 
         List<AccountingPeriodEntity> periods = generatePeriods(accountingPeriodRequest);
@@ -84,7 +89,7 @@ public class AccountingPeriodService {
 
         // El primer período es el activo
         AccountingPeriodEntity activePeriod = periods.get(0);
-        activePeriod.setPeriodStatus(PeriodStatus.ACTIVE);
+        activePeriod.setPeriodStatus(accountingPeriodRequest.getPeriodStatus() == null ? PeriodStatus.ACTIVE : accountingPeriodRequest.getPeriodStatus());
         accountingPeriodRepository.save(activePeriod);
 
         return toResponse(activePeriod);
@@ -218,12 +223,12 @@ public class AccountingPeriodService {
 
         int currentYear = LocalDate.now().getYear();
 
-        // Intenta obtener el próximo período
+        // Obtener el próximo período
         AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByClosureTypeAndPeriodOrderForYear(
                 activePeriod.getClosureType(), activePeriod.getPeriodOrder() + 1, currentYear
         );
 
-        // Si existe, devuelve su información
+        // Si existe, devuelve la información
         if (nextPeriod != null) {
             return toResponse(nextPeriod);
         }
@@ -277,6 +282,13 @@ public class AccountingPeriodService {
 
     private boolean isAccountingPeriodExists(AccountingPeriodRequest request, Long excludeId) {
         return accountingPeriodRepository.existsByClosureTypeAndStartPeriodAndIdNot(request.getClosureType(), request.getStartPeriod(), excludeId);
+    }
+
+    public AccountingPeriodEntity getAnnualPeriod() {
+        return accountingPeriodRepository.findAll().stream()
+                .filter(period -> period.getIsAnnual() != null && period.getIsAnnual())
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no annual period available"));
     }
 
     public AccountingPeriodResponse toResponse(AccountingPeriodEntity entity) {

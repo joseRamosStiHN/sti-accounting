@@ -41,4 +41,8 @@ public class AccountingPeriodEntity {
 
     @Column(name = "IS_ANNUAL")
     private Boolean isAnnual;
+
+    public Boolean getIsAnnual() {
+        return isAnnual;
+    }
 }
