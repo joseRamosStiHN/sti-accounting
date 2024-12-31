@@ -219,13 +219,21 @@ public class AccountingPeriodService {
     }
 
     public AccountingPeriodResponse getNextPeriodInfo() {
-        AccountingPeriodEntity activePeriod = getActivePeriod();
+        AccountingPeriodEntity activePeriod = null;
+        try {
+            activePeriod = getActivePeriod();
+        } catch (ResponseStatusException e) {
+            logger.warn("No active accounting period found: {}", e.getMessage());
+        }
 
+        AccountingPeriodEntity annualPeriod = getAnnualPeriod();
         int currentYear = LocalDate.now().getYear();
 
         // Obtener el próximo período
         AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByClosureTypeAndPeriodOrderForYear(
-                activePeriod.getClosureType(), activePeriod.getPeriodOrder() + 1, currentYear
+                activePeriod != null ? activePeriod.getClosureType() : annualPeriod.getClosureType(),
+                activePeriod != null ? activePeriod.getPeriodOrder() + 1 : 1,
+                currentYear
         );
 
         // Si existe, devuelve la información
@@ -236,9 +244,9 @@ public class AccountingPeriodService {
         // Calcular el siguiente período si no existe
         LocalDateTime startPeriod = null;
         LocalDateTime endPeriod = null;
-        LocalDate startOfNextYear = activePeriod.getEndPeriod().toLocalDate().with(TemporalAdjusters.firstDayOfNextYear());
+        LocalDate startOfNextYear = annualPeriod.getEndPeriod().toLocalDate().with(TemporalAdjusters.firstDayOfNextYear());
 
-        switch (activePeriod.getClosureType().toLowerCase()) {
+        switch (annualPeriod.getClosureType().toLowerCase()) {
             case CLOSURE_TYPE_MENSUAL:
                 startPeriod = startOfNextYear.atStartOfDay();
                 endPeriod = startOfNextYear.with(TemporalAdjusters.lastDayOfMonth()).atTime(23, 59, 59);
@@ -258,20 +266,20 @@ public class AccountingPeriodService {
             default:
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "No next period found and cannot calculate for unsupported closure type: " + activePeriod.getClosureType()
+                        "No next period found and cannot calculate for unsupported closure type: " + annualPeriod.getClosureType()
                 );
         }
 
         // Retornar información del siguiente período calculado
         AccountingPeriodResponse response = new AccountingPeriodResponse();
-        response.setPeriodName(String.format("Periodo %s %d", activePeriod.getClosureType(), 1));
-        response.setClosureType(activePeriod.getClosureType());
+        response.setPeriodName(String.format("Periodo %s %d", annualPeriod.getClosureType(), 1));
+        response.setClosureType(annualPeriod.getClosureType());
         response.setStartPeriod(startPeriod);
         response.setEndPeriod(endPeriod);
         response.setDaysPeriod((int) Duration.between(startPeriod, endPeriod).toDays() + 1);
         response.setPeriodStatus(PeriodStatus.INACTIVE.toString());
         response.setPeriodOrder(1);
-        response.setIsAnnual(activePeriod.getIsAnnual());
+        response.setIsAnnual(annualPeriod.getIsAnnual());
 
         return response;
     }

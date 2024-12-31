@@ -62,7 +62,16 @@ public class AccountingClosingService {
     public AccountingClosingResponse getDetailAccountingClosing() {
         logger.info("Generating detail accounting closing");
 
-        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+        AccountingPeriodEntity activePeriod;
+        AccountingPeriodEntity annualPeriod = accountingPeriodService.getAnnualPeriod();
+
+        try {
+            activePeriod = accountingPeriodService.getActivePeriod();
+        } catch (ResponseStatusException e) {
+            logger.warn("No active accounting period found: {}", e.getMessage());
+            // Si no hay un período activo, usar el período anual
+            activePeriod = annualPeriod;
+        }
 
         AccountingClosingResponse accountingClosingResponse = new AccountingClosingResponse();
 
@@ -271,6 +280,8 @@ public class AccountingClosingService {
 
         accountingClosingResponse.setId(accountingClosingEntity.getId());
         accountingClosingResponse.setAccountingPeriodId(accountingClosingEntity.getAccountingPeriod().getId());
+        accountingClosingResponse.setPeriodName(accountingClosingEntity.getAccountingPeriod().getPeriodName());
+        accountingClosingResponse.setTypePeriod(accountingClosingEntity.getAccountingPeriod().getClosureType());
         accountingClosingResponse.setStartPeriod(accountingClosingEntity.getStartPeriod());
         accountingClosingResponse.setEndPeriod(accountingClosingEntity.getEndPeriod());
         accountingClosingResponse.setTotalAssets(accountingClosingEntity.getTotalAssets());
