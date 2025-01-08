@@ -34,6 +34,6 @@ public class AccountingPeriodRequest {
 
     private Boolean isAnnual;
 
-
+    private String tenantId;
 
 }

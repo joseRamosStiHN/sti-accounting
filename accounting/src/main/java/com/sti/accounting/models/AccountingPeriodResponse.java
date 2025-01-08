@@ -16,5 +16,6 @@ public class AccountingPeriodResponse {
     private String periodStatus;
     private Integer periodOrder;
     private Boolean isAnnual;
+    private String tenantId;
 
 }
