@@ -10,13 +10,13 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface IAccountRepository extends ListCrudRepository<AccountEntity, Long> {
 
-    boolean existsByCode(String code);
+    boolean existsByCodeAndTenantId(String code, String tenantId);
 
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
             "FROM AccountEntity a " +
-            "WHERE a.code = :code AND a.id <> :id")
-    boolean existsByCodeAndNotId(@Param("code") String code, @Param("id") Long id);
+            "WHERE a.code = :code AND a.id <> :id AND a.tenantId = :tenantId")
+    boolean existsByCodeAndNotId(@Param("code") String code, @Param("id") Long id, @Param("tenantId") String tenantId);
 
-    long countByParentId(Long parentId);
+    long countByParentIdAndTenantId(Long parentId, String tenantId);
 
 }

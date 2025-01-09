@@ -83,4 +83,7 @@ public class TransactionEntity {
     @ManyToOne
     @JoinColumn(name = "accounting_period_id")
     private AccountingPeriodEntity accountingPeriod;
+
+    @Column(name = "TENANT_ID")
+    private String tenantId;
 }

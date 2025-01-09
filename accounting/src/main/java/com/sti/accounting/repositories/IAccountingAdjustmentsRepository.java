@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface IAccountingAdjustmentsRepository extends ListCrudRepository<AccountingAdjustmentsEntity, Long> {
 
-    List<AccountingAdjustmentsEntity> getAccountingAdjustmentsByTransactionId(Long transactionId);
+    List<AccountingAdjustmentsEntity> getAccountingAdjustmentsByTransactionIdAndTenantId(Long transactionId, String tenantId);
 
 }

@@ -34,7 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String tenantId = request.getHeader("tenantId");
 
-            System.out.println("tenantId:" + tenantId);
             if (tenantId != null && !tenantId.isEmpty()) {
                 TenantContext.setCurrentTenant(tenantId);
             }

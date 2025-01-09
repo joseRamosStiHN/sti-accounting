@@ -9,7 +9,7 @@ import java.util.List;
 @Repository
 public interface ICreditNotesRepository extends ListCrudRepository<CreditNotesEntity, Long> {
 
-    List<CreditNotesEntity> getCreditNotesByTransactionId(Long transactionId);
+    List<CreditNotesEntity> getCreditNotesByTransactionIdAndTenantId(Long transactionId, String tenantId);
 
 }
 

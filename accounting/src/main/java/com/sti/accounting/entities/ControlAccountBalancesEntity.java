@@ -34,4 +34,7 @@ public class ControlAccountBalancesEntity {
 
     @Column(name = "DATE")
     private LocalDate createAtDate;
+
+    @Column(name = "TENANT_ID")
+    private String tenantId;
 }

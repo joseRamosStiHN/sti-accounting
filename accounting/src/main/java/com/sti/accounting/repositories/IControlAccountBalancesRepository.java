@@ -11,16 +11,15 @@ import java.util.Optional;
 @Repository
 public interface IControlAccountBalancesRepository extends ListCrudRepository<ControlAccountBalancesEntity, Long> {
 
+    Optional<ControlAccountBalancesEntity> findByAccountIdAndAccountingPeriodIdAndTenantId(Long accountId, Long accountingPeriodId, String tenantId);
 
-    Optional<ControlAccountBalancesEntity> findByAccountIdAndAccountingPeriodId(Long accountId, Long accountingPeriodId);
+    List<ControlAccountBalancesEntity> findAllByAccountIdAndTenantId(Long accountId, String tenantId);
 
-    List<ControlAccountBalancesEntity> findAllByAccountId(Long accountId);
+    List<ControlAccountBalancesEntity> findAllByAccountingPeriodIdAndTenantId(Long accountingPeriodId, String tenantId);
 
-    List<ControlAccountBalancesEntity> findAllByAccountingPeriodId(Long accountingPeriodId);
+    Optional<ControlAccountBalancesEntity> findByAccountIdAndCreateAtDateBetweenAndTenantId(Long accountId, LocalDate startDate, LocalDate endDate, String tenantId);
 
-    Optional<ControlAccountBalancesEntity> findByAccountIdAndCreateAtDateBetween(Long accountId, LocalDate startDate, LocalDate endDate);
+    List<ControlAccountBalancesEntity> findAllByAccountIdAndAccountingPeriodIdAndCreateAtDateBetweenAndTenantId(Long accountId, Long accountingPeriodId, LocalDate startDate, LocalDate endDate, String tenantId);
 
-    List<ControlAccountBalancesEntity> findAllByAccountIdAndAccountingPeriodIdAndCreateAtDateBetween(Long accountId, Long accountingPeriodId, LocalDate startDate, LocalDate endDate);
-
-    List<ControlAccountBalancesEntity> findAllByAccountIdAndCreateAtDateBetween(Long accountId, LocalDate startDate, LocalDate endDate);
+    List<ControlAccountBalancesEntity> findAllByAccountIdAndCreateAtDateBetweenAndTenantId(Long accountId, LocalDate startDate, LocalDate endDate, String tenantId);
 }

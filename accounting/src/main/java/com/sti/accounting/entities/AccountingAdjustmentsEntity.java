@@ -45,5 +45,6 @@ public class AccountingAdjustmentsEntity {
     @OneToMany(mappedBy = "adjustment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AdjustmentDetailEntity> adjustmentDetail;
 
-
+    @Column(name = "TENANT_ID")
+    private String tenantId;
 }

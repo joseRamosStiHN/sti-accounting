@@ -50,4 +50,7 @@ public class DebitNotesEntity {
 
     @OneToMany(mappedBy = "debitNote", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DebitNotesDetailEntity> debitNoteDetail;
+
+    @Column(name = "TENANT_ID")
+    private String tenantId;
 }

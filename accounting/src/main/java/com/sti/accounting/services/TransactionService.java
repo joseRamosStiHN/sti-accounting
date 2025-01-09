@@ -7,6 +7,7 @@ import com.sti.accounting.repositories.IAccountingJournalRepository;
 import com.sti.accounting.repositories.IDocumentRepository;
 import com.sti.accounting.repositories.ITransactionRepository;
 import com.sti.accounting.utils.Motion;
+import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -42,8 +43,13 @@ public class TransactionService {
         this.accountingPeriodService = accountingPeriodService;
     }
 
+    private String getTenantId() {
+        return TenantContext.getCurrentTenant();
+    }
+
     public List<TransactionResponse> getAllTransaction() {
-        return transactionRepository.findAll().stream().map(this::entityToResponse).toList();
+        String tenantId = getTenantId();
+        return transactionRepository.findAll().stream().filter(transaction -> transaction.getTenantId().equals(tenantId)).map(this::entityToResponse).toList();
     }
 
     public Map<String, List<AccountTransactionDTO>> getTransactionAccountsByActivePeriod() {
@@ -83,9 +89,12 @@ public class TransactionService {
     }
 
     public List<TransactionResponse> getByDocumentType(Long id) {
+        String tenantId = getTenantId();
+
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
-        List<TransactionEntity> transByDocument = transactionRepository.findByDocumentId(id);
+        List<TransactionEntity> transByDocument = transactionRepository.findByDocumentIdAndTenantId(id, tenantId);
+
 
         return transByDocument.stream()
                 .filter(transaction -> transaction.getAccountingPeriod().equals(activePeriod))
@@ -102,15 +111,19 @@ public class TransactionService {
 
     public List<TransactionResponse> getTransactionByDateRange(LocalDate startDate, LocalDate endDate) {
         logger.trace("Transaction request with startDate {} and endDate {}", startDate, endDate);
+        String tenantId = getTenantId();
+
         if (startDate.isAfter(endDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Invalid date range: start date %s cannot be after end date", startDate));
         }
 
-        return transactionRepository.findByCreateAtDateBetween(startDate, endDate).stream().map(this::entityToResponse).toList();
+        return transactionRepository.findByCreateAtDateBetweenAndTenantId(startDate, endDate, tenantId).stream().map(this::entityToResponse).toList();
     }
 
     public TransactionResponse getById(Long id) {
-        TransactionEntity entity = transactionRepository.findById(id)
+        String tenantId = getTenantId();
+
+        TransactionEntity entity = transactionRepository.findById(id).filter(transaction -> transaction.getTenantId().equals(tenantId))
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                 String.format("Transaction not with ID %d not found", id)));
@@ -121,6 +134,7 @@ public class TransactionService {
     public TransactionResponse createTransaction(TransactionRequest transactionRequest) {
         logger.info("creating transaction");
         TransactionEntity entity = new TransactionEntity();
+        String tenantId = getTenantId();
 
         // Get Document
         DocumentEntity documentType = document.findById(transactionRequest.getDocumentType())
@@ -130,7 +144,7 @@ public class TransactionService {
                         )
                 );
 
-        AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(transactionRequest.getDiaryType()).orElseThrow(
+        AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(transactionRequest.getDiaryType()).filter(transaction -> transaction.getTenantId().equals(tenantId)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("Diary type %d not valid ", transactionRequest.getDiaryType())
                 )
@@ -154,6 +168,7 @@ public class TransactionService {
         entity.setRtn(transactionRequest.getRtn());
         entity.setSupplierName(transactionRequest.getSupplierName());
         entity.setAccountingPeriod(activePeriod);
+        entity.setTenantId(tenantId);
         //transaction detail validations
         validateTransactionDetail(transactionRequest.getDetail());
 
@@ -170,6 +185,7 @@ public class TransactionService {
     @Transactional
     public TransactionResponse updateTransaction(Long id, TransactionRequest transactionRequest) {
         logger.info("Updating transaction with ID: {}", id);
+        String tenantId = getTenantId();
 
         TransactionEntity existingTransaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -182,7 +198,7 @@ public class TransactionService {
                         )
                 );
 
-        AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(transactionRequest.getDiaryType()).orElseThrow(
+        AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(transactionRequest.getDiaryType()).filter(transaction -> transaction.getTenantId().equals(tenantId)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("Diary type %d not valid ", transactionRequest.getDiaryType())
                 )
@@ -242,7 +258,7 @@ public class TransactionService {
         existingTransaction.setRtn(transactionRequest.getRtn());
         existingTransaction.setSupplierName(transactionRequest.getSupplierName());
         existingTransaction.setAccountingPeriod(activePeriod);
-
+        existingTransaction.setTenantId(tenantId);
         //delete details that are not in list
         existingTransaction.getTransactionDetail().removeAll(existingDetailMap.values());
         // update list
@@ -315,8 +331,9 @@ public class TransactionService {
 
     private List<TransactionDetailEntity> detailToEntity(TransactionEntity transactionEntity, List<TransactionDetailRequest> detailRequests) {
         try {
+            String tenantId = getTenantId();
             List<TransactionDetailEntity> result = new ArrayList<>();
-            List<AccountEntity> accounts = iAccountRepository.findAll();
+            List<AccountEntity> accounts = iAccountRepository.findAll().stream().filter(account -> account.getTenantId().equals(tenantId)).toList();
             for (TransactionDetailRequest detail : detailRequests) {
                 TransactionDetailEntity entity = new TransactionDetailEntity();
                 // si la cuenta no existe esto truena

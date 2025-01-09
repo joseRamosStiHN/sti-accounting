@@ -4,6 +4,7 @@ import com.sti.accounting.entities.*;
 import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.utils.Status;
+import com.sti.accounting.utils.TenantContext;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,13 +33,18 @@ public class GeneralBalanceService {
         this.accountingPeriodService = accountingPeriodService;
     }
 
+    private String getTenantId() {
+        return TenantContext.getCurrentTenant();
+    }
+
     @Transactional
     public List<GeneralBalanceResponse> getBalanceGeneral(Long periodId) {
         logger.info("Generating balance general");
+        String tenantId = getTenantId();
 
         // Realiza el filtro por las cuentas activas
         List<AccountEntity> accounts = iAccountRepository.findAll().stream()
-                .filter(account -> account.getAccountCategory().getName().equalsIgnoreCase("Balance General") && account.getStatus() == Status.ACTIVO)
+                .filter(account -> account.getAccountCategory().getName().equalsIgnoreCase("Balance General") && account.getStatus() == Status.ACTIVO && account.getTenantId().equals(tenantId))
                 .toList();
 
         List<GeneralBalanceResponse> response = new ArrayList<>();

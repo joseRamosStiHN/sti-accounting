@@ -45,7 +45,6 @@ public class AccountingPeriodService {
         int currentYear = LocalDate.now().getYear();
         String tenantId = getTenantId();
 
-        System.out.println(tenantId);
         return accountingPeriodRepository.findAll().stream()
                 .filter(period -> period.getTenantId().equals(tenantId))
                 .filter(period -> period.getStartPeriod().getYear() == currentYear || period.getEndPeriod().getYear() == currentYear)

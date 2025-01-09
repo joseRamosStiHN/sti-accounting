@@ -43,7 +43,6 @@ public class AccountingClosingService {
     private final IBalancesRepository iBalancesRepository;
     private final IControlAccountBalancesRepository controlAccountBalancesRepository;
     private final ReportPdfGenerator reportPdfGenerator;
-    private final String tenantId;
 
     public AccountingClosingService(IAccountingClosingRepository accountingClosingRepository, AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository, BalancesService balancesService, IBalancesRepository iBalancesRepository, IControlAccountBalancesRepository controlAccountBalancesRepository, ReportPdfGenerator reportPdfGenerator) {
         this.accountingClosingRepository = accountingClosingRepository;
@@ -55,12 +54,16 @@ public class AccountingClosingService {
         this.iBalancesRepository = iBalancesRepository;
         this.controlAccountBalancesRepository = controlAccountBalancesRepository;
         this.reportPdfGenerator = reportPdfGenerator;
-        this.tenantId = TenantContext.getCurrentTenant();
+    }
 
+    private String getTenantId() {
+        return TenantContext.getCurrentTenant();
     }
 
     public List<AccountingClosingResponse> getAllAccountingClosing() {
-        return this.accountingClosingRepository.findAll().stream().map(this::toResponse).toList();
+        String tenantId = getTenantId();
+
+        return this.accountingClosingRepository.findAll().stream().filter(closing -> closing.getTenantId().equals(tenantId)).map(this::toResponse).toList();
     }
 
     public AccountingClosingResponse getDetailAccountingClosing() {
@@ -155,6 +158,7 @@ public class AccountingClosingService {
 
     private void activateNextPeriod(AccountingPeriodEntity currentPeriod, String newClosureType) {
         int currentYear = LocalDate.now().getYear();
+        String tenantId = getTenantId();
 
         AccountingPeriodEntity nextPeriod = accountingPeriodRepository
                 .findByClosureTypeAndPeriodOrderForYear(newClosureType, currentPeriod.getPeriodOrder() + 1, currentYear, tenantId);
@@ -170,7 +174,9 @@ public class AccountingClosingService {
     }
 
     private void processBalances(AccountingPeriodEntity activePeriod) {
-        List<ControlAccountBalancesEntity> accountBalances = controlAccountBalancesRepository.findAllByAccountingPeriodId(activePeriod.getId());
+        String tenantId = getTenantId();
+
+        List<ControlAccountBalancesEntity> accountBalances = controlAccountBalancesRepository.findAllByAccountingPeriodIdAndTenantId(activePeriod.getId(), tenantId);
         if (accountBalances.isEmpty()) {
             logger.warn("No account balances found for the active accounting period.");
             return;

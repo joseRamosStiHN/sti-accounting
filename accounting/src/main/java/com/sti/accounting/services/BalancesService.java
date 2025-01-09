@@ -7,6 +7,7 @@ import com.sti.accounting.models.Constant;
 import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IBalancesRepository;
+import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -31,15 +32,21 @@ public class BalancesService {
 
     }
 
+    private String getTenantId() {
+        return TenantContext.getCurrentTenant();
+    }
 
     public List<BalancesResponse> getAllBalances() {
-        return this.iBalancesRepository.findAll().stream().map(this::toResponse).toList();
+        String tenantId = getTenantId();
+        return this.iBalancesRepository.findAll().stream().filter(balances -> balances.getTenantId().equals(tenantId)).map(this::toResponse).toList();
 
     }
 
     public BalancesResponse getById(Long id) {
         logger.trace("balance request with id {}", id);
-        BalancesEntity balancesEntity = this.iBalancesRepository.findById(id).orElseThrow(
+        String tenantId = getTenantId();
+
+        BalancesEntity balancesEntity = this.iBalancesRepository.findById(id).filter(balances -> balances.getTenantId().equals(tenantId)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(Constant.NOT_BALANCE, id))
         );
         return toResponse(balancesEntity);
@@ -48,6 +55,7 @@ public class BalancesService {
     public BalancesResponse createBalance(BalancesRequest balancesRequest) {
         logger.info("creating balance");
         BalancesEntity balanceEntity = new BalancesEntity();
+        String tenantId = getTenantId();
 
         AccountEntity accountEntity = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No account were found with the id %s", balancesRequest.getAccountId())));
@@ -57,6 +65,7 @@ public class BalancesService {
         balanceEntity.setTypicalBalance(balancesRequest.getTypicalBalance());
         balanceEntity.setInitialBalance(balancesRequest.getInitialBalance());
         balanceEntity.setIsCurrent(balancesRequest.getIsCurrent());
+        balanceEntity.setTenantId(tenantId);
         iBalancesRepository.save(balanceEntity);
 
         return toResponse(balanceEntity);
@@ -64,6 +73,7 @@ public class BalancesService {
 
     public BalancesResponse updateBalance(Long id, BalancesRequest balancesRequest) {
         logger.info("Updating balance with ID: {}", id);
+        String tenantId = getTenantId();
 
         if (balancesRequest.getInitialBalance().compareTo(BigDecimal.ZERO) < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The initial account balance cannot be negative");
@@ -82,6 +92,7 @@ public class BalancesService {
         existingBalance.setInitialBalance(balancesRequest.getInitialBalance());
         existingBalance.setCreateAtDate(LocalDateTime.now());
         existingBalance.setIsCurrent(balancesRequest.getIsCurrent());
+        existingBalance.setTenantId(tenantId);
         iBalancesRepository.save(existingBalance);
         return toResponse(existingBalance);
 

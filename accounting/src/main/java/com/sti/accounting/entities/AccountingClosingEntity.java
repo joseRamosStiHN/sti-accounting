@@ -50,4 +50,7 @@ public class AccountingClosingEntity {
     @Lob
     @Column(name = "CLOSURE_REPORT_PDF", columnDefinition = "LONGBLOB")
     private byte[] closureReportPdf;
+
+    @Column(name = "TENANT_ID")
+    private String tenantId;
 }

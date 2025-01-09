@@ -3,6 +3,7 @@ package com.sti.accounting.services;
 import com.sti.accounting.entities.*;
 import com.sti.accounting.repositories.IControlAccountBalancesRepository;
 import com.sti.accounting.utils.Motion;
+import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,8 +26,14 @@ public class ControlAccountBalancesService {
         this.accountingPeriodService = accountingPeriodService;
     }
 
+    private String getTenantId() {
+        return TenantContext.getCurrentTenant();
+    }
+
     @Transactional
     public void updateControlAccountBalances(TransactionEntity transactionEntity) {
+        String tenantId = getTenantId();
+
         List<TransactionDetailEntity> transactionDetails = transactionEntity.getTransactionDetail();
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
@@ -42,12 +49,13 @@ public class ControlAccountBalancesService {
 
             // Buscar el registro existente para el mes actual
             ControlAccountBalancesEntity balanceEntity = controlAccountBalancesRepository
-                    .findByAccountIdAndCreateAtDateBetween(accountId, startOfMonth, endOfMonth)
+                    .findByAccountIdAndCreateAtDateBetweenAndTenantId(accountId, startOfMonth, endOfMonth, tenantId)
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
                         newEntity.setCreateAtDate(detail.getTransaction().getCreateAtDate());
+                        newEntity.setTenantId(tenantId);
 
                         return newEntity;
                     });
@@ -68,6 +76,8 @@ public class ControlAccountBalancesService {
 
 
     public void updateControlAccountBalancesAdjustment(AccountingAdjustmentsEntity accountingAdjustmentsEntity) {
+        String tenantId = getTenantId();
+
         List<AdjustmentDetailEntity> adjustmentDetail = accountingAdjustmentsEntity.getAdjustmentDetail();
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
@@ -76,12 +86,13 @@ public class ControlAccountBalancesService {
             BigDecimal amount = detail.getAmount();
             Motion motion = detail.getMotion();
 
-            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, activePeriod.getId())
+            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodIdAndTenantId(accountId, activePeriod.getId(), tenantId)
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
                         newEntity.setCreateAtDate(detail.getAdjustment().getTransaction().getCreateAtDate());
+                        newEntity.setTenantId(tenantId);
 
                         return newEntity;
                     });
@@ -102,6 +113,7 @@ public class ControlAccountBalancesService {
     @Transactional
     public void updateControlAccountDebitNotes(DebitNotesEntity debitNotesEntity) {
         logger.info("creating update Control Account Balances");
+        String tenantId = getTenantId();
 
         List<DebitNotesDetailEntity> debitNotesDetails = debitNotesEntity.getDebitNoteDetail();
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
@@ -111,12 +123,13 @@ public class ControlAccountBalancesService {
             BigDecimal amount = detail.getAmount();
             Motion motion = detail.getMotion();
 
-            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, activePeriod.getId())
+            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodIdAndTenantId(accountId, activePeriod.getId(), tenantId)
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
                         newEntity.setCreateAtDate(detail.getDebitNote().getCreateAtDate());
+                        newEntity.setTenantId(tenantId);
 
                         return newEntity;
                     });
@@ -137,6 +150,7 @@ public class ControlAccountBalancesService {
     @Transactional
     public void updateControlAccountCreditNotes(CreditNotesEntity creditNotesEntity) {
         logger.info("creating update Control Account Balances");
+        String tenantId = getTenantId();
 
         List<CreditNotesDetailEntity> creditNotesDetails = creditNotesEntity.getCreditNoteDetail();
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
@@ -146,12 +160,13 @@ public class ControlAccountBalancesService {
             BigDecimal amount = detail.getAmount();
             Motion motion = detail.getMotion();
 
-            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodId(accountId, activePeriod.getId())
+            ControlAccountBalancesEntity sumViewEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodIdAndTenantId(accountId, activePeriod.getId(), tenantId)
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);
                         newEntity.setAccountingPeriod(activePeriod);
                         newEntity.setCreateAtDate(detail.getCreditNote().getCreateAtDate());
+                        newEntity.setTenantId(tenantId);
                         return newEntity;
                     });
 
@@ -170,14 +185,17 @@ public class ControlAccountBalancesService {
 
 
     public List<ControlAccountBalancesEntity> getControlAccountBalancesForAllPeriods(Long accountId) {
-        return controlAccountBalancesRepository.findAllByAccountId(accountId);
+        String tenantId = getTenantId();
+        return controlAccountBalancesRepository.findAllByAccountIdAndTenantId(accountId, tenantId);
     }
 
     public List<ControlAccountBalancesEntity> getControlAccountBalancesForPeriodAndMonth(Long accountId, Long accountingPeriodId, LocalDate startDate, LocalDate endDate) {
-        return controlAccountBalancesRepository.findAllByAccountIdAndAccountingPeriodIdAndCreateAtDateBetween(accountId, accountingPeriodId, startDate, endDate);
+        String tenantId = getTenantId();
+        return controlAccountBalancesRepository.findAllByAccountIdAndAccountingPeriodIdAndCreateAtDateBetweenAndTenantId(accountId, accountingPeriodId, startDate, endDate, tenantId);
     }
 
     public List<ControlAccountBalancesEntity> getControlAccountBalancesForDateRange(Long accountId, LocalDate startDate, LocalDate endDate) {
-        return controlAccountBalancesRepository.findAllByAccountIdAndCreateAtDateBetween(accountId, startDate, endDate);
+        String tenantId = getTenantId();
+        return controlAccountBalancesRepository.findAllByAccountIdAndCreateAtDateBetweenAndTenantId(accountId, startDate, endDate, tenantId);
     }
 }

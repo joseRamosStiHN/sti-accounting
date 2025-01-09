@@ -38,4 +38,7 @@ public class TaxSettingsEntity {
     @CreationTimestamp
     @Column(name = "DATE")
     private LocalDateTime createAtDate;
+
+    @Column(name = "TENANT_ID")
+    private String tenantId;
 }

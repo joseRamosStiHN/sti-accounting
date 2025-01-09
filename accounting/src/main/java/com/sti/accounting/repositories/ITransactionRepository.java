@@ -12,13 +12,12 @@ import java.util.List;
 @Repository
 public interface ITransactionRepository extends ListCrudRepository<TransactionEntity, Long> {
 
-    List<TransactionEntity> findByDocumentId(Long id);
+    List<TransactionEntity> findByDocumentIdAndTenantId(Long id, String tenantId);
 
-    List<TransactionEntity> findByCreateAtDateBetween(LocalDate startDate, LocalDate endDate);
+    List<TransactionEntity> findByCreateAtDateBetweenAndTenantId(LocalDate startDate, LocalDate endDate, String tenantId);
 
-    @Query("SELECT COUNT(td) > 0 FROM TransactionDetailEntity td WHERE td.account.id = :accountId")
-    boolean existsByAccountId(@Param("accountId") Long accountId);
-
+    @Query("SELECT COUNT(td) > 0 FROM TransactionDetailEntity td WHERE td.account.id = :accountId AND td.transaction.tenantId = :tenantId")
+    boolean existsByAccountIdAndTenantId(@Param("accountId") Long accountId, @Param("tenantId") String tenantId);
 
     @Query(value = """
             

@@ -35,4 +35,7 @@ public class BalancesEntity {
 
     @Column(name = "IS_CURRENT")
     private Boolean isCurrent;
+
+    @Column(name = "TENANT_ID")
+    private String tenantId;
 }

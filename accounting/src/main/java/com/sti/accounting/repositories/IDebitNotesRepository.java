@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface IDebitNotesRepository extends ListCrudRepository<DebitNotesEntity, Long> {
 
-    List<DebitNotesEntity> getDebitNotesByTransactionId(Long transactionId);
+    List<DebitNotesEntity> getDebitNotesByTransactionIdAndTenantId(Long transactionId, String tenantId);
 
 }

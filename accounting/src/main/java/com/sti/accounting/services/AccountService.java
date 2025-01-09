@@ -10,6 +10,7 @@ import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IAccountTypeRepository;
 import com.sti.accounting.repositories.ITransactionRepository;
 import com.sti.accounting.utils.Status;
+import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -37,13 +38,19 @@ public class AccountService {
         this.transactionRepository = transactionRepository;
     }
 
+    private String getTenantId() {
+        return TenantContext.getCurrentTenant();
+    }
+
     public List<AccountResponse> getAllAccount() {
-        return this.iAccountRepository.findAll().stream().map(this::toResponse).toList();
+        String tenantId = getTenantId();
+        return this.iAccountRepository.findAll().stream().filter(account -> account.getTenantId().equals(tenantId)).map(this::toResponse).toList();
     }
 
     public AccountResponse getById(Long id) {
         logger.trace("account request with id {}", id);
-        AccountEntity accountEntity = iAccountRepository.findById(id).orElseThrow(
+        String tenantId = getTenantId();
+        AccountEntity accountEntity = iAccountRepository.findById(id).filter(account -> account.getTenantId().equals(tenantId)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No account were found with the id %s", id))
         );
         return toResponse(accountEntity);
@@ -52,8 +59,9 @@ public class AccountService {
 
     public AccountResponse createAccount(AccountRequest accountRequest) {
         AccountEntity entity = new AccountEntity();
+        String tenantId = getTenantId();
 
-        boolean existsCode = this.iAccountRepository.existsByCode(accountRequest.getCode());
+        boolean existsCode = this.iAccountRepository.existsByCodeAndTenantId(accountRequest.getCode(), tenantId);
         if (existsCode) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account code already exists.");
         }
@@ -81,6 +89,7 @@ public class AccountService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Category"));
         entity.setAccountCategory(accountCategoryEntity);
         entity.setSupportsRegistration(accountRequest.isSupportsRegistration());
+        entity.setTenantId(tenantId);
 
         if (!accountRequest.getBalances().isEmpty() && accountRequest.isSupportsRegistration()) {
             validateBalances(accountRequest.getBalances());
@@ -103,6 +112,7 @@ public class AccountService {
 
     public AccountResponse updateAccount(Long id, AccountRequest accountRequest) {
         logger.info("Updating account with ID: {}", id);
+        String tenantId = getTenantId();
 
         // Verificar si la cuenta existe
         AccountEntity existingAccount = iAccountRepository.findById(id)
@@ -110,7 +120,7 @@ public class AccountService {
                         String.format("No account found with ID: %d", id)));
 
         // Verificar si el código de cuenta ya existe para otra cuenta
-        if (iAccountRepository.existsByCodeAndNotId(accountRequest.getCode(), id)) {
+        if (iAccountRepository.existsByCodeAndNotId(accountRequest.getCode(), id, tenantId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Account with code %s already exists.", accountRequest.getCode()));
         }
 
@@ -128,6 +138,7 @@ public class AccountService {
         existingAccount.setTypicalBalance(accountRequest.getTypicalBalance());
         existingAccount.setSupportsRegistration(accountRequest.isSupportsRegistration());
         existingAccount.setStatus(accountRequest.getStatus());
+        existingAccount.setTenantId(tenantId);
 
         if (accountRequest.getAccountType() != null) {
             Long accountTypeId = accountRequest.getAccountType().longValue();
@@ -161,6 +172,7 @@ public class AccountService {
 
     /*Return All Categories of Accounts*/
     public List<AccountCategory> getAllCategories() {
+
         return categoryRepository.findAll().stream().map(x -> {
             AccountCategory dto = new AccountCategory();
             dto.setId(x.getId());
@@ -207,6 +219,8 @@ public class AccountService {
     }
 
     private AccountResponse toResponse(AccountEntity entity) {
+        String tenantId = getTenantId();
+
         AccountResponse response = new AccountResponse();
         response.setId(entity.getId());
         response.setName(entity.getDescription());
@@ -215,11 +229,11 @@ public class AccountService {
         response.setCategoryId(entity.getAccountCategory().getId());
 
         // Verifica si la cuenta tiene transacciones
-        boolean hasTransactions = transactionRepository.existsByAccountId(entity.getId());
+        boolean hasTransactions = transactionRepository.existsByAccountIdAndTenantId(entity.getId(), tenantId);
         response.setAsTransaction(hasTransactions);
 
         // Verifica si la cuenta tiene cuentas hijas
-        boolean hasChildAccounts = iAccountRepository.countByParentId(entity.getId()) > 0;
+        boolean hasChildAccounts = iAccountRepository.countByParentIdAndTenantId(entity.getId(), tenantId) > 0;
         response.setHasChildAccounts(hasChildAccounts);
 
         // recursive query if parent is not null is a root account

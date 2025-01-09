@@ -7,6 +7,7 @@ import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IAccountTypeRepository;
 import com.sti.accounting.repositories.IAccountingJournalRepository;
+import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -30,13 +31,21 @@ public class AccountingJournalService {
 
     }
 
+    private String getTenantId() {
+        return TenantContext.getCurrentTenant();
+    }
+
     public List<AccountingJournalResponse> getAllAccountingJournal() {
-        return this.accountingJournalRepository.findAll().stream().map(this::toResponse).toList();
+        String tenantId = getTenantId();
+
+        return this.accountingJournalRepository.findAll().stream().filter(journal -> journal.getTenantId().equals(tenantId)).map(this::toResponse).toList();
     }
 
     public AccountingJournalResponse getAccountingJournalById(Long id) {
         logger.trace("accounting journal request with id {}", id);
-        AccountingJournalEntity accountingJournalEntity = accountingJournalRepository.findById(id).orElseThrow(
+        String tenantId = getTenantId();
+
+        AccountingJournalEntity accountingJournalEntity = accountingJournalRepository.findById(id).filter(journal -> journal.getTenantId().equals(tenantId)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No accounting journal were found with the id %s", id))
         );
         return toResponse(accountingJournalEntity);
@@ -44,7 +53,7 @@ public class AccountingJournalService {
 
     public AccountingJournalResponse createAccountingJournal(AccountingJournalRequest accountingJournalRequest) {
         AccountingJournalEntity entity = new AccountingJournalEntity();
-
+        String tenantId = getTenantId();
 
         entity.setDiaryName(accountingJournalRequest.getDiaryName());
         Long accountTypeId = accountingJournalRequest.getAccountType().longValue();
@@ -62,6 +71,7 @@ public class AccountingJournalService {
         entity.setDefaultAccount(findAndAssignAccount(accountingJournalRequest.getDefaultAccount(), "Invalid Default Account"));
         entity.setCode(accountingJournalRequest.getCode());
         entity.setStatus(false);
+        entity.setTenantId(tenantId);
         accountingJournalRepository.save(entity);
 
         return toResponse(entity);
@@ -70,6 +80,7 @@ public class AccountingJournalService {
     public AccountingJournalResponse updateAccountingJournal(Long id, AccountingJournalRequest accountingJournalRequest) {
 
         logger.info("Updating accounting journal with ID: {}", id);
+        String tenantId = getTenantId();
 
         AccountingJournalEntity existingAccountingJournal = accountingJournalRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -91,23 +102,21 @@ public class AccountingJournalService {
         existingAccountingJournal.setDefaultAccount(findAndAssignAccount(accountingJournalRequest.getDefaultAccount(), "Invalid Default Account"));
         existingAccountingJournal.setCode(accountingJournalRequest.getCode());
         existingAccountingJournal.setStatus(accountingJournalRequest.isStatus());
+        existingAccountingJournal.setTenantId(tenantId);
+
         accountingJournalRepository.save(existingAccountingJournal);
 
         return toResponse(existingAccountingJournal);
     }
 
     private AccountEntity findAndAssignAccount(Long accountId, String errorMessage) {
+        String tenantId = getTenantId();
+
         if (accountId != null) {
-            return iAccountRepository.findById(accountId)
+            return iAccountRepository.findById(accountId).filter(journal -> journal.getTenantId().equals(tenantId))
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, errorMessage));
         }
         return null;
-    }
-
-    public String getDiaryName(Long diaryId) {
-        AccountingJournalEntity accountingJournalEntity = accountingJournalRepository.findById(diaryId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No accounting journal were found with the id %s", diaryId)));
-        return accountingJournalEntity.getDiaryName();
     }
 
     private AccountingJournalResponse toResponse(AccountingJournalEntity entity) {

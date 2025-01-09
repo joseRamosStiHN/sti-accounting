@@ -5,6 +5,7 @@ import com.sti.accounting.entities.ControlAccountBalancesEntity;
 import com.sti.accounting.models.AccountingPeriodResponse;
 import com.sti.accounting.models.IncomeStatementResponse;
 import com.sti.accounting.repositories.IAccountRepository;
+import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,10 +31,15 @@ public class IncomeStatementService {
         this.accountingPeriodService = accountingPeriodService;
     }
 
+    private String getTenantId() {
+        return TenantContext.getCurrentTenant();
+    }
+
     public List<IncomeStatementResponse> getIncomeStatement(Long periodId) {
         logger.info("Generating income statement");
+        String tenantId = getTenantId();
 
-        List<AccountEntity> accounts = accountRepository.findAll();
+        List<AccountEntity> accounts = accountRepository.findAll().stream().filter(balances -> balances.getTenantId().equals(tenantId)).toList();
         accounts = accounts.stream()
                 .filter(account -> account.getAccountCategory().getName().equalsIgnoreCase("Estado de Resultados"))
                 .toList();

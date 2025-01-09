@@ -7,6 +7,7 @@ import com.sti.accounting.repositories.IAccountingJournalRepository;
 import com.sti.accounting.repositories.IDebitNotesRepository;
 import com.sti.accounting.repositories.ITransactionRepository;
 import com.sti.accounting.utils.Motion;
+import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -39,17 +40,24 @@ public class DebitNotesService {
         this.accountingPeriodService = accountingPeriodService;
     }
 
+    private String getTenantId() {
+        return TenantContext.getCurrentTenant();
+    }
+
     public List<DebitNotesResponse> getAllDebitNotes() {
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+        String tenantId = getTenantId();
 
         return debitNotesRepository.findAll().stream()
-                .filter(debitNote -> debitNote.getAccountingPeriod().equals(activePeriod))
+                .filter(debitNote -> debitNote.getAccountingPeriod().equals(activePeriod) && debitNote.getTenantId().equals(tenantId))
                 .map(this::entityToResponse)
                 .toList();
     }
 
     public DebitNotesResponse getDebitNoteById(Long id) {
-        DebitNotesEntity entity = debitNotesRepository.findById(id)
+        String tenantId = getTenantId();
+
+        DebitNotesEntity entity = debitNotesRepository.findById(id).filter(debitNotes -> debitNotes.getTenantId().equals(tenantId))
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                 String.format("Debit Note with ID %d not found", id)));
@@ -57,7 +65,9 @@ public class DebitNotesService {
     }
 
     public List<DebitNotesResponse> getDebitNoteByTransactionId(Long transactionId) {
-        List<DebitNotesEntity> entity = debitNotesRepository.getDebitNotesByTransactionId(transactionId);
+        String tenantId = getTenantId();
+
+        List<DebitNotesEntity> entity = debitNotesRepository.getDebitNotesByTransactionIdAndTenantId(transactionId, tenantId);
         if (entity.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Transactions with ID %d not found", transactionId));
         }
@@ -70,6 +80,7 @@ public class DebitNotesService {
     public DebitNotesResponse createDebitNote(DebitNotesRequest debitNotesRequest) {
         logger.info("creating debit note");
         DebitNotesEntity entity = new DebitNotesEntity();
+        String tenantId = getTenantId();
 
         TransactionEntity transactionEntity = transactionRepository.findById(debitNotesRequest.getTransactionId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -91,6 +102,7 @@ public class DebitNotesService {
         entity.setCreateAtDate(debitNotesRequest.getCreateAtDate());
         entity.setStatus(StatusTransaction.DRAFT);
         entity.setAccountingPeriod(activePeriod);
+        entity.setTenantId(tenantId);
 
         //Adjustment detail validations
         validateDebitNotesDetail(debitNotesRequest.getDetailNote());
@@ -163,11 +175,12 @@ public class DebitNotesService {
 
     private List<DebitNotesDetailEntity> detailToEntity(DebitNotesEntity debitNotesEntity, List<DebitNotesDetailRequest> detailRequests) {
         try {
+            String tenantId = getTenantId();
             List<DebitNotesDetailEntity> result = new ArrayList<>();
             List<AccountEntity> accounts = iAccountRepository.findAll();
             for (DebitNotesDetailRequest detail : detailRequests) {
                 DebitNotesDetailEntity entity = new DebitNotesDetailEntity();
-                Optional<AccountEntity> currentAccount = accounts.stream().filter(x -> x.getId().equals(detail.getAccountId())).findFirst();
+                Optional<AccountEntity> currentAccount = accounts.stream().filter(x -> x.getId().equals(detail.getAccountId()) && x.getTenantId().equals(tenantId)).findFirst();
                 if (currentAccount.isEmpty()) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account with id " + detail.getAccountId() + "does not exist.");
                 }

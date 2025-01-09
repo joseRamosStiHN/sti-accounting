@@ -50,4 +50,7 @@ public class CreditNotesEntity {
 
     @OneToMany(mappedBy = "creditNote", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CreditNotesDetailEntity> creditNoteDetail;
+
+    @Column(name = "TENANT_ID")
+    private String tenantId;
 }

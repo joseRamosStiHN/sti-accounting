@@ -78,4 +78,7 @@ public class AccountingJournalEntity {
     @CreationTimestamp
     @Column(name = "CREATION_DATE")
     private LocalDateTime createDate;
+
+    @Column(name = "TENANT_ID")
+    private String tenantId;
 }

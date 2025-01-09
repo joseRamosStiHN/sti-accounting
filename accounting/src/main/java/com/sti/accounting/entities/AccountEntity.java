@@ -48,4 +48,7 @@ public class AccountEntity {
     @ManyToOne
     @JoinColumn(name = "account_type_id", referencedColumnName = "id")
     private AccountTypeEntity accountType;
+
+    @Column(name = "TENANT_ID")
+    private String tenantId;
 }
