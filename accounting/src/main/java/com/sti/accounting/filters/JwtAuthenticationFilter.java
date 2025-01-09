@@ -1,6 +1,7 @@
 package com.sti.accounting.filters;
 
 import com.sti.accounting.services.JwtService;
+import com.sti.accounting.utils.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -30,29 +31,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        final String token = extractTokenFromCookie(request);
+        try {
+            String tenantId = request.getHeader("tenantId");
 
-        if (token == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        final String username = jwtService.extractUsername(token);
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (jwtService.isTokenValid(token)) {
-                UserDetails userDetails = jwtService.getUserDetails(token);
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            System.out.println("tenantId:" + tenantId);
+            if (tenantId != null && !tenantId.isEmpty()) {
+                TenantContext.setCurrentTenant(tenantId);
             }
-        }
 
-        filterChain.doFilter(request, response);
+            final String token = extractTokenFromCookie(request);
+
+            if (token == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            final String username = jwtService.extractUsername(token);
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (jwtService.isTokenValid(token)) {
+                    UserDetails userDetails = jwtService.getUserDetails(token);
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+
+            filterChain.doFilter(request, response);
+        } finally {
+            // Limpiar el contexto del tenant después de cada solicitud
+            // TenantContext.clear();
+        }
     }
 
     private String extractTokenFromCookie(HttpServletRequest request) {

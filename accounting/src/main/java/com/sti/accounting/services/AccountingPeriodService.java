@@ -6,6 +6,7 @@ import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.utils.PeriodStatus;
+import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -34,13 +35,19 @@ public class AccountingPeriodService {
 
     public AccountingPeriodService(IAccountingPeriodRepository accountingPeriodRepository) {
         this.accountingPeriodRepository = accountingPeriodRepository;
+    }
 
+    private String getTenantId() {
+        return TenantContext.getCurrentTenant();
     }
 
     public List<AccountingPeriodResponse> getAllAccountingPeriod() {
         int currentYear = LocalDate.now().getYear();
+        String tenantId = getTenantId();
 
-        return this.accountingPeriodRepository.findAll().stream()
+        System.out.println(tenantId);
+        return accountingPeriodRepository.findAll().stream()
+                .filter(period -> period.getTenantId().equals(tenantId))
                 .filter(period -> period.getStartPeriod().getYear() == currentYear || period.getEndPeriod().getYear() == currentYear)
                 .map(this::toResponse)
                 .toList();
@@ -48,34 +55,43 @@ public class AccountingPeriodService {
 
     public AccountingPeriodResponse getById(Long id) {
         logger.trace("accounting period request with id {}", id);
-        AccountingPeriodEntity accountingPeriodEntity = accountingPeriodRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No accounting period were found with the id %s", id))
-        );
+        String tenantId = getTenantId();
+
+        AccountingPeriodEntity accountingPeriodEntity = accountingPeriodRepository.findById(id)
+                .filter(period -> period.getTenantId().equals(tenantId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        String.format("No accounting period were found with the id %s", id)));
         return toResponse(accountingPeriodEntity);
     }
 
+
     public List<AccountingPeriodResponse> getAccountingPeriodByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         logger.trace("accounting period request with startDate {} and endDate {}", startDate, endDate);
+        String tenantId = getTenantId();
+
         if (startDate.isAfter(endDate)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Invalid date range: start date %s cannot be after end date", startDate));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("Invalid date range: start date %s cannot be after end date", startDate));
         }
 
-        return accountingPeriodRepository.findByStartPeriodBetween(startDate, endDate).stream().map(this::toResponse).toList();
+        return accountingPeriodRepository.findByStartPeriodBetweenAndTenantId(startDate, endDate, tenantId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     public AccountingPeriodResponse createAccountingPeriod(AccountingPeriodRequest accountingPeriodRequest) {
 
-        // Verificar si ya existe un periodo igual
+        String tenantId = getTenantId();
+
         if (isAccountingPeriodExists(accountingPeriodRequest)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is already an equal accounting period.");
         }
 
-        // Verificar si el periodo a crear es anual
         boolean isAnnualPeriod = accountingPeriodRequest.getIsAnnual() != null && accountingPeriodRequest.getIsAnnual();
 
-        // Inactivar todos los períodos activos solo si el nuevo periodo no es anual
         if (!isAnnualPeriod) {
-            List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findActivePeriods();
+            List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findActivePeriods(tenantId);
             for (AccountingPeriodEntity activePeriod : activePeriods) {
                 activePeriod.setPeriodStatus(PeriodStatus.INACTIVE);
                 accountingPeriodRepository.save(activePeriod);
@@ -83,11 +99,10 @@ public class AccountingPeriodService {
         }
 
         List<AccountingPeriodEntity> periods = generatePeriods(accountingPeriodRequest);
+        periods.forEach(period -> period.setTenantId(tenantId));
 
-        // Guardar todos los períodos en la base de datos
         accountingPeriodRepository.saveAll(periods);
 
-        // El primer período es el activo
         AccountingPeriodEntity activePeriod = periods.get(0);
         activePeriod.setPeriodStatus(accountingPeriodRequest.getPeriodStatus() == null ? PeriodStatus.ACTIVE : accountingPeriodRequest.getPeriodStatus());
         accountingPeriodRepository.save(activePeriod);
@@ -157,18 +172,19 @@ public class AccountingPeriodService {
     public AccountingPeriodResponse updateAccountingPeriod(Long id, AccountingPeriodRequest accountingPeriodRequest) {
         logger.info("Updating accounting period with ID: {}", id);
 
+        String tenantId = getTenantId();
+
         AccountingPeriodEntity existingAccountingPeriod = accountingPeriodRepository.findById(id)
+                .filter(period -> period.getTenantId().equals(tenantId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No accounting period found with ID: %d", id)));
 
-        // Verificar si ya existe un periodo igual (excluyendo el actual)
         if (isAccountingPeriodExists(accountingPeriodRequest, existingAccountingPeriod.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is already an equal accounting period.");
         }
 
-        // Desactivar los periodos que esten activos cuando se mande activar un periodo
         if (accountingPeriodRequest.getPeriodStatus() == PeriodStatus.ACTIVE) {
-            List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findActivePeriods();
+            List<AccountingPeriodEntity> activePeriods = accountingPeriodRepository.findActivePeriods(tenantId);
             for (AccountingPeriodEntity activePeriod : activePeriods) {
                 if (!activePeriod.getId().equals(existingAccountingPeriod.getId())) {
                     activePeriod.setPeriodStatus(PeriodStatus.INACTIVE);
@@ -184,8 +200,8 @@ public class AccountingPeriodService {
         existingAccountingPeriod.setDaysPeriod(accountingPeriodRequest.getDaysPeriod());
         existingAccountingPeriod.setPeriodStatus(accountingPeriodRequest.getPeriodStatus());
         existingAccountingPeriod.setPeriodOrder(accountingPeriodRequest.getPeriodOrder());
-
         existingAccountingPeriod.setIsAnnual(accountingPeriodRequest.getIsAnnual());
+
         accountingPeriodRepository.save(existingAccountingPeriod);
 
         return toResponse(existingAccountingPeriod);
@@ -194,7 +210,10 @@ public class AccountingPeriodService {
     public AccountingPeriodResponse deleteAccountingPeriod(Long id) {
         logger.info("Deleting accounting period with ID: {}", id);
 
+        String tenantId = getTenantId();
+
         AccountingPeriodEntity existingAccountingPeriod = accountingPeriodRepository.findById(id)
+                .filter(period -> period.getTenantId().equals(tenantId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No accounting period found with ID: %d", id)));
 
@@ -203,23 +222,30 @@ public class AccountingPeriodService {
     }
 
     public boolean isActivePeriodExists() {
-        return !accountingPeriodRepository.findActivePeriods().isEmpty();
+        String tenantId = getTenantId();
+        return !accountingPeriodRepository.findActivePeriods(tenantId).isEmpty();
     }
 
     @Cacheable("activePeriod")
     public AccountingPeriodEntity getActivePeriod() {
-        return accountingPeriodRepository.findActivePeriods()
+        String tenantId = getTenantId();
+
+        return accountingPeriodRepository.findActivePeriods(tenantId)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no active accounting period"));
     }
 
     public List<AccountingPeriodEntity> getClosedPeriods() {
-        return accountingPeriodRepository.findByPeriodStatus();
+        String tenantId = getTenantId();
+
+        return accountingPeriodRepository.findByPeriodStatus(tenantId);
     }
 
     public AccountingPeriodResponse getNextPeriodInfo() {
         AccountingPeriodEntity activePeriod = null;
+        String tenantId = getTenantId();
+
         try {
             activePeriod = getActivePeriod();
         } catch (ResponseStatusException e) {
@@ -229,14 +255,13 @@ public class AccountingPeriodService {
         AccountingPeriodEntity annualPeriod = getAnnualPeriod();
         int currentYear = LocalDate.now().getYear();
 
-        // Obtener el próximo período
         AccountingPeriodEntity nextPeriod = accountingPeriodRepository.findByClosureTypeAndPeriodOrderForYear(
                 activePeriod != null ? activePeriod.getClosureType() : annualPeriod.getClosureType(),
                 activePeriod != null ? activePeriod.getPeriodOrder() + 1 : 1,
-                currentYear
+                currentYear,
+                tenantId
         );
 
-        // Si existe, devuelve la información
         if (nextPeriod != null) {
             return toResponse(nextPeriod);
         }
@@ -270,7 +295,6 @@ public class AccountingPeriodService {
                 );
         }
 
-        // Retornar información del siguiente período calculado
         AccountingPeriodResponse response = new AccountingPeriodResponse();
         response.setPeriodName(String.format("Periodo %s %d", annualPeriod.getClosureType(), 1));
         response.setClosureType(annualPeriod.getClosureType());
@@ -285,15 +309,31 @@ public class AccountingPeriodService {
     }
 
     private boolean isAccountingPeriodExists(AccountingPeriodRequest request) {
-        return accountingPeriodRepository.existsByClosureTypeAndStartPeriod(request.getClosureType(), request.getStartPeriod());
+        String tenantId = getTenantId();
+
+        return accountingPeriodRepository.existsByClosureTypeAndStartPeriodAndTenantId(
+                request.getClosureType(),
+                request.getStartPeriod(),
+                tenantId
+        );
     }
 
     private boolean isAccountingPeriodExists(AccountingPeriodRequest request, Long excludeId) {
-        return accountingPeriodRepository.existsByClosureTypeAndStartPeriodAndIdNot(request.getClosureType(), request.getStartPeriod(), excludeId);
+        String tenantId = getTenantId();
+
+        return accountingPeriodRepository.existsByClosureTypeAndStartPeriodAndIdNotAndTenantId(
+                request.getClosureType(),
+                request.getStartPeriod(),
+                excludeId,
+                tenantId
+        );
     }
 
     public AccountingPeriodEntity getAnnualPeriod() {
+        String tenantId = getTenantId();
+
         return accountingPeriodRepository.findAll().stream()
+                .filter(period -> period.getTenantId().equals(tenantId))
                 .filter(period -> period.getIsAnnual() != null && period.getIsAnnual())
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no annual period available"));

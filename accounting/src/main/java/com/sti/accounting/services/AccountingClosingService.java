@@ -11,6 +11,7 @@ import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.repositories.IBalancesRepository;
 import com.sti.accounting.repositories.IControlAccountBalancesRepository;
 import com.sti.accounting.utils.PeriodStatus;
+import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -42,6 +43,7 @@ public class AccountingClosingService {
     private final IBalancesRepository iBalancesRepository;
     private final IControlAccountBalancesRepository controlAccountBalancesRepository;
     private final ReportPdfGenerator reportPdfGenerator;
+    private final String tenantId;
 
     public AccountingClosingService(IAccountingClosingRepository accountingClosingRepository, AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository, BalancesService balancesService, IBalancesRepository iBalancesRepository, IControlAccountBalancesRepository controlAccountBalancesRepository, ReportPdfGenerator reportPdfGenerator) {
         this.accountingClosingRepository = accountingClosingRepository;
@@ -53,6 +55,8 @@ public class AccountingClosingService {
         this.iBalancesRepository = iBalancesRepository;
         this.controlAccountBalancesRepository = controlAccountBalancesRepository;
         this.reportPdfGenerator = reportPdfGenerator;
+        this.tenantId = TenantContext.getCurrentTenant();
+
     }
 
     public List<AccountingClosingResponse> getAllAccountingClosing() {
@@ -153,7 +157,7 @@ public class AccountingClosingService {
         int currentYear = LocalDate.now().getYear();
 
         AccountingPeriodEntity nextPeriod = accountingPeriodRepository
-                .findByClosureTypeAndPeriodOrderForYear(newClosureType, currentPeriod.getPeriodOrder() + 1, currentYear);
+                .findByClosureTypeAndPeriodOrderForYear(newClosureType, currentPeriod.getPeriodOrder() + 1, currentYear, tenantId);
 
         if (nextPeriod != null) {
             nextPeriod.setPeriodStatus(PeriodStatus.ACTIVE);
@@ -347,7 +351,7 @@ public class AccountingClosingService {
             createNextYearPeriod(annualPeriod);
 
             // Crear los nuevos periodos para el siguiente año
-            createNextYearPeriods(annualPeriod,newClosureType);
+            createNextYearPeriods(annualPeriod, newClosureType);
 
         } catch (Exception e) {
             logger.error("Error during annual closing", e);

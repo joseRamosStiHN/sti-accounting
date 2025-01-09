@@ -8,6 +8,7 @@ import com.sti.accounting.repositories.IAccountCategoryRepository;
 import com.sti.accounting.repositories.IAccountTypeRepository;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.repositories.IDocumentRepository;
+import com.sti.accounting.utils.TenantContext;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -69,7 +70,7 @@ public class AccountingApplication {
             long accountingPeriod = accountingPeriodRepository.count();
             LocalDateTime startOfYear = LocalDateTime.of(Year.now().getValue(), 1, 1, 0, 0);
             LocalDateTime endOfYear = LocalDateTime.of(Year.now().getValue(), 12, 31, 23, 59, 59);
-
+            String tenantId = TenantContext.getCurrentTenant();
             if (accountingPeriod == 0) {
                 List<AccountingPeriodEntity> accountingPeriods = List.of(
                         new AccountingPeriodEntity(
@@ -81,7 +82,8 @@ public class AccountingApplication {
                                 365,
                                 INACTIVE,
                                 0,
-                                true
+                                true,
+                                tenantId
                         )
                 );
                 accountingPeriodRepository.saveAll(accountingPeriods);
