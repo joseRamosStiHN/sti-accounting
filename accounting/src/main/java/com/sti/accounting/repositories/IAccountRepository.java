@@ -7,6 +7,8 @@ import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface IAccountRepository extends ListCrudRepository<AccountEntity, Long> {
 
@@ -19,4 +21,5 @@ public interface IAccountRepository extends ListCrudRepository<AccountEntity, Lo
 
     long countByParentIdAndTenantId(Long parentId, String tenantId);
 
+    List<AccountEntity> findAllByTenantId(String tenantId);
 }

@@ -218,6 +218,47 @@ public class AccountService {
         return entity;
     }
 
+    public void cloneCatalog(String sourceTenantId) {
+        // Obtener todas las cuentas del tenant original
+        List<AccountEntity> sourceAccounts = iAccountRepository.findAllByTenantId(sourceTenantId);
+
+        String tenantId = getTenantId();
+
+        for (AccountEntity sourceAccount : sourceAccounts) {
+            // Clonar la cuenta
+            AccountEntity clonedAccount = new AccountEntity();
+            clonedAccount.setCode(sourceAccount.getCode());
+            clonedAccount.setDescription(sourceAccount.getDescription());
+            clonedAccount.setStatus(sourceAccount.getStatus());
+            clonedAccount.setTypicalBalance(sourceAccount.getTypicalBalance());
+            clonedAccount.setSupportsRegistration(sourceAccount.isSupportsRegistration());
+            clonedAccount.setTenantId(tenantId);
+
+            // Clonar el tipo de cuenta
+            if (sourceAccount.getAccountType() != null) {
+                AccountTypeEntity accountTypeEntity = accountTypeRepository.findById(sourceAccount.getAccountType().getId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Account Type"));
+                clonedAccount.setAccountType(accountTypeEntity);
+            }
+
+            // Clonar la categoría de cuenta
+            if (sourceAccount.getAccountCategory() != null) {
+                AccountCategoryEntity accountCategoryEntity = categoryRepository.findById(sourceAccount.getAccountCategory().getId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Category"));
+                clonedAccount.setAccountCategory(accountCategoryEntity);
+            }
+
+            if (sourceAccount.getParent() != null) {
+                AccountEntity parentAccount = iAccountRepository.findById(sourceAccount.getParent().getId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Parent Account"));
+                clonedAccount.setParent(parentAccount);
+            }
+
+            // Guardar la cuenta clonada
+            iAccountRepository.save(clonedAccount);
+        }
+    }
+
     private AccountResponse toResponse(AccountEntity entity) {
         String tenantId = getTenantId();
 

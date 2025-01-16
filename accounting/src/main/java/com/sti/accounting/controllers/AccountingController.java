@@ -56,5 +56,9 @@ public class AccountingController {
         return accountService.updateAccount(id, accountRequest);
     }
 
+    @PostMapping("/clone")
+    public void cloneCatalog(@RequestParam String sourceTenantId) {
+        accountService.cloneCatalog(sourceTenantId);
+    }
 
 }
