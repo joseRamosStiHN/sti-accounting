@@ -26,9 +26,9 @@ public class WebConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configure(http))
-                .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/v1/**").authenticated()
-                )
+//                .authorizeHttpRequests(auth ->
+////                        auth.requestMatchers("**").authenticated()
+//                )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
