@@ -219,10 +219,17 @@ public class AccountService {
     }
 
     public void cloneCatalog(String sourceTenantId) {
-        // Obtener todas las cuentas del tenant original
-        List<AccountEntity> sourceAccounts = iAccountRepository.findAllByTenantId(sourceTenantId);
 
         String tenantId = getTenantId();
+
+        // Verificar si ya existen cuentas en el tenant actual
+        List<AccountEntity> existingAccounts = iAccountRepository.findAllByTenantId(tenantId);
+        if (!existingAccounts.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The catalog cannot be cloned because accounts already exist for the tenant.");
+        }
+
+        // Obtener todas las cuentas del tenant original
+        List<AccountEntity> sourceAccounts = iAccountRepository.findAllByTenantId(sourceTenantId);
 
         for (AccountEntity sourceAccount : sourceAccounts) {
             // Clonar la cuenta
