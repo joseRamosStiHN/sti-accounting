@@ -2,25 +2,20 @@ package com.sti.accounting;
 
 import com.sti.accounting.entities.AccountCategoryEntity;
 import com.sti.accounting.entities.AccountTypeEntity;
-import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.entities.DocumentEntity;
 import com.sti.accounting.repositories.IAccountCategoryRepository;
 import com.sti.accounting.repositories.IAccountTypeRepository;
-import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.repositories.IDocumentRepository;
-import com.sti.accounting.utils.TenantContext;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.time.LocalDateTime;
-import java.time.Year;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import static com.sti.accounting.utils.PeriodStatus.INACTIVE;
 
 
 @SpringBootApplication()
@@ -31,7 +26,7 @@ public class AccountingApplication {
     }
 
     @Bean
-    CommandLineRunner seedCategories(IAccountCategoryRepository repository, IDocumentRepository document, IAccountTypeRepository accountType, IAccountingPeriodRepository accountingPeriodRepository) {
+    CommandLineRunner seedCategories(IAccountCategoryRepository repository, IDocumentRepository document, IAccountTypeRepository accountType) {
         return args -> {
             long count = repository.count();
             if (count == 0) {
@@ -66,28 +61,32 @@ public class AccountingApplication {
                 );
                 accountType.saveAll(accountsType);
             }
-
-            long accountingPeriod = accountingPeriodRepository.count();
-            LocalDateTime startOfYear = LocalDateTime.of(Year.now().getValue(), 1, 1, 0, 0);
-            LocalDateTime endOfYear = LocalDateTime.of(Year.now().getValue(), 12, 31, 23, 59, 59);
-            String tenantId = TenantContext.getCurrentTenant();
-            if (accountingPeriod == 0) {
-                List<AccountingPeriodEntity> accountingPeriods = List.of(
-                        new AccountingPeriodEntity(
-                                null,
-                                "Periodo Contable Anual",
-                                "Anual",
-                                startOfYear,
-                                endOfYear,
-                                365,
-                                INACTIVE,
-                                0,
-                                true,
-                                tenantId
-                        )
-                );
-                accountingPeriodRepository.saveAll(accountingPeriods);
-            }
+/*
+  TODO: esta parte no le veo el porque, el periodo anual se debe poner por defecto cuando se crea una compañia asi se le asigna el tenantId y los valore
+        necesarios para crear el periodo, en un seeder donde no se sabe el tenantId de una compañia.
+*/
+            //IAccountingPeriodRepository accountingPeriodRepository
+//            long accountingPeriod = accountingPeriodRepository.count();
+//            LocalDateTime startOfYear = LocalDateTime.of(Year.now().getValue(), 1, 1, 0, 0);
+//            LocalDateTime endOfYear = LocalDateTime.of(Year.now().getValue(), 12, 31, 23, 59, 59);
+//            String tenantId = UUID.randomUUID().toString();  //TenantContext.getCurrentTenant(); <- esto genera un thread starvation!!!
+//            if (accountingPeriod == 0) {
+//                List<AccountingPeriodEntity> accountingPeriods = List.of(
+//                        new AccountingPeriodEntity(
+//                                null,
+//                                "Periodo Contable Anual",
+//                                "Anual",
+//                                startOfYear,
+//                                endOfYear,
+//                                365,
+//                                INACTIVE,
+//                                0,
+//                                true,
+//                                tenantId
+//                        )
+//                );
+//                accountingPeriodRepository.saveAll(accountingPeriods);
+//            }
         };
     }
 
