@@ -6,7 +6,6 @@ import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.utils.PeriodStatus;
-import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,29 +32,34 @@ public class AccountingPeriodService {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountingPeriodService.class);
     private final IAccountingPeriodRepository accountingPeriodRepository;
-
-    public AccountingPeriodService(IAccountingPeriodRepository accountingPeriodRepository) {
+    private final AuthService authService;
+    public AccountingPeriodService(IAccountingPeriodRepository accountingPeriodRepository, AuthService authService) {
         this.accountingPeriodRepository = accountingPeriodRepository;
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     public List<AccountingPeriodResponse> getAllAccountingPeriod() {
         int currentYear = LocalDate.now().getYear();
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
+        LocalDateTime startOfYear = LocalDateTime.of(Year.now().getValue(), 1, 1, 0, 0);
+        LocalDateTime endOfYear = LocalDateTime.of(Year.now().getValue(), 12, 31, 23, 59);
 
-        return accountingPeriodRepository.findAll().stream()
-                .filter(period -> period.getTenantId().equals(tenantId))
-                .filter(period -> period.getStartPeriod().getYear() == currentYear || period.getEndPeriod().getYear() == currentYear)
-                .map(this::toResponse)
-                .toList();
+//        return accountingPeriodRepository.findAll().stream()
+//                .filter(period -> period.getTenantId().equals(tenantId))
+//                .filter(period -> period.getStartPeriod().getYear() == currentYear || period.getEndPeriod().getYear() == currentYear)
+//                .map(this::toResponse)
+//                .toList();
+        return accountingPeriodRepository.findByTenantIdAndStartPeriodBetween(tenantId, startOfYear, endOfYear).stream()
+                .map(this::toResponse).toList();
     }
 
     public AccountingPeriodResponse getById(Long id) {
         logger.trace("accounting period request with id {}", id);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         AccountingPeriodEntity accountingPeriodEntity = accountingPeriodRepository.findById(id)
                 .filter(period -> period.getTenantId().equals(tenantId))
@@ -66,7 +71,7 @@ public class AccountingPeriodService {
 
     public List<AccountingPeriodResponse> getAccountingPeriodByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         logger.trace("accounting period request with startDate {} and endDate {}", startDate, endDate);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         if (startDate.isAfter(endDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -81,7 +86,7 @@ public class AccountingPeriodService {
 
     public AccountingPeriodResponse createAccountingPeriod(AccountingPeriodRequest accountingPeriodRequest) {
 
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         if (isAccountingPeriodExists(accountingPeriodRequest)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is already an equal accounting period.");
@@ -171,7 +176,7 @@ public class AccountingPeriodService {
     public AccountingPeriodResponse updateAccountingPeriod(Long id, AccountingPeriodRequest accountingPeriodRequest) {
         logger.info("Updating accounting period with ID: {}", id);
 
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         AccountingPeriodEntity existingAccountingPeriod = accountingPeriodRepository.findById(id)
                 .filter(period -> period.getTenantId().equals(tenantId))
@@ -209,7 +214,7 @@ public class AccountingPeriodService {
     public AccountingPeriodResponse deleteAccountingPeriod(Long id) {
         logger.info("Deleting accounting period with ID: {}", id);
 
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         AccountingPeriodEntity existingAccountingPeriod = accountingPeriodRepository.findById(id)
                 .filter(period -> period.getTenantId().equals(tenantId))
@@ -221,13 +226,13 @@ public class AccountingPeriodService {
     }
 
     public boolean isActivePeriodExists() {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
         return !accountingPeriodRepository.findActivePeriods(tenantId).isEmpty();
     }
 
     @Cacheable("activePeriod")
     public AccountingPeriodEntity getActivePeriod() {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         return accountingPeriodRepository.findActivePeriods(tenantId)
                 .stream()
@@ -236,14 +241,14 @@ public class AccountingPeriodService {
     }
 
     public List<AccountingPeriodEntity> getClosedPeriods() {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         return accountingPeriodRepository.findByPeriodStatus(tenantId);
     }
 
     public AccountingPeriodResponse getNextPeriodInfo() {
         AccountingPeriodEntity activePeriod = null;
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         try {
             activePeriod = getActivePeriod();
@@ -308,7 +313,7 @@ public class AccountingPeriodService {
     }
 
     private boolean isAccountingPeriodExists(AccountingPeriodRequest request) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         return accountingPeriodRepository.existsByClosureTypeAndStartPeriodAndTenantId(
                 request.getClosureType(),
@@ -318,7 +323,7 @@ public class AccountingPeriodService {
     }
 
     private boolean isAccountingPeriodExists(AccountingPeriodRequest request, Long excludeId) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         return accountingPeriodRepository.existsByClosureTypeAndStartPeriodAndIdNotAndTenantId(
                 request.getClosureType(),
@@ -329,7 +334,7 @@ public class AccountingPeriodService {
     }
 
     public AccountingPeriodEntity getAnnualPeriod() {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         return accountingPeriodRepository.findAll().stream()
                 .filter(period -> period.getTenantId().equals(tenantId))

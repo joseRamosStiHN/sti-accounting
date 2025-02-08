@@ -7,7 +7,6 @@ import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IAccountTypeRepository;
 import com.sti.accounting.repositories.IAccountingJournalRepository;
-import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -23,27 +22,28 @@ public class AccountingJournalService {
     private final IAccountingJournalRepository accountingJournalRepository;
     private final IAccountTypeRepository accountTypeRepository;
     private final IAccountRepository iAccountRepository;
-
-    public AccountingJournalService(IAccountingJournalRepository accountingJournalRepository, IAccountTypeRepository accountTypeRepository, IAccountRepository iAccountRepository) {
+    private final AuthService authService;
+    public AccountingJournalService(IAccountingJournalRepository accountingJournalRepository, IAccountTypeRepository accountTypeRepository, IAccountRepository iAccountRepository, AuthService authService) {
         this.accountingJournalRepository = accountingJournalRepository;
         this.accountTypeRepository = accountTypeRepository;
         this.iAccountRepository = iAccountRepository;
 
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     public List<AccountingJournalResponse> getAllAccountingJournal() {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         return this.accountingJournalRepository.findAll().stream().filter(journal -> journal.getTenantId().equals(tenantId)).map(this::toResponse).toList();
     }
 
     public AccountingJournalResponse getAccountingJournalById(Long id) {
         logger.trace("accounting journal request with id {}", id);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         AccountingJournalEntity accountingJournalEntity = accountingJournalRepository.findById(id).filter(journal -> journal.getTenantId().equals(tenantId)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No accounting journal were found with the id %s", id))
@@ -53,7 +53,7 @@ public class AccountingJournalService {
 
     public AccountingJournalResponse createAccountingJournal(AccountingJournalRequest accountingJournalRequest) {
         AccountingJournalEntity entity = new AccountingJournalEntity();
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         entity.setDiaryName(accountingJournalRequest.getDiaryName());
         Long accountTypeId = accountingJournalRequest.getAccountType().longValue();
@@ -80,7 +80,7 @@ public class AccountingJournalService {
     public AccountingJournalResponse updateAccountingJournal(Long id, AccountingJournalRequest accountingJournalRequest) {
 
         logger.info("Updating accounting journal with ID: {}", id);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         AccountingJournalEntity existingAccountingJournal = accountingJournalRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -110,7 +110,7 @@ public class AccountingJournalService {
     }
 
     private AccountEntity findAndAssignAccount(Long accountId, String errorMessage) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         if (accountId != null) {
             return iAccountRepository.findById(accountId).filter(journal -> journal.getTenantId().equals(tenantId))

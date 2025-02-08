@@ -3,7 +3,7 @@ package com.sti.accounting.services;
 import com.sti.accounting.entities.*;
 import com.sti.accounting.repositories.IControlAccountBalancesRepository;
 import com.sti.accounting.utils.Motion;
-import com.sti.accounting.utils.TenantContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,19 +20,20 @@ public class ControlAccountBalancesService {
 
     private final IControlAccountBalancesRepository controlAccountBalancesRepository;
     private final AccountingPeriodService accountingPeriodService;
-
-    public ControlAccountBalancesService(IControlAccountBalancesRepository controlAccountBalancesRepository, AccountingPeriodService accountingPeriodService) {
+    private final AuthService authService;
+    public ControlAccountBalancesService(IControlAccountBalancesRepository controlAccountBalancesRepository, AccountingPeriodService accountingPeriodService, AuthService authService) {
         this.controlAccountBalancesRepository = controlAccountBalancesRepository;
         this.accountingPeriodService = accountingPeriodService;
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     @Transactional
     public void updateControlAccountBalances(TransactionEntity transactionEntity) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         List<TransactionDetailEntity> transactionDetails = transactionEntity.getTransactionDetail();
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
@@ -76,7 +77,7 @@ public class ControlAccountBalancesService {
 
 
     public void updateControlAccountBalancesAdjustment(AccountingAdjustmentsEntity accountingAdjustmentsEntity) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         List<AdjustmentDetailEntity> adjustmentDetail = accountingAdjustmentsEntity.getAdjustmentDetail();
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
@@ -113,7 +114,7 @@ public class ControlAccountBalancesService {
     @Transactional
     public void updateControlAccountDebitNotes(DebitNotesEntity debitNotesEntity) {
         logger.info("creating update Control Account Balances");
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         List<DebitNotesDetailEntity> debitNotesDetails = debitNotesEntity.getDebitNoteDetail();
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
@@ -150,7 +151,7 @@ public class ControlAccountBalancesService {
     @Transactional
     public void updateControlAccountCreditNotes(CreditNotesEntity creditNotesEntity) {
         logger.info("creating update Control Account Balances");
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         List<CreditNotesDetailEntity> creditNotesDetails = creditNotesEntity.getCreditNoteDetail();
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
@@ -185,17 +186,17 @@ public class ControlAccountBalancesService {
 
 
     public List<ControlAccountBalancesEntity> getControlAccountBalancesForAllPeriods(Long accountId) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
         return controlAccountBalancesRepository.findAllByAccountIdAndTenantId(accountId, tenantId);
     }
 
     public List<ControlAccountBalancesEntity> getControlAccountBalancesForPeriodAndMonth(Long accountId, Long accountingPeriodId, LocalDate startDate, LocalDate endDate) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
         return controlAccountBalancesRepository.findAllByAccountIdAndAccountingPeriodIdAndCreateAtDateBetweenAndTenantId(accountId, accountingPeriodId, startDate, endDate, tenantId);
     }
 
     public List<ControlAccountBalancesEntity> getControlAccountBalancesForDateRange(Long accountId, LocalDate startDate, LocalDate endDate) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
         return controlAccountBalancesRepository.findAllByAccountIdAndCreateAtDateBetweenAndTenantId(accountId, startDate, endDate, tenantId);
     }
 }

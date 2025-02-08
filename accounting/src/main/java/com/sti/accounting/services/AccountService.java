@@ -10,7 +10,6 @@ import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IAccountTypeRepository;
 import com.sti.accounting.repositories.ITransactionRepository;
 import com.sti.accounting.utils.Status;
-import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -30,26 +29,27 @@ public class AccountService {
     private final IAccountCategoryRepository categoryRepository;
     private final IAccountTypeRepository accountTypeRepository;
     private final ITransactionRepository transactionRepository;
-
-    public AccountService(IAccountRepository iAccountRepository, IAccountCategoryRepository categoryRepository, IAccountTypeRepository accountTypeRepository, ITransactionRepository transactionRepository) {
+    private final AuthService authService;
+    public AccountService(IAccountRepository iAccountRepository, IAccountCategoryRepository categoryRepository, IAccountTypeRepository accountTypeRepository, ITransactionRepository transactionRepository, AuthService authService) {
         this.iAccountRepository = iAccountRepository;
         this.categoryRepository = categoryRepository;
         this.accountTypeRepository = accountTypeRepository;
         this.transactionRepository = transactionRepository;
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     public List<AccountResponse> getAllAccount() {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
         return this.iAccountRepository.findAll().stream().filter(account -> account.getTenantId().equals(tenantId)).map(this::toResponse).toList();
     }
 
     public AccountResponse getById(Long id) {
         logger.trace("account request with id {}", id);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
         AccountEntity accountEntity = iAccountRepository.findById(id).filter(account -> account.getTenantId().equals(tenantId)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No account were found with the id %s", id))
         );
@@ -59,7 +59,7 @@ public class AccountService {
 
     public AccountResponse createAccount(AccountRequest accountRequest) {
         AccountEntity entity = new AccountEntity();
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         boolean existsCode = this.iAccountRepository.existsByCodeAndTenantId(accountRequest.getCode(), tenantId);
         if (existsCode) {
@@ -112,7 +112,7 @@ public class AccountService {
 
     public AccountResponse updateAccount(Long id, AccountRequest accountRequest) {
         logger.info("Updating account with ID: {}", id);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         // Verificar si la cuenta existe
         AccountEntity existingAccount = iAccountRepository.findById(id)
@@ -220,7 +220,7 @@ public class AccountService {
 
     public void cloneCatalog(String sourceTenantId) {
 
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         // Verificar si ya existen cuentas en el tenant actual
         List<AccountEntity> existingAccounts = iAccountRepository.findAllByTenantId(tenantId);
@@ -267,7 +267,7 @@ public class AccountService {
     }
 
     private AccountResponse toResponse(AccountEntity entity) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         AccountResponse response = new AccountResponse();
         response.setId(entity.getId());

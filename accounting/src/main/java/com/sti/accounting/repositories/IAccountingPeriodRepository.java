@@ -51,4 +51,6 @@ public interface IAccountingPeriodRepository extends ListCrudRepository<Accounti
             Long id,
             String tenantId
     );
+
+    List<AccountingPeriodEntity> findByTenantIdAndStartPeriodBetween(String tenantId, LocalDateTime startDate, LocalDateTime endDate);
 }

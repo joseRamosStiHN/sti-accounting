@@ -7,7 +7,7 @@ import com.sti.accounting.models.Constant;
 import com.sti.accounting.models.BalancesRequest;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IBalancesRepository;
-import com.sti.accounting.utils.TenantContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -25,26 +25,27 @@ public class BalancesService {
 
     private final IBalancesRepository iBalancesRepository;
     private final IAccountRepository iAccountRepository;
-
-    public BalancesService(IBalancesRepository iBalancesRepository, IAccountRepository iAccountRepository) {
+    private final AuthService authService;
+    public BalancesService(IBalancesRepository iBalancesRepository, IAccountRepository iAccountRepository, AuthService authService) {
         this.iBalancesRepository = iBalancesRepository;
         this.iAccountRepository = iAccountRepository;
 
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     public List<BalancesResponse> getAllBalances() {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
         return this.iBalancesRepository.findAll().stream().filter(balances -> balances.getTenantId().equals(tenantId)).map(this::toResponse).toList();
 
     }
 
     public BalancesResponse getById(Long id) {
         logger.trace("balance request with id {}", id);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         BalancesEntity balancesEntity = this.iBalancesRepository.findById(id).filter(balances -> balances.getTenantId().equals(tenantId)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(Constant.NOT_BALANCE, id))
@@ -55,7 +56,7 @@ public class BalancesService {
     public BalancesResponse createBalance(BalancesRequest balancesRequest) {
         logger.info("creating balance");
         BalancesEntity balanceEntity = new BalancesEntity();
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         AccountEntity accountEntity = iAccountRepository.findById(balancesRequest.getAccountId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No account were found with the id %s", balancesRequest.getAccountId())));
@@ -73,7 +74,7 @@ public class BalancesService {
 
     public BalancesResponse updateBalance(Long id, BalancesRequest balancesRequest) {
         logger.info("Updating balance with ID: {}", id);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         if (balancesRequest.getInitialBalance().compareTo(BigDecimal.ZERO) < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The initial account balance cannot be negative");
