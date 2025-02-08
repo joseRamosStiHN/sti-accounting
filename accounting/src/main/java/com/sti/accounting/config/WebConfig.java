@@ -1,6 +1,7 @@
 package com.sti.accounting.config;
 
 import com.sti.accounting.filters.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -14,9 +15,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 public class WebConfig {
+
+    @Value("${app.allow.origins}")
+    private String allowedOrigins;
 
     private final JwtAuthenticationFilter jwtAuthFilter;
 
@@ -47,7 +53,7 @@ public class WebConfig {
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("*"); // Ajustar para producción DDoS
+        config.setAllowedOrigins(List.of(allowedOrigins.split(","))); // Ajustar para producción DDoS
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
 
