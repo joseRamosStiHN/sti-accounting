@@ -55,7 +55,7 @@ public class WebConfig {
         config.setAllowCredentials(true);
         config.setAllowedOrigins(List.of(allowedOrigins.split(","))); // Ajustar para producción DDoS
         config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
+         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
