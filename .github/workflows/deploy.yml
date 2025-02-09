@@ -44,7 +44,7 @@ jobs:
 
       - name: Test SSH Connection
         run: |
-          sh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'Conexión exitosa'"
+          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'Conexión exitosa'"
 
       - name: Deploy to EC2
         working-directory: accounting
