@@ -1,0 +1,51 @@
+name: Accounting build and Deploy
+
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Replace Properties
+        working-directory: accounting
+        run: |
+          CONFIG_FILE="src/main/resources/application.properties"
+          # Si la clave ya existe, la reemplaza; si no, la añade
+          sed -i "/^spring.datasource.url=/c\spring.datasource.url=${{ secrets.DATABASE_URL }}" $CONFIG_FILE || echo "spring.datasource.url=${{ secrets.DATABASE_URL }}" >> $CONFIG_FILE
+          sed -i "/^spring.datasource.username=/c\spring.datasource.username=${{ secrets.DATABASE_USERNAME }}" $CONFIG_FILE || echo "spring.datasource.username=${{ secrets.DATABASE_USERNAME }}" >> $CONFIG_FILE
+          sed -i "/^spring.datasource.password=/c\spring.datasource.password=${{ secrets.DATABASE_PASSWORD }}" $CONFIG_FILE || echo "spring.datasource.password=${{ secrets.DATABASE_PASSWORD }}" >> $CONFIG_FILE
+          sed -i "/^server.port=/c\server.port=8080" $CONFIG_FILE || echo "server.port=8080" >> $CONFIG_FILE
+
+          # Verificar contenido final del archivo (opcional)
+          cat $CONFIG_FILE
+
+      - name: Build with maven
+        working-directory: accounting
+        run: |
+          mvn clean package -DskipTests 
+          ls -l target/  # Verificar que el JAR fue creado
+
+      - name: Deploy to EC2
+        working-directory: accounting
+        env:
+          PRIVATE_KEY: ${{secrets.EC2_SSH_KEY}}
+        run: |
+          echo "$PRIVATE_KEY" > key.pem
+          chmod 600 key.pem
+
+          scp -o StrictHostKeyChecking=no -i key.pem target/accounting-1.0.0.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/app
+          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'sudo systemctl restart accountingService'
+
+          rm -f key.pem
