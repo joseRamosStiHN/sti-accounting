@@ -25,7 +25,9 @@ jobs:
           # Si la clave ya existe, la reemplaza; si no, la añade
           sed -i "/^spring.datasource.url=/c\spring.datasource.url=${{ secrets.DATABASE_URL }}" $CONFIG_FILE || echo "spring.datasource.url=${{ secrets.DATABASE_URL }}" >> $CONFIG_FILE
           sed -i "/^spring.datasource.username=/c\spring.datasource.username=${{ secrets.DATABASE_USERNAME }}" $CONFIG_FILE || echo "spring.datasource.username=${{ secrets.DATABASE_USERNAME }}" >> $CONFIG_FILE
-          sed -i "/^spring.datasource.password=/c\spring.datasource.password=${{ secrets.DATABASE_PASSWORD }}" $CONFIG_FILE || echo "spring.datasource.password=${{ secrets.DATABASE_PASSWORD }}" >> $CONFIG_FILE
+          # Esta línea preserva caracteres especiales en la contraseña
+          sed -i "/^spring.datasource.password=/c\spring.datasource.password=$(printf '%s\n' "${{ secrets.DATABASE_PASSWORD }}")" $CONFIG_FILE || echo "spring.datasource.password=$(printf '%s\n' "${{ secrets.DATABASE_PASSWORD }}")" >> $CONFIG_FILE
+
           sed -i "/^server.port=/c\server.port=8080" $CONFIG_FILE || echo "server.port=8080" >> $CONFIG_FILE
 
           # Verificar contenido final del archivo (opcional)
