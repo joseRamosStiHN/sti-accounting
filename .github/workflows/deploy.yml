@@ -37,15 +37,22 @@ jobs:
           mvn clean package -DskipTests 
           ls -l target/  # Verificar que el JAR fue creado
 
+      - name: Set up SSH Key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" | sed 's/\\n/\n/g' > key.pem
+          chmod 600 key.pem
+
+      - name: Test SSH Connection
+        run: |
+          sh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'Conexión exitosa'"
+
       - name: Deploy to EC2
         working-directory: accounting
         env:
-          PRIVATE_KEY: ${{secrets.EC2_SSH_KEY}}
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          echo "$PRIVATE_KEY" > key.pem
+          echo "${{ secrets.EC2_SSH_KEY }}" | sed 's/\\n/\n/g' > key.pem
           chmod 600 key.pem
 
           scp -o StrictHostKeyChecking=no -i key.pem target/accounting-1.0.0.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/app
           ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'sudo systemctl restart accountingService'
-
-          rm -f key.pem
