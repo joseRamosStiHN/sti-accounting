@@ -6,7 +6,7 @@ import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.repositories.IAccountingAdjustmentsRepository;
 import com.sti.accounting.repositories.ITransactionRepository;
 import com.sti.accounting.utils.Motion;
-import com.sti.accounting.utils.TenantContext;
+//import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -29,41 +29,55 @@ public class AccountingAdjustmentService {
     private final ITransactionRepository transactionRepository;
     private final ControlAccountBalancesService controlAccountBalancesService;
     private final AccountingPeriodService accountingPeriodService;
+    private final AuthService authService;
 
-    public AccountingAdjustmentService(IAccountingAdjustmentsRepository accountingAdjustmentsRepository, IAccountRepository iAccountRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService, AccountingPeriodService accountingPeriodService) {
+    public AccountingAdjustmentService(IAccountingAdjustmentsRepository accountingAdjustmentsRepository, IAccountRepository iAccountRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService, AccountingPeriodService accountingPeriodService, AuthService authService) {
         this.accountingAdjustmentsRepository = accountingAdjustmentsRepository;
         this.iAccountRepository = iAccountRepository;
         this.transactionRepository = transactionRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
         this.accountingPeriodService = accountingPeriodService;
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     public List<AccountingAdjustmentResponse> getAllAccountingAdjustments() {
+        logger.info("Getting all accounting adjustments");
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
-        return accountingAdjustmentsRepository.findAll().stream()
-                .filter(adjustment -> adjustment.getAccountingPeriod().equals(activePeriod) && adjustment.getTenantId().equals(tenantId))
+//        return accountingAdjustmentsRepository.findAll().stream()
+//                .filter(adjustment -> adjustment.getAccountingPeriod().equals(activePeriod) && adjustment.getTenantId().equals(tenantId))
+//                .map(this::entityToResponse)
+//                .toList();
+        return accountingAdjustmentsRepository.findByTenantIdAndAccountingPeriodId(tenantId, activePeriod.getId())
+                .stream()
                 .map(this::entityToResponse)
                 .toList();
     }
 
     public AccountingAdjustmentResponse getAccountingAdjustmentsById(Long id) {
-        String tenantId = getTenantId();
+        logger.info("Getting accounting adjustments by id: {}", id);
+        String tenantId = authService.getTenantId();
+        AccountingAdjustmentsEntity entity = accountingAdjustmentsRepository.findByTenantIdAndId(tenantId, id);
 
-        AccountingAdjustmentsEntity entity = accountingAdjustmentsRepository.findById(id).filter(adjustments -> adjustments.getTenantId().equals(tenantId))
-                .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                String.format("Accounting adjustments with ID %d not found", id)));
+        if (entity == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Accounting adjustments with ID %d not found", id));
+        }
+//        AccountingAdjustmentsEntity entity = accountingAdjustmentsRepository
+//                  .findById(id).filter(adjustments -> adjustments.getTenantId().equals(tenantId))
+//                .orElseThrow(
+//                        () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+//                                String.format("Accounting adjustments with ID %d not found", id)));
         return entityToResponse(entity);
     }
 
     public List<AccountingAdjustmentResponse> getAccountingAdjustmentsByTransactionId(Long transactionId) {
-        String tenantId = getTenantId();
+        logger.info("Getting accounting adjustments by transaction id: {}", transactionId);
+        String tenantId = authService.getTenantId();
 
         List<AccountingAdjustmentsEntity> entity = accountingAdjustmentsRepository.getAccountingAdjustmentsByTransactionIdAndTenantId(transactionId, tenantId);
         if (entity.isEmpty()) {
@@ -78,7 +92,7 @@ public class AccountingAdjustmentService {
     public AccountingAdjustmentResponse createAdjustment(AccountingAdjustmentRequest accountingAdjustmentRequest) {
         logger.info("creating adjustment");
         AccountingAdjustmentsEntity entity = new AccountingAdjustmentsEntity();
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         TransactionEntity transactionEntity = transactionRepository.findById(accountingAdjustmentRequest.getTransactionId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -111,25 +125,39 @@ public class AccountingAdjustmentService {
     public void changeAdjustmentStatus(List<Long> adjustmentIds) {
         logger.info("Changing status of adjustment with id {}", adjustmentIds);
 
-        for (Long adjustmentId : adjustmentIds) {
-            AccountingAdjustmentsEntity existingAdjustment = accountingAdjustmentsRepository.findById(adjustmentId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "No adjustment found with ID: " + adjustmentId));
+        List<AccountingAdjustmentsEntity> adjustments = accountingAdjustmentsRepository.findByIdInAndStatus(adjustmentIds, StatusTransaction.DRAFT);
 
-            if (!existingAdjustment.getStatus().equals(StatusTransaction.DRAFT)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The adjustment is not in draft status");
-            }
-
-            existingAdjustment.setStatus(StatusTransaction.SUCCESS);
-
-            accountingAdjustmentsRepository.save(existingAdjustment);
-            controlAccountBalancesService.updateControlAccountBalancesAdjustment(existingAdjustment);
+        if (adjustments.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No adjustment found with the provided IDs");
         }
+
+        adjustments.forEach(adjustment -> {
+            adjustment.setStatus(StatusTransaction.SUCCESS);
+            controlAccountBalancesService.updateControlAccountBalancesAdjustment(adjustment);
+        });
+
+        accountingAdjustmentsRepository.saveAll(adjustments);
+
+//        for (Long adjustmentId : adjustmentIds) {
+//            AccountingAdjustmentsEntity existingAdjustment = accountingAdjustmentsRepository.findById(adjustmentId)
+//                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+//                            "No adjustment found with ID: " + adjustmentId));
+//
+//            if (!existingAdjustment.getStatus().equals(StatusTransaction.DRAFT)) {
+//                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The adjustment is not in draft status");
+//            }
+//
+//            existingAdjustment.setStatus(StatusTransaction.SUCCESS);
+//
+//            accountingAdjustmentsRepository.save(existingAdjustment);
+//            controlAccountBalancesService.updateControlAccountBalancesAdjustment(existingAdjustment);
+//        }
 
 
     }
 
     private void validateAdjustmentTranDetail(List<AdjustmentDetailRequest> detailRequest) {
+        logger.info("Validating adjustment detail");
         if (detailRequest.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Detail is required");
         }
@@ -168,8 +196,9 @@ public class AccountingAdjustmentService {
     }
 
     private List<AdjustmentDetailEntity> detailToEntity(AccountingAdjustmentsEntity accountingAdjustmentsEntity, List<AdjustmentDetailRequest> detailRequests) {
+        logger.info("Converting detail to entity");
         try {
-            String tenantId = getTenantId();
+            String tenantId = authService.getTenantId();
             List<AdjustmentDetailEntity> result = new ArrayList<>();
             List<AccountEntity> accounts = iAccountRepository.findAll();
             for (AdjustmentDetailRequest detail : detailRequests) {
@@ -186,6 +215,7 @@ public class AccountingAdjustmentService {
             }
             return result;
         } catch (Exception e) {
+            logger.error("Error in detailToEntity: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account or accounts in detail do not exist");
         }
     }

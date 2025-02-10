@@ -11,7 +11,6 @@ import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.repositories.IBalancesRepository;
 import com.sti.accounting.repositories.IControlAccountBalancesRepository;
 import com.sti.accounting.utils.PeriodStatus;
-import com.sti.accounting.utils.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -43,8 +42,9 @@ public class AccountingClosingService {
     private final IBalancesRepository iBalancesRepository;
     private final IControlAccountBalancesRepository controlAccountBalancesRepository;
     private final ReportPdfGenerator reportPdfGenerator;
+    private final AuthService authService;
 
-    public AccountingClosingService(IAccountingClosingRepository accountingClosingRepository, AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository, BalancesService balancesService, IBalancesRepository iBalancesRepository, IControlAccountBalancesRepository controlAccountBalancesRepository, ReportPdfGenerator reportPdfGenerator) {
+    public AccountingClosingService(IAccountingClosingRepository accountingClosingRepository, AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository, BalancesService balancesService, IBalancesRepository iBalancesRepository, IControlAccountBalancesRepository controlAccountBalancesRepository, ReportPdfGenerator reportPdfGenerator, AuthService authService) {
         this.accountingClosingRepository = accountingClosingRepository;
         this.accountingPeriodService = accountingPeriodService;
         this.generalBalanceService = generalBalanceService;
@@ -54,14 +54,15 @@ public class AccountingClosingService {
         this.iBalancesRepository = iBalancesRepository;
         this.controlAccountBalancesRepository = controlAccountBalancesRepository;
         this.reportPdfGenerator = reportPdfGenerator;
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     public List<AccountingClosingResponse> getAllAccountingClosing() {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         return this.accountingClosingRepository.findAll().stream().filter(closing -> closing.getTenantId().equals(tenantId)).map(this::toResponse).toList();
     }
@@ -158,7 +159,7 @@ public class AccountingClosingService {
 
     private void activateNextPeriod(AccountingPeriodEntity currentPeriod, String newClosureType) {
         int currentYear = LocalDate.now().getYear();
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         AccountingPeriodEntity nextPeriod = accountingPeriodRepository
                 .findByClosureTypeAndPeriodOrderForYear(newClosureType, currentPeriod.getPeriodOrder() + 1, currentYear, tenantId);
@@ -174,7 +175,7 @@ public class AccountingClosingService {
     }
 
     private void processBalances(AccountingPeriodEntity activePeriod) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         List<ControlAccountBalancesEntity> accountBalances = controlAccountBalancesRepository.findAllByAccountingPeriodIdAndTenantId(activePeriod.getId(), tenantId);
         if (accountBalances.isEmpty()) {

@@ -7,7 +7,7 @@ import com.sti.accounting.repositories.IAccountingJournalRepository;
 import com.sti.accounting.repositories.IDocumentRepository;
 import com.sti.accounting.repositories.ITransactionRepository;
 import com.sti.accounting.utils.Motion;
-import com.sti.accounting.utils.TenantContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -32,23 +32,24 @@ public class TransactionService {
     private final IAccountingJournalRepository accountingJournalRepository;
     private final ControlAccountBalancesService controlAccountBalancesService;
     private final AccountingPeriodService accountingPeriodService;
-
+    private final AuthService authService;
     public TransactionService(ITransactionRepository transactionRepository, IAccountRepository iAccountRepository,
-                              IDocumentRepository document, IAccountingJournalRepository accountingJournalRepository, ControlAccountBalancesService controlAccountBalancesService, AccountingPeriodService accountingPeriodService) {
+                              IDocumentRepository document, IAccountingJournalRepository accountingJournalRepository, ControlAccountBalancesService controlAccountBalancesService, AccountingPeriodService accountingPeriodService, AuthService authService) {
         this.transactionRepository = transactionRepository;
         this.iAccountRepository = iAccountRepository;
         this.document = document;
         this.accountingJournalRepository = accountingJournalRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
         this.accountingPeriodService = accountingPeriodService;
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     public List<TransactionResponse> getAllTransaction() {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
         return transactionRepository.findAll().stream().filter(transaction -> transaction.getTenantId().equals(tenantId)).map(this::entityToResponse).toList();
     }
 
@@ -90,7 +91,7 @@ public class TransactionService {
     }
 
     public List<TransactionResponse> getByDocumentType(Long id) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
@@ -112,7 +113,7 @@ public class TransactionService {
 
     public List<TransactionResponse> getTransactionByDateRange(LocalDate startDate, LocalDate endDate) {
         logger.trace("Transaction request with startDate {} and endDate {}", startDate, endDate);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         if (startDate.isAfter(endDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Invalid date range: start date %s cannot be after end date", startDate));
@@ -122,7 +123,7 @@ public class TransactionService {
     }
 
     public TransactionResponse getById(Long id) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         TransactionEntity entity = transactionRepository.findById(id).filter(transaction -> transaction.getTenantId().equals(tenantId))
                 .orElseThrow(
@@ -135,7 +136,7 @@ public class TransactionService {
     public TransactionResponse createTransaction(TransactionRequest transactionRequest) {
         logger.info("creating transaction");
         TransactionEntity entity = new TransactionEntity();
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         // Get Document
         DocumentEntity documentType = document.findById(transactionRequest.getDocumentType())
@@ -186,7 +187,7 @@ public class TransactionService {
     @Transactional
     public TransactionResponse updateTransaction(Long id, TransactionRequest transactionRequest) {
         logger.info("Updating transaction with ID: {}", id);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         TransactionEntity existingTransaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -329,7 +330,7 @@ public class TransactionService {
 
     private List<TransactionDetailEntity> detailToEntity(TransactionEntity transactionEntity, List<TransactionDetailRequest> detailRequests) {
         try {
-            String tenantId = getTenantId();
+            String tenantId = authService.getTenantId();
             List<TransactionDetailEntity> result = new ArrayList<>();
             List<AccountEntity> accounts = iAccountRepository.findAll().stream().filter(account -> account.getTenantId().equals(tenantId)).toList();
             for (TransactionDetailRequest detail : detailRequests) {

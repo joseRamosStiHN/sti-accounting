@@ -7,7 +7,7 @@ import com.sti.accounting.repositories.IAccountingJournalRepository;
 import com.sti.accounting.repositories.ICreditNotesRepository;
 import com.sti.accounting.repositories.ITransactionRepository;
 import com.sti.accounting.utils.Motion;
-import com.sti.accounting.utils.TenantContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -30,23 +30,24 @@ public class CreditNotesService {
     private final IAccountingJournalRepository accountingJournalRepository;
     private final IAccountRepository iAccountRepository;
     private final AccountingPeriodService accountingPeriodService;
-
-    public CreditNotesService(ICreditNotesRepository creditNotesRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService, IAccountingJournalRepository accountingJournalRepository, IAccountRepository iAccountRepository, AccountingPeriodService accountingPeriodService) {
+    private final AuthService authService;
+    public CreditNotesService(ICreditNotesRepository creditNotesRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService, IAccountingJournalRepository accountingJournalRepository, IAccountRepository iAccountRepository, AccountingPeriodService accountingPeriodService, AuthService authService) {
         this.creditNotesRepository = creditNotesRepository;
         this.transactionRepository = transactionRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
         this.accountingJournalRepository = accountingJournalRepository;
         this.iAccountRepository = iAccountRepository;
         this.accountingPeriodService = accountingPeriodService;
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     public List<CreditNotesResponse> getAllCreditNotes() {
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         return creditNotesRepository.findAll().stream()
                 .filter(creditNote -> creditNote.getAccountingPeriod().equals(activePeriod) && creditNote.getTenantId().equals(tenantId))
@@ -55,7 +56,7 @@ public class CreditNotesService {
     }
 
     public CreditNotesResponse getCreditNoteById(Long id) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         CreditNotesEntity entity = creditNotesRepository.findById(id).filter(creditNotes -> creditNotes.getTenantId().equals(tenantId))
                 .orElseThrow(
@@ -65,7 +66,7 @@ public class CreditNotesService {
     }
 
     public List<CreditNotesResponse> getCreditNoteByTransactionId(Long transactionId) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         List<CreditNotesEntity> entity = creditNotesRepository.getCreditNotesByTransactionIdAndTenantId(transactionId, tenantId);
         if (entity.isEmpty()) {
@@ -80,7 +81,7 @@ public class CreditNotesService {
     public CreditNotesResponse createCreditNote(CreditNotesRequest creditNotesRequest) {
         logger.info("creating credit note");
         CreditNotesEntity entity = new CreditNotesEntity();
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         TransactionEntity transactionEntity = transactionRepository.findById(creditNotesRequest.getTransactionId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -175,7 +176,7 @@ public class CreditNotesService {
 
     private List<CreditNotesDetailEntity> detailToEntity(CreditNotesEntity creditNotesEntity, List<CreditNotesDetailRequest> detailRequests) {
         try {
-            String tenantId = getTenantId();
+            String tenantId = authService.getTenantId();
             List<CreditNotesDetailEntity> result = new ArrayList<>();
             List<AccountEntity> accounts = iAccountRepository.findAll();
             for (CreditNotesDetailRequest detail : detailRequests) {

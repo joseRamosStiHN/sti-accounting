@@ -5,7 +5,7 @@ import com.sti.accounting.entities.ControlAccountBalancesEntity;
 import com.sti.accounting.models.AccountingPeriodResponse;
 import com.sti.accounting.models.IncomeStatementResponse;
 import com.sti.accounting.repositories.IAccountRepository;
-import com.sti.accounting.utils.TenantContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,20 +24,21 @@ public class IncomeStatementService {
     private final IAccountRepository accountRepository;
     private final ControlAccountBalancesService controlAccountBalancesService;
     private final AccountingPeriodService accountingPeriodService;
-
-    public IncomeStatementService(IAccountRepository accountRepository, ControlAccountBalancesService controlAccountBalancesService, AccountingPeriodService accountingPeriodService) {
+    private final AuthService authService;
+    public IncomeStatementService(IAccountRepository accountRepository, ControlAccountBalancesService controlAccountBalancesService, AccountingPeriodService accountingPeriodService, AuthService authService) {
         this.accountRepository = accountRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
         this.accountingPeriodService = accountingPeriodService;
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     public List<IncomeStatementResponse> getIncomeStatement(Long periodId) {
         logger.info("Generating income statement");
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         //ToDo: Crear metodo de repositorio para obtener las cuentas filtradas desde la base de datos
         List<AccountEntity> accounts = accountRepository.findAll().stream().filter(balances -> balances.getTenantId().equals(tenantId)).toList();

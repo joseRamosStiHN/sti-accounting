@@ -1,7 +1,6 @@
 package com.sti.accounting.controllers;
 
-import com.sti.accounting.models.AccountingPeriodRequest;
-import com.sti.accounting.models.AccountingPeriodResponse;
+
 import com.sti.accounting.models.TaxSettingsRequest;
 import com.sti.accounting.models.TaxSettingsResponse;
 import com.sti.accounting.services.TaxSettingsService;
@@ -10,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+
 @RestController
 @RequestMapping("/api/v1/tax-settings")
 public class TaxSettingsController {

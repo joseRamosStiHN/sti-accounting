@@ -1,12 +1,10 @@
 package com.sti.accounting.services;
 
-import com.sti.accounting.entities.AccountingJournalEntity;
 import com.sti.accounting.entities.TaxSettingsEntity;
-import com.sti.accounting.models.AccountingJournalResponse;
 import com.sti.accounting.models.TaxSettingsRequest;
 import com.sti.accounting.models.TaxSettingsResponse;
 import com.sti.accounting.repositories.ITaxSettingsRepository;
-import com.sti.accounting.utils.TenantContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -20,25 +18,26 @@ public class TaxSettingsService {
 
     private static final Logger logger = LoggerFactory.getLogger(TaxSettingsService.class);
     private final ITaxSettingsRepository taxSettingsRepository;
-
-    public TaxSettingsService(ITaxSettingsRepository taxSettingsRepository) {
+    private final AuthService authService;
+    public TaxSettingsService(ITaxSettingsRepository taxSettingsRepository, AuthService authService) {
         this.taxSettingsRepository = taxSettingsRepository;
+        this.authService = authService;
     }
 
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
 
     public List<TaxSettingsResponse> getAllTaxSettings() {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
         return this.taxSettingsRepository.findAll().stream().filter(tax -> tax.getTenantId().equals(tenantId)).map(this::toResponse).toList();
     }
 
     public TaxSettingsResponse getTaxSettingsById(Long id) {
         logger.trace("Tax Settings request with id {}", id);
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         TaxSettingsEntity taxSettingsEntity = taxSettingsRepository.findById(id).filter(tax -> tax.getTenantId().equals(tenantId)).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("No tax settings were found with the id %s", id))
@@ -47,7 +46,7 @@ public class TaxSettingsService {
     }
 
     public TaxSettingsResponse createTaxSettings(TaxSettingsRequest taxSettingsRequest) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         TaxSettingsEntity taxSettingsEntity = new TaxSettingsEntity();
 
@@ -62,7 +61,7 @@ public class TaxSettingsService {
     }
 
     public TaxSettingsResponse updateTaxSettings(Long id, TaxSettingsRequest taxSettingsRequest) {
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         TaxSettingsEntity taxSettingsEntity = taxSettingsRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 String.format("No ta settings found with ID: %d", id)));

@@ -4,7 +4,7 @@ import com.sti.accounting.entities.*;
 import com.sti.accounting.models.*;
 import com.sti.accounting.repositories.IAccountRepository;
 import com.sti.accounting.utils.Status;
-import com.sti.accounting.utils.TenantContext;
+
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,22 +25,23 @@ public class GeneralBalanceService {
     private final ControlAccountBalancesService controlAccountBalancesService;
     private final IncomeStatementService incomeStatementService;
     private final AccountingPeriodService accountingPeriodService;
-
-    public GeneralBalanceService(IAccountRepository iAccountRepository, ControlAccountBalancesService controlAccountBalancesService, IncomeStatementService incomeStatementService, AccountingPeriodService accountingPeriodService) {
+    private final AuthService authService;
+    public GeneralBalanceService(IAccountRepository iAccountRepository, ControlAccountBalancesService controlAccountBalancesService, IncomeStatementService incomeStatementService, AccountingPeriodService accountingPeriodService, AuthService authService) {
         this.iAccountRepository = iAccountRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
         this.incomeStatementService = incomeStatementService;
         this.accountingPeriodService = accountingPeriodService;
+        this.authService = authService;
     }
 
-    private String getTenantId() {
-        return TenantContext.getCurrentTenant();
-    }
+//    private String getTenantId() {
+//        return TenantContext.getCurrentTenant();
+//    }
 
     @Transactional
     public List<GeneralBalanceResponse> getBalanceGeneral(Long periodId) {
         logger.info("Generating balance general");
-        String tenantId = getTenantId();
+        String tenantId = authService.getTenantId();
 
         // Realiza el filtro por las cuentas activas
         //ToDo: Crear metodo de repositorio para obtener las cuentas filtradas desde la base de datos
