@@ -39,6 +39,7 @@ public class IncomeStatementService {
         logger.info("Generating income statement");
         String tenantId = getTenantId();
 
+        //ToDo: Crear metodo de repositorio para obtener las cuentas filtradas desde la base de datos
         List<AccountEntity> accounts = accountRepository.findAll().stream().filter(balances -> balances.getTenantId().equals(tenantId)).toList();
         accounts = accounts.stream()
                 .filter(account -> account.getAccountCategory().getName().equalsIgnoreCase("Estado de Resultados"))

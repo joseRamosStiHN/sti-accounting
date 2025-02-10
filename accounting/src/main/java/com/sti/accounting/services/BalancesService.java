@@ -104,8 +104,9 @@ public class BalancesService {
         balancesResponse.setAccountId(balancesEntity.getAccount().getId());
         balancesResponse.setTypicalBalance(balancesEntity.getTypicalBalance());
         balancesResponse.setInitialBalance(balancesEntity.getInitialBalance());
-        balancesResponse.setCreateAtDate(balancesEntity.getCreateAtDate());
         balancesResponse.setIsCurrent(balancesEntity.getIsCurrent());
+        balancesResponse.setCreateAtDate(balancesEntity.getCreateAtDate());
+        balancesResponse.setClosingDate(balancesEntity.getClosingDate());
         return balancesResponse;
 
     }

@@ -43,34 +43,29 @@ public class GeneralBalanceService {
         String tenantId = getTenantId();
 
         // Realiza el filtro por las cuentas activas
-        List<AccountEntity> accounts = iAccountRepository.findAll().stream()
-                .filter(account -> account.getAccountCategory().getName().equalsIgnoreCase("Balance General") && account.getStatus() == Status.ACTIVO && account.getTenantId().equals(tenantId))
-                .toList();
+        //ToDo: Crear metodo de repositorio para obtener las cuentas filtradas desde la base de datos
+
+        List<AccountEntity> accounts = iAccountRepository.findFilteredAccounts("Balance General", Status.ACTIVO, tenantId);
 
         List<GeneralBalanceResponse> response = new ArrayList<>();
 
-        // Si periodId es null, se obtienen los balances para todos los periodos
+
         for (AccountEntity account : accounts) {
             ControlAccountBalancesEntity sumViewEntity;
 
-            if (periodId != null) {
-                // Obtener el periodo específico
-                AccountingPeriodResponse period = accountingPeriodService.getById(periodId);
-                if (period != null) {
-                    // Obtener el inicio y el final del periodo mensual
-                    LocalDate startPeriod = period.getStartPeriod().toLocalDate();
-                    LocalDate endPeriod = period.getEndPeriod().toLocalDate();
-
-                    List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForPeriodAndMonth(account.getId(), period.getId(), startPeriod, endPeriod);
-                    sumViewEntity = combineBalances(balances);
-                } else {
-                    // Manejar el caso en que el periodo no existe
-                    List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForAllPeriods(account.getId());
-                    sumViewEntity = combineBalances(balances);
-                }
-            } else {
-                // Si periodId es null, obtener balances para todos los periodos
+            if (periodId == null) {
+                // Manejar el caso en que el periodo no existe manejar todos los periodos
                 List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForAllPeriods(account.getId());
+                sumViewEntity = combineBalances(balances);
+            } else {
+                // Si periodId es null, se obtienen los balances para todos los periodos
+                AccountingPeriodResponse period = accountingPeriodService.getById(periodId);
+
+                // Obtener el inicio y el final del periodo mensual
+                LocalDate startPeriod = period.getStartPeriod().toLocalDate();
+                LocalDate endPeriod = period.getEndPeriod().toLocalDate();
+
+                List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForPeriodAndMonth(account.getId(), period.getId(), startPeriod, endPeriod);
                 sumViewEntity = combineBalances(balances);
             }
 

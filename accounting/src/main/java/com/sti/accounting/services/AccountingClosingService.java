@@ -195,6 +195,7 @@ public class AccountingClosingService {
         }
     }
 
+    //ToDo: Revisar la generacion del PDF generado
     private void saveAccountingClosing(AccountingPeriodEntity activePeriod) {
         AccountingClosingResponse closingDetails = getDetailAccountingClosing();
 
@@ -234,6 +235,7 @@ public class AccountingClosingService {
         List<BalancesEntity> existingBalances = iBalancesRepository.findByAccountId(accountId);
         for (BalancesEntity existingBalance : existingBalances) {
             existingBalance.setIsCurrent(false);
+            existingBalance.setClosingDate(LocalDateTime.now());
             iBalancesRepository.save(existingBalance);
         }
     }

@@ -52,6 +52,7 @@ public class TransactionService {
         return transactionRepository.findAll().stream().filter(transaction -> transaction.getTenantId().equals(tenantId)).map(this::entityToResponse).toList();
     }
 
+    //ToDo: Revisar este metodo (comparar la informacion que me trae con la que se tiene en la tabla de control de saldos)
     public Map<String, List<AccountTransactionDTO>> getTransactionAccountsByActivePeriod() {
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
@@ -277,17 +278,14 @@ public class TransactionService {
     public void changeTransactionStatus(List<Long> transactionIds) {
         logger.info("Changing status of transaction with id {}", transactionIds);
 
-        for (Long transactionId : transactionIds) {
-            TransactionEntity existingTransaction = transactionRepository.findById(transactionId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            String.format("No transaction found with ID: %d", transactionId)));
-            if (!existingTransaction.getStatus().equals(StatusTransaction.DRAFT)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The transaction is not in draft status");
+            List<TransactionEntity> existingTransactions = transactionRepository.findAllById(transactionIds).stream().filter(f -> !f.getStatus().equals(StatusTransaction.SUCCESS)).toList();
+
+            for (TransactionEntity transactionEntity : existingTransactions) {
+                transactionEntity.setStatus(StatusTransaction.SUCCESS);
+                transactionRepository.save(transactionEntity);
+                controlAccountBalancesService.updateControlAccountBalances(transactionEntity);
             }
-            existingTransaction.setStatus(StatusTransaction.SUCCESS);
-            transactionRepository.save(existingTransaction);
-            controlAccountBalancesService.updateControlAccountBalances(existingTransaction);
-        }
+
     }
 
     private void validateTransactionDetail(List<TransactionDetailRequest> detailRequest) {
