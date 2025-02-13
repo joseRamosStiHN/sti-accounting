@@ -34,18 +34,12 @@ public class GeneralBalanceService {
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     @Transactional
     public List<GeneralBalanceResponse> getBalanceGeneral(Long periodId) {
         logger.info("Generating balance general");
         String tenantId = authService.getTenantId();
 
         // Realiza el filtro por las cuentas activas
-        //ToDo: Crear metodo de repositorio para obtener las cuentas filtradas desde la base de datos
-
         List<AccountEntity> accounts = iAccountRepository.findFilteredAccounts("Balance General", Status.ACTIVO, tenantId);
 
         List<GeneralBalanceResponse> response = new ArrayList<>();
