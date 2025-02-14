@@ -29,4 +29,6 @@ public interface IAccountRepository extends ListCrudRepository<AccountEntity, Lo
     long countByParentIdAndTenantId(Long parentId, String tenantId);
 
     List<AccountEntity> findAllByTenantId(String tenantId);
+
+    List<AccountEntity> findAllByTenantIdIsNull();
 }
