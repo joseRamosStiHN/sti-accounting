@@ -27,10 +27,6 @@ public class ControlAccountBalancesService {
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     @Transactional
     public void updateControlAccountBalances(TransactionEntity transactionEntity) {
         String tenantId = authService.getTenantId();

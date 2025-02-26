@@ -1,7 +1,5 @@
 package com.sti.accounting.entities;
 
-
-
 import com.sti.accounting.utils.CompanyTypeEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

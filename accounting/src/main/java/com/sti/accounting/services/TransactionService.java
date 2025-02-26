@@ -44,10 +44,6 @@ public class TransactionService {
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     public List<TransactionResponse> getAllTransaction() {
         String tenantId = authService.getTenantId();
         return transactionRepository.findAll().stream().filter(transaction -> transaction.getTenantId().equals(tenantId)).map(this::entityToResponse).toList();

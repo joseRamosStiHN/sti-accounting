@@ -57,10 +57,6 @@ public class AccountingClosingService {
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     public List<AccountingClosingResponse> getAllAccountingClosing() {
         String tenantId = authService.getTenantId();
 

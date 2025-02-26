@@ -26,6 +26,7 @@ public class GeneralBalanceService {
     private final IncomeStatementService incomeStatementService;
     private final AccountingPeriodService accountingPeriodService;
     private final AuthService authService;
+
     public GeneralBalanceService(IAccountRepository iAccountRepository, ControlAccountBalancesService controlAccountBalancesService, IncomeStatementService incomeStatementService, AccountingPeriodService accountingPeriodService, AuthService authService) {
         this.iAccountRepository = iAccountRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;

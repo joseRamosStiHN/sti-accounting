@@ -33,10 +33,6 @@ public class BalancesService {
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     public List<BalancesResponse> getAllBalances() {
         String tenantId = authService.getTenantId();
         return this.iBalancesRepository.findAll().stream().filter(balances -> balances.getTenantId().equals(tenantId)).map(this::toResponse).toList();

@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class TrialBalanceService {
@@ -62,7 +61,6 @@ public class TrialBalanceService {
     public TrialBalanceResponse getAllTrialBalances() {
         TrialBalanceResponse trialBalanceResponse = new TrialBalanceResponse();
         List<TrialBalanceResponse.PeriodBalanceResponse> periodBalances = new ArrayList<>();
-        //List<AccountResponse> allAccounts = accountService.getAllAccount();
         List<AccountResponse> allAccounts = accountService.getAllAccount().stream().filter(f -> f.getSupportEntry() != null  ).toList();
 
         // Obtener todos los períodos contables
@@ -96,7 +94,6 @@ public class TrialBalanceService {
         Map<Long, TrialBalanceResponse.FinalBalance> finalBalancesMap = new HashMap<>();
 
         for (AccountResponse account : allAccounts) {
-//            if (isSupportEntry(account)) {
                 TrialBalanceResponse.AccountBalance accountBalance = createAccountBalance(account);
 
                 // Calcular el balance inicial
@@ -120,16 +117,11 @@ public class TrialBalanceService {
                 finalBalancesMap.put(account.getId(), finalBalanceResponse);
 
                 accountBalances.add(accountBalance);
-            //    }
        }
 
         periodBalanceResponse.setAccountBalances(accountBalances);
         return periodBalanceResponse;
     }
-
-//    private boolean isSupportEntry(AccountResponse account) {
-//        return account.getSupportEntry() != null && account.getSupportEntry();
-//    }
 
     private TrialBalanceResponse.AccountBalance createAccountBalance(AccountResponse account) {
         TrialBalanceResponse.AccountBalance accountBalance = new TrialBalanceResponse.AccountBalance();

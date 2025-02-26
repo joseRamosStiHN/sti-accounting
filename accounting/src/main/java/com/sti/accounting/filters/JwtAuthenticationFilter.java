@@ -1,7 +1,6 @@
 package com.sti.accounting.filters;
 
 import com.sti.accounting.core.CompanyDto;
-import com.sti.accounting.core.CompanyUserDto;
 import com.sti.accounting.core.CustomUserDetails;
 import com.sti.accounting.core.SecurityUserDto;
 import com.sti.accounting.entities.CompanyEntity;
@@ -15,22 +14,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.*;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtService jwtService;
@@ -70,8 +67,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.getWriter().close();
             return;
         }
-        // set tenantId to context TODO: revisar esto
-       // TenantContext.setCurrentTenant(tenantId);
 
         // validate token
         if (!jwtService.isTokenValid(token)) {

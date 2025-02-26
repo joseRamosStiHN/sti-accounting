@@ -31,10 +31,6 @@ public class AccountingJournalService {
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     public List<AccountingJournalResponse> getAllAccountingJournal() {
         String tenantId = authService.getTenantId();
 
