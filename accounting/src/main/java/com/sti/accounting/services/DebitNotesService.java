@@ -31,6 +31,7 @@ public class DebitNotesService {
     private final IAccountRepository iAccountRepository;
     private final AccountingPeriodService accountingPeriodService;
     private final AuthService authService;
+
     public DebitNotesService(IDebitNotesRepository debitNotesRepository, ITransactionRepository transactionRepository, ControlAccountBalancesService controlAccountBalancesService, IAccountingJournalRepository accountingJournalRepository, IAccountRepository iAccountRepository, AccountingPeriodService accountingPeriodService, AuthService authService) {
         this.debitNotesRepository = debitNotesRepository;
         this.transactionRepository = transactionRepository;
@@ -40,10 +41,6 @@ public class DebitNotesService {
         this.accountingPeriodService = accountingPeriodService;
         this.authService = authService;
     }
-
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
 
     public List<DebitNotesResponse> getAllDebitNotes() {
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();

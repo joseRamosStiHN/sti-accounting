@@ -57,10 +57,6 @@ public class AccountingClosingService {
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     public List<AccountingClosingResponse> getAllAccountingClosing() {
         String tenantId = authService.getTenantId();
 
@@ -196,6 +192,7 @@ public class AccountingClosingService {
         }
     }
 
+    //ToDo: Revisar la generacion del PDF generado
     private void saveAccountingClosing(AccountingPeriodEntity activePeriod) {
         AccountingClosingResponse closingDetails = getDetailAccountingClosing();
 
@@ -235,6 +232,7 @@ public class AccountingClosingService {
         List<BalancesEntity> existingBalances = iBalancesRepository.findByAccountId(accountId);
         for (BalancesEntity existingBalance : existingBalances) {
             existingBalance.setIsCurrent(false);
+            existingBalance.setClosingDate(LocalDateTime.now());
             iBalancesRepository.save(existingBalance);
         }
     }

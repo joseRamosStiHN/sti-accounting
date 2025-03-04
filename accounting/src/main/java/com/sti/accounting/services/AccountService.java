@@ -38,13 +38,9 @@ public class AccountService {
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     public List<AccountResponse> getAllAccount() {
         String tenantId = authService.getTenantId();
-        return this.iAccountRepository.findAll().stream().filter(account -> account.getTenantId().equals(tenantId)).map(this::toResponse).toList();
+        return this.iAccountRepository.findAllByTenantId(tenantId).stream().map(this::toResponse).toList();
     }
 
     public AccountResponse getById(Long id) {
@@ -219,7 +215,6 @@ public class AccountService {
     }
 
     public void cloneCatalog(String sourceTenantId) {
-
         String tenantId = authService.getTenantId();
 
         // Verificar si ya existen cuentas en el tenant actual
@@ -228,8 +223,15 @@ public class AccountService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The catalog cannot be cloned because accounts already exist for the tenant.");
         }
 
-        // Obtener todas las cuentas del tenant original
-        List<AccountEntity> sourceAccounts = iAccountRepository.findAllByTenantId(sourceTenantId);
+        List<AccountEntity> sourceAccounts;
+
+        // Si sourceTenantId es null o no se proporciona, obtener cuentas sin tenantId
+        if (sourceTenantId == null || sourceTenantId.isEmpty()) {
+            sourceAccounts = iAccountRepository.findAllByTenantIdIsNull();
+        } else {
+            // Obtener todas las cuentas del tenant original
+            sourceAccounts = iAccountRepository.findAllByTenantId(sourceTenantId);
+        }
 
         for (AccountEntity sourceAccount : sourceAccounts) {
             // Clonar la cuenta

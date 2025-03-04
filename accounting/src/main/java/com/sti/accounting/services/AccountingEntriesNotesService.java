@@ -24,6 +24,7 @@ public class AccountingEntriesNotesService {
     }
 
 
+    //ToDo: Considerar crear la relacion en la entidad de transacciones con ajuste, y las ND y NC
     public AccountingEntriesNotesResponse getAccountingEntriesNotes() {
 
         AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();

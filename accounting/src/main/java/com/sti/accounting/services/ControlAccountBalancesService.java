@@ -27,10 +27,6 @@ public class ControlAccountBalancesService {
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     @Transactional
     public void updateControlAccountBalances(TransactionEntity transactionEntity) {
         String tenantId = authService.getTenantId();
@@ -43,14 +39,8 @@ public class ControlAccountBalancesService {
             BigDecimal amount = detail.getAmount();
             Motion motion = detail.getMotion();
 
-            // Obtener el mes y año de la fecha de la transacción
-            LocalDate transactionDate = detail.getTransaction().getCreateAtDate();
-            LocalDate startOfMonth = transactionDate.withDayOfMonth(1);
-            LocalDate endOfMonth = transactionDate.withDayOfMonth(transactionDate.lengthOfMonth());
-
             // Buscar el registro existente para el mes actual
-            ControlAccountBalancesEntity balanceEntity = controlAccountBalancesRepository
-                    .findByAccountIdAndCreateAtDateBetweenAndTenantId(accountId, startOfMonth, endOfMonth, tenantId)
+            ControlAccountBalancesEntity balanceEntity = controlAccountBalancesRepository.findByAccountIdAndAccountingPeriodIdAndTenantId(accountId, activePeriod.getId(), tenantId)
                     .orElseGet(() -> {
                         ControlAccountBalancesEntity newEntity = new ControlAccountBalancesEntity();
                         newEntity.setAccountId(accountId);

@@ -7,7 +7,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -26,6 +25,10 @@ public class AuthService {
         return getAuthenticatedUser().getUser().getUserName();
     }
 
+    public Long getUserId() {
+        return getAuthenticatedUser().getUser().getId();
+    }
+
     public String getTenantId() {
         return getAuthenticatedUser().getTenantId();
     }
@@ -34,13 +37,13 @@ public class AuthService {
         return getAuthenticatedUser().getUser().getGlobalRoles();
     }
 
-    public Optional<KeyValueDto> getCurrentCompanyRole() {
-        String tenantId = getTenantId();
-        return getAuthenticatedUser().getUser().getCompanies().stream()
-                .filter(f->f.getCompany().getTenantId().equals(tenantId))
-                .map(f-> (KeyValueDto) f.getRoles())
-                .findFirst();
-    }
+
+    //Actualmente los roles no estan validando las apis cuando se tenga esa funcionalidad anadirla
+//    public List<KeyValueDto> getCurrentCompanyRole() {
+//        String tenantId = getTenantId();
+//        return getAuthenticatedUser().getUser().getCompanie().
+//     //           .filter(f->f.getCompany().getTenantId().equals(tenantId)
+//    }
 
     public boolean hasRole(String roleName) {
         return getAuthenticatedUser().getUser().getGlobalRoles().stream()

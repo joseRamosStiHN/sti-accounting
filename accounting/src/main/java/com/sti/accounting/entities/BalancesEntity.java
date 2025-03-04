@@ -29,13 +29,17 @@ public class BalancesEntity {
     @Column(name = "INITIAL BALANCE")
     private BigDecimal initialBalance;
 
-    @CreationTimestamp
-    @Column(name = "DATE")
-    private LocalDateTime createAtDate;
-
     @Column(name = "IS_CURRENT")
     private Boolean isCurrent;
 
     @Column(name = "TENANT_ID")
     private String tenantId;
+
+    @CreationTimestamp
+    @Column(name = "DATE")
+    private LocalDateTime createAtDate;
+
+    @Column(name = "CLOSING_DATE")
+    private LocalDateTime closingDate;
+
 }

@@ -19,5 +19,5 @@ public class SecurityUserDto {
     private LocalDateTime createdAt;
     private boolean isActive;
     private List<KeyValueDto> globalRoles;
-    private List<CompanyUserDto> companies;
+    private CompanyDto companie;
 }

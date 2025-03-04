@@ -33,26 +33,17 @@ public class AccountingPeriodService {
     private static final Logger logger = LoggerFactory.getLogger(AccountingPeriodService.class);
     private final IAccountingPeriodRepository accountingPeriodRepository;
     private final AuthService authService;
+
     public AccountingPeriodService(IAccountingPeriodRepository accountingPeriodRepository, AuthService authService) {
         this.accountingPeriodRepository = accountingPeriodRepository;
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     public List<AccountingPeriodResponse> getAllAccountingPeriod() {
-        int currentYear = LocalDate.now().getYear();
         String tenantId = authService.getTenantId();
         LocalDateTime startOfYear = LocalDateTime.of(Year.now().getValue(), 1, 1, 0, 0);
         LocalDateTime endOfYear = LocalDateTime.of(Year.now().getValue(), 12, 31, 23, 59);
 
-//        return accountingPeriodRepository.findAll().stream()
-//                .filter(period -> period.getTenantId().equals(tenantId))
-//                .filter(period -> period.getStartPeriod().getYear() == currentYear || period.getEndPeriod().getYear() == currentYear)
-//                .map(this::toResponse)
-//                .toList();
         return accountingPeriodRepository.findByTenantIdAndStartPeriodBetween(tenantId, startOfYear, endOfYear).stream()
                 .map(this::toResponse).toList();
     }

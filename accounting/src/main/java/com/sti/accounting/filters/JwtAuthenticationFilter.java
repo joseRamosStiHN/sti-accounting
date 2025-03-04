@@ -1,7 +1,10 @@
 package com.sti.accounting.filters;
 
+import com.sti.accounting.core.CompanyDto;
 import com.sti.accounting.core.CustomUserDetails;
 import com.sti.accounting.core.SecurityUserDto;
+import com.sti.accounting.entities.CompanyEntity;
+import com.sti.accounting.repositories.ICompanyRepository;
 import com.sti.accounting.services.JwtService;
 
 import jakarta.servlet.FilterChain;
@@ -19,16 +22,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtService jwtService;
+    private final ICompanyRepository companyRepository;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, ICompanyRepository companyRepository) {
         this.jwtService = jwtService;
+        this.companyRepository = companyRepository;
     }
 
     @Override
@@ -60,8 +67,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.getWriter().close();
             return;
         }
-        // set tenantId to context TODO: revisar esto
-       // TenantContext.setCurrentTenant(tenantId);
 
         // validate token
         if (!jwtService.isTokenValid(token)) {
@@ -82,6 +87,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             List<SimpleGrantedAuthority> authorities = userDetails.getGlobalRoles().stream()
                     .map(role -> new SimpleGrantedAuthority(role.getName()))
                     .toList();
+
+            //To Do obtener el query para obtener la compania actual
+
+            CompanyDto company = this.getCompanyByTennatId(tenantId);
+
+            if (company== null){
+                logger.info("no company valid");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"Error not found Company\"}");
+                response.getWriter().flush();
+                response.getWriter().close();
+                return;
+            }
+
+            userDetails.setCompanie(company);
             // create custom user
             CustomUserDetails customUserDetails = new CustomUserDetails(userDetails,tenantId, authorities);
             //create SecurityContextHolder
@@ -92,7 +113,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     customUserDetails.getAuthorities()
             );
             SecurityContextHolder.getContext().setAuthentication(authToken);
-        } catch (RuntimeException e) {
+        }
+
+
+        catch (RuntimeException e) {
             logger.error("Error al autenticar usuario desde token: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json");
@@ -116,5 +140,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         return null;
+    }
+
+    public CompanyDto getCompanyByTennatId(String tennatId) {
+
+        CompanyEntity companyEntity = companyRepository.findByTenantId(tennatId);
+        CompanyDto companyDto= null;
+        if (companyEntity != null){
+            companyDto = new CompanyDto();
+            companyDto.setId(companyEntity.getId());
+            companyDto.setName(companyEntity.getCompanyName());
+            companyDto.setDescription(companyEntity.getCompanyDescription());
+            companyDto.setTenantId(companyEntity.getTenantId());
+            companyDto.setActive(companyEntity.getIsActive());
+            companyDto.setEmail(companyEntity.getCompanyEmail());
+            companyDto.setCreatedAt(LocalDate.from(companyEntity.getCreatedAt()));
+            companyDto.setPhone(companyEntity.getCompanyPhone());
+            companyDto.setRtn(companyEntity.getCompanyRTN());
+            companyDto.setWebsite(companyEntity.getCompanyWebsite());
+            companyDto.setType(String.valueOf(companyEntity.getType()));
+
+        }
+        return companyDto;
     }
 }

@@ -30,6 +30,7 @@ import java.util.*;
 
 @Service
 public class BulkAccountConfigService {
+
     //TODO: revisar esta clase de Bulk Account Service
     private static final Logger logger = LoggerFactory.getLogger(BulkAccountConfigService.class);
 

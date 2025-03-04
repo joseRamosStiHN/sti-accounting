@@ -57,8 +57,9 @@ public class AccountingController {
     }
 
     @PostMapping("/clone")
-    public void cloneCatalog(@RequestParam String sourceTenantId) {
+    public void cloneCatalog(@RequestParam(required = false) String sourceTenantId) {
         accountService.cloneCatalog(sourceTenantId);
     }
+
 
 }

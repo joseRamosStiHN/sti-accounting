@@ -26,6 +26,7 @@ public class GeneralBalanceService {
     private final IncomeStatementService incomeStatementService;
     private final AccountingPeriodService accountingPeriodService;
     private final AuthService authService;
+
     public GeneralBalanceService(IAccountRepository iAccountRepository, ControlAccountBalancesService controlAccountBalancesService, IncomeStatementService incomeStatementService, AccountingPeriodService accountingPeriodService, AuthService authService) {
         this.iAccountRepository = iAccountRepository;
         this.controlAccountBalancesService = controlAccountBalancesService;
@@ -34,44 +35,33 @@ public class GeneralBalanceService {
         this.authService = authService;
     }
 
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
     @Transactional
     public List<GeneralBalanceResponse> getBalanceGeneral(Long periodId) {
         logger.info("Generating balance general");
         String tenantId = authService.getTenantId();
 
         // Realiza el filtro por las cuentas activas
-        List<AccountEntity> accounts = iAccountRepository.findAll().stream()
-                .filter(account -> account.getAccountCategory().getName().equalsIgnoreCase("Balance General") && account.getStatus() == Status.ACTIVO && account.getTenantId().equals(tenantId))
-                .toList();
+        List<AccountEntity> accounts = iAccountRepository.findFilteredAccounts("Balance General", Status.ACTIVO, tenantId);
 
         List<GeneralBalanceResponse> response = new ArrayList<>();
 
-        // Si periodId es null, se obtienen los balances para todos los periodos
+
         for (AccountEntity account : accounts) {
             ControlAccountBalancesEntity sumViewEntity;
 
-            if (periodId != null) {
-                // Obtener el periodo específico
-                AccountingPeriodResponse period = accountingPeriodService.getById(periodId);
-                if (period != null) {
-                    // Obtener el inicio y el final del periodo mensual
-                    LocalDate startPeriod = period.getStartPeriod().toLocalDate();
-                    LocalDate endPeriod = period.getEndPeriod().toLocalDate();
-
-                    List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForPeriodAndMonth(account.getId(), period.getId(), startPeriod, endPeriod);
-                    sumViewEntity = combineBalances(balances);
-                } else {
-                    // Manejar el caso en que el periodo no existe
-                    List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForAllPeriods(account.getId());
-                    sumViewEntity = combineBalances(balances);
-                }
-            } else {
-                // Si periodId es null, obtener balances para todos los periodos
+            if (periodId == null) {
+                // Manejar el caso en que el periodo no existe manejar todos los periodos
                 List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForAllPeriods(account.getId());
+                sumViewEntity = combineBalances(balances);
+            } else {
+                // Si periodId es null, se obtienen los balances para todos los periodos
+                AccountingPeriodResponse period = accountingPeriodService.getById(periodId);
+
+                // Obtener el inicio y el final del periodo mensual
+                LocalDate startPeriod = period.getStartPeriod().toLocalDate();
+                LocalDate endPeriod = period.getEndPeriod().toLocalDate();
+
+                List<ControlAccountBalancesEntity> balances = controlAccountBalancesService.getControlAccountBalancesForPeriodAndMonth(account.getId(), period.getId(), startPeriod, endPeriod);
                 sumViewEntity = combineBalances(balances);
             }
 

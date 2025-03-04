@@ -12,7 +12,8 @@ public class BalancesResponse {
     private Long accountId;
     private String typicalBalance;
     private BigDecimal initialBalance;
-    private LocalDateTime createAtDate;
     private Boolean isCurrent;
+    private LocalDateTime createAtDate;
+    private LocalDateTime closingDate;
 
 }

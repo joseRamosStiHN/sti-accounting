@@ -25,6 +25,7 @@ public class TrialBalanceService {
         this.accountService = accountService;
     }
 
+    //ToDo: Revisar logica para obtener la balanza de comprobacion total todos los meses hasta el cierre anual
     public TrialBalanceResponse getTrialBalance() {
         TrialBalanceResponse trialBalanceResponse = new TrialBalanceResponse();
         List<TrialBalanceResponse.PeriodBalanceResponse> periodBalances = new ArrayList<>();
@@ -60,7 +61,7 @@ public class TrialBalanceService {
     public TrialBalanceResponse getAllTrialBalances() {
         TrialBalanceResponse trialBalanceResponse = new TrialBalanceResponse();
         List<TrialBalanceResponse.PeriodBalanceResponse> periodBalances = new ArrayList<>();
-        List<AccountResponse> allAccounts = accountService.getAllAccount();
+        List<AccountResponse> allAccounts = accountService.getAllAccount().stream().filter(f -> f.getSupportEntry() != null  ).toList();
 
         // Obtener todos los períodos contables
         List<AccountingPeriodResponse> allAccountingPeriods = accountingPeriodService.getAllAccountingPeriod();
@@ -93,7 +94,6 @@ public class TrialBalanceService {
         Map<Long, TrialBalanceResponse.FinalBalance> finalBalancesMap = new HashMap<>();
 
         for (AccountResponse account : allAccounts) {
-            if (isSupportEntry(account)) {
                 TrialBalanceResponse.AccountBalance accountBalance = createAccountBalance(account);
 
                 // Calcular el balance inicial
@@ -117,15 +117,10 @@ public class TrialBalanceService {
                 finalBalancesMap.put(account.getId(), finalBalanceResponse);
 
                 accountBalances.add(accountBalance);
-            }
-        }
+       }
 
         periodBalanceResponse.setAccountBalances(accountBalances);
         return periodBalanceResponse;
-    }
-
-    private boolean isSupportEntry(AccountResponse account) {
-        return account.getSupportEntry() != null && account.getSupportEntry();
     }
 
     private TrialBalanceResponse.AccountBalance createAccountBalance(AccountResponse account) {

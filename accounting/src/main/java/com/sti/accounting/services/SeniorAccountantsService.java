@@ -19,6 +19,7 @@ public class SeniorAccountantsService {
     }
 
 
+    //ToDo: Flujo principal
     public List<SeniorAccountsResponse> getSeniorAccountants() {
         Map<String, List<AccountTransactionDTO>> transactionAccounts = transactionService.getTransactionAccountsByActivePeriod();
 

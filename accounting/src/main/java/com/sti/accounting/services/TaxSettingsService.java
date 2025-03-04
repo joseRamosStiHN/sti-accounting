@@ -24,12 +24,6 @@ public class TaxSettingsService {
         this.authService = authService;
     }
 
-
-//    private String getTenantId() {
-//        return TenantContext.getCurrentTenant();
-//    }
-
-
     public List<TaxSettingsResponse> getAllTaxSettings() {
         String tenantId = authService.getTenantId();
         return this.taxSettingsRepository.findAll().stream().filter(tax -> tax.getTenantId().equals(tenantId)).map(this::toResponse).toList();
