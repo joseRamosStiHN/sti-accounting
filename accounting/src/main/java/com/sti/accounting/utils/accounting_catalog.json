@@ -1,0 +1,45 @@
+[
+    {
+        "code": "1",
+        "description": "ACTIVO",
+        "category": 1,
+        "typicalBalance": "D",
+        "supportsRegistration": false,
+        "balances": []
+    },
+    {
+        "code": "1-101",
+        "description": "ACTIVO CORRIENTE",
+        "parentId": 1,
+        "category": 1,
+        "typicalBalance": "D",
+        "supportsRegistration": false,
+        "balances": []
+    },
+    {
+        "code": "1-101-1011",
+        "description": "EFECTIVO Y EQUIVALENTES AL EFECTIVO",
+        "parentId": 2,
+        "category": 1,
+        "typicalBalance": "D",
+        "accountType": null,
+        "supportsRegistration": false,
+        "balances": []
+    },
+    {
+        "code": "1-101-1011-01",
+        "description": "CAJA",
+        "parentId": 3,
+        "category": 1,
+        "typicalBalance": "D",
+        "accountType": 1,
+        "supportsRegistration": true,
+        "balances": [
+            {
+                "typicalBalance": "D",
+                "initialBalance": 100000.00,
+                "isCurrent": true
+            }
+        ]
+    }
+]

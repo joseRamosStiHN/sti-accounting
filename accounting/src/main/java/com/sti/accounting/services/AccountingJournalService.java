@@ -51,6 +51,11 @@ public class AccountingJournalService {
         AccountingJournalEntity entity = new AccountingJournalEntity();
         String tenantId = authService.getTenantId();
 
+        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantId(accountingJournalRequest.getAccountType(), tenantId);
+        if (existsAccountType) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account type already exists.");
+        }
+
         entity.setDiaryName(accountingJournalRequest.getDiaryName());
         Long accountTypeId = accountingJournalRequest.getAccountType().longValue();
         AccountTypeEntity accountTypeEntity = accountTypeRepository.findById(accountTypeId)
@@ -81,6 +86,12 @@ public class AccountingJournalService {
         AccountingJournalEntity existingAccountingJournal = accountingJournalRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No accounting journal found with ID: %d", id)));
+
+        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantId(accountingJournalRequest.getAccountType(), tenantId);
+        if (existsAccountType) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account type already exists.");
+        }
+
 
         existingAccountingJournal.setDiaryName(accountingJournalRequest.getDiaryName());
         Long accountTypeId = accountingJournalRequest.getAccountType().longValue();

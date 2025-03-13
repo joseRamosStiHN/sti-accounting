@@ -1,5 +1,7 @@
 package com.sti.accounting.services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sti.accounting.entities.AccountCategoryEntity;
 import com.sti.accounting.entities.AccountEntity;
 import com.sti.accounting.entities.AccountTypeEntity;
@@ -17,10 +19,13 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class AccountService {
@@ -30,6 +35,7 @@ public class AccountService {
     private final IAccountTypeRepository accountTypeRepository;
     private final ITransactionRepository transactionRepository;
     private final AuthService authService;
+
     public AccountService(IAccountRepository iAccountRepository, IAccountCategoryRepository categoryRepository, IAccountTypeRepository accountTypeRepository, ITransactionRepository transactionRepository, AuthService authService) {
         this.iAccountRepository = iAccountRepository;
         this.categoryRepository = categoryRepository;
@@ -214,6 +220,60 @@ public class AccountService {
         return entity;
     }
 
+//    public void cloneCatalog(String sourceTenantId) {
+//        String tenantId = authService.getTenantId();
+//
+//        // Verificar si ya existen cuentas en el tenant actual
+//        List<AccountEntity> existingAccounts = iAccountRepository.findAllByTenantId(tenantId);
+//        if (!existingAccounts.isEmpty()) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The catalog cannot be cloned because accounts already exist for the tenant.");
+//        }
+//
+//        List<AccountEntity> sourceAccounts;
+//
+//        // Si sourceTenantId es null o no se proporciona, obtener cuentas sin tenantId
+//        if (sourceTenantId == null || sourceTenantId.isEmpty()) {
+//            sourceAccounts = iAccountRepository.findAllByTenantIdIsNull();
+//        } else {
+//            // Obtener todas las cuentas del tenant original
+//            sourceAccounts = iAccountRepository.findAllByTenantId(sourceTenantId);
+//        }
+//
+//        for (AccountEntity sourceAccount : sourceAccounts) {
+//            // Clonar la cuenta
+//            AccountEntity clonedAccount = new AccountEntity();
+//            clonedAccount.setCode(sourceAccount.getCode());
+//            clonedAccount.setDescription(sourceAccount.getDescription());
+//            clonedAccount.setStatus(sourceAccount.getStatus());
+//            clonedAccount.setTypicalBalance(sourceAccount.getTypicalBalance());
+//            clonedAccount.setSupportsRegistration(sourceAccount.isSupportsRegistration());
+//            clonedAccount.setTenantId(tenantId);
+//
+//            // Clonar el tipo de cuenta
+//            if (sourceAccount.getAccountType() != null) {
+//                AccountTypeEntity accountTypeEntity = accountTypeRepository.findById(sourceAccount.getAccountType().getId())
+//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Account Type"));
+//                clonedAccount.setAccountType(accountTypeEntity);
+//            }
+//
+//            // Clonar la categoría de cuenta
+//            if (sourceAccount.getAccountCategory() != null) {
+//                AccountCategoryEntity accountCategoryEntity = categoryRepository.findById(sourceAccount.getAccountCategory().getId())
+//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Category"));
+//                clonedAccount.setAccountCategory(accountCategoryEntity);
+//            }
+//
+//            if (sourceAccount.getParent() != null) {
+//                AccountEntity parentAccount = iAccountRepository.findById(sourceAccount.getParent().getId())
+//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Parent Account"));
+//                clonedAccount.setParent(parentAccount);
+//            }
+//
+//            // Guardar la cuenta clonada
+//            iAccountRepository.save(clonedAccount);
+//        }
+//    }
+
     public void cloneCatalog(String sourceTenantId) {
         String tenantId = authService.getTenantId();
 
@@ -223,18 +283,38 @@ public class AccountService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The catalog cannot be cloned because accounts already exist for the tenant.");
         }
 
-        List<AccountEntity> sourceAccounts;
+        List<AccountRequest> sourceAccounts;
 
-        // Si sourceTenantId es null o no se proporciona, obtener cuentas sin tenantId
+        // Si sourceTenantId es null o no se proporciona, obtener cuentas desde el archivo JSON
         if (sourceTenantId == null || sourceTenantId.isEmpty()) {
-            sourceAccounts = iAccountRepository.findAllByTenantIdIsNull();
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                // Leer el archivo JSON
+                File jsonFile = new File("D:\\STI-ACCOUNTING\\accounting\\src\\main\\java\\com\\sti\\accounting\\utils\\accounting_catalog.json");
+                sourceAccounts = objectMapper.readValue(jsonFile, new TypeReference<List<AccountRequest>>() {
+                });
+            } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error reading accounts from JSON file", e);
+            }
         } else {
-            // Obtener todas las cuentas del tenant original
-            sourceAccounts = iAccountRepository.findAllByTenantId(sourceTenantId);
+            // Mapear entidades a AccountRequest si vienen de la base de datos
+            sourceAccounts = iAccountRepository.findAllByTenantId(sourceTenantId).stream().map(account -> {
+                AccountRequest request = new AccountRequest();
+                request.setId(account.getId());
+                request.setCode(account.getCode());
+                request.setDescription(account.getDescription());
+                request.setTypicalBalance(account.getTypicalBalance());
+                request.setSupportsRegistration(account.isSupportsRegistration());
+                request.setStatus(account.getStatus());
+                request.setCategory(account.getAccountCategory() != null ? BigDecimal.valueOf(account.getAccountCategory().getId()) : null);
+                request.setAccountType(account.getAccountType() != null ? BigDecimal.valueOf(account.getAccountType().getId()) : null);
+                request.setParentId(account.getParent() != null ? account.getParent().getId() : null);
+                return request;
+            }).collect(Collectors.toList());
         }
 
-        for (AccountEntity sourceAccount : sourceAccounts) {
-            // Clonar la cuenta
+        for (AccountRequest sourceAccount : sourceAccounts) {
+            // Crear nueva entidad basada en el request
             AccountEntity clonedAccount = new AccountEntity();
             clonedAccount.setCode(sourceAccount.getCode());
             clonedAccount.setDescription(sourceAccount.getDescription());
@@ -245,20 +325,20 @@ public class AccountService {
 
             // Clonar el tipo de cuenta
             if (sourceAccount.getAccountType() != null) {
-                AccountTypeEntity accountTypeEntity = accountTypeRepository.findById(sourceAccount.getAccountType().getId())
+                AccountTypeEntity accountTypeEntity = accountTypeRepository.findById(sourceAccount.getAccountType().longValue())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Account Type"));
                 clonedAccount.setAccountType(accountTypeEntity);
             }
 
             // Clonar la categoría de cuenta
-            if (sourceAccount.getAccountCategory() != null) {
-                AccountCategoryEntity accountCategoryEntity = categoryRepository.findById(sourceAccount.getAccountCategory().getId())
+            if (sourceAccount.getCategory() != null) {
+                AccountCategoryEntity accountCategoryEntity = categoryRepository.findById(sourceAccount.getCategory().longValue())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Category"));
                 clonedAccount.setAccountCategory(accountCategoryEntity);
             }
 
-            if (sourceAccount.getParent() != null) {
-                AccountEntity parentAccount = iAccountRepository.findById(sourceAccount.getParent().getId())
+            if (sourceAccount.getParentId() != null) {
+                AccountEntity parentAccount = iAccountRepository.findById(sourceAccount.getParentId())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Parent Account"));
                 clonedAccount.setParent(parentAccount);
             }
