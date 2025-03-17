@@ -51,7 +51,7 @@ public class AccountingJournalService {
         AccountingJournalEntity entity = new AccountingJournalEntity();
         String tenantId = authService.getTenantId();
 
-        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantId(accountingJournalRequest.getAccountType(), tenantId);
+        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantIdAndStatus(accountingJournalRequest.getAccountType(), tenantId,true);
         if (existsAccountType) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account type already exists.");
         }
@@ -87,7 +87,7 @@ public class AccountingJournalService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No accounting journal found with ID: %d", id)));
 
-        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantId(accountingJournalRequest.getAccountType(), tenantId);
+        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantIdAndStatus(accountingJournalRequest.getAccountType(), tenantId,true);
         if (existsAccountType) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account type already exists.");
         }

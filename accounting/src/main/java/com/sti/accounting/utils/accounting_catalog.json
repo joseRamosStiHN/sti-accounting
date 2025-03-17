@@ -1,45 +1,3899 @@
-[
-    {
-        "code": "1",
-        "description": "ACTIVO",
-        "category": 1,
-        "typicalBalance": "D",
-        "supportsRegistration": false,
-        "balances": []
+[ {
+  "id" : 90,
+  "code" : "1",
+  "description" : "ACTIVO",
+  "typicalBalance" : "D",
+  "supportsRegistration" : false,
+  "status" : "ACTIVO",
+  "balances" : null,
+  "accountCategory" : {
+    "id" : 1,
+    "name" : "Balance General",
+    "description" : "Agrupa las cuentas de Balance General"
+  },
+  "accountType" : null,
+  "tenantId" : null,
+  "children" : [ {
+    "id" : 91,
+    "code" : "1-101",
+    "description" : "ACTIVO CORRIENTE",
+    "typicalBalance" : "D",
+    "supportsRegistration" : false,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 1,
+      "name" : "Balance General",
+      "description" : "Agrupa las cuentas de Balance General"
     },
-    {
-        "code": "1-101",
-        "description": "ACTIVO CORRIENTE",
-        "parentId": 1,
-        "category": 1,
-        "typicalBalance": "D",
-        "supportsRegistration": false,
-        "balances": []
+    "accountType" : null,
+    "tenantId" : null,
+    "children" : [ {
+      "id" : 92,
+      "code" : "1-101-1011",
+      "description" : "EFECTIVO Y EQUIVALENTES AL EFECTIVO",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 93,
+        "code" : "1-101-1011-01",
+        "description" : "CAJA",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 92
+      }, {
+        "id" : 94,
+        "code" : "1-101-1011-02",
+        "description" : "BANCOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 92
+      } ],
+      "parentId" : 91
+    }, {
+      "id" : 95,
+      "code" : "1-101-1012",
+      "description" : "CUENTAS Y DOCUMENTOS POR COBRAR",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 96,
+        "code" : "1-101-1012-01",
+        "description" : "CLIENTES",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 95
+      }, {
+        "id" : 97,
+        "code" : "1-101-1012-02",
+        "description" : "FUNCIONARIOS Y EMPLEADOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 95
+      }, {
+        "id" : 98,
+        "code" : "1-101-1012-03",
+        "description" : "IMPUESTOS POR COBRAR EMPLEADOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 95
+      }, {
+        "id" : 99,
+        "code" : "1-101-1012-04",
+        "description" : "DOCUMENTOS POR COBRAR",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 95
+      } ],
+      "parentId" : 91
+    }, {
+      "id" : 100,
+      "code" : "1-101-1013",
+      "description" : "INVENTARIOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 101,
+        "code" : "1-101-1013-01",
+        "description" : "ALMACEN",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 100
+      }, {
+        "id" : 102,
+        "code" : "1-101-1013-02",
+        "description" : "MATERIA PRIMA",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 100
+      }, {
+        "id" : 103,
+        "code" : "1-101-1013-03",
+        "description" : "PRODUECTOS EN PROCESO",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 100
+      }, {
+        "id" : 104,
+        "code" : "1-101-1013-04",
+        "description" : "PRODUCTO TERMINADO",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 100
+      } ],
+      "parentId" : 91
+    }, {
+      "id" : 105,
+      "code" : "1-101-1014",
+      "description" : "PAGOS ANTICIPADOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 91
+    } ],
+    "parentId" : 90
+  }, {
+    "id" : 106,
+    "code" : "1-102",
+    "description" : "ACTIVO NO CORRIENTE",
+    "typicalBalance" : "D",
+    "supportsRegistration" : false,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 1,
+      "name" : "Balance General",
+      "description" : "Agrupa las cuentas de Balance General"
     },
-    {
-        "code": "1-101-1011",
-        "description": "EFECTIVO Y EQUIVALENTES AL EFECTIVO",
-        "parentId": 2,
-        "category": 1,
-        "typicalBalance": "D",
-        "accountType": null,
-        "supportsRegistration": false,
-        "balances": []
+    "accountType" : null,
+    "tenantId" : null,
+    "children" : [ {
+      "id" : 107,
+      "code" : "1-102-1010",
+      "description" : "INVERSIONES Y VALORES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 108,
+        "code" : "1-102-1010-01",
+        "description" : "INVERSIONES EN ACCIONES",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 107
+      }, {
+        "id" : 109,
+        "code" : "1-102-1010-02",
+        "description" : "INVERSIONES EN NEGOCIOS CONJUNTOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 107
+      } ],
+      "parentId" : 106
+    }, {
+      "id" : 110,
+      "code" : "1-102-1011",
+      "description" : "PROPIEDAD PLANTA Y EQUIPO",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 111,
+        "code" : "1-102-1011-02",
+        "description" : "TERRENOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 110
+      }, {
+        "id" : 112,
+        "code" : "1-102-1011-03",
+        "description" : "EDIFICIOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 110
+      }, {
+        "id" : 113,
+        "code" : "1-102-1011-04",
+        "description" : "MAQUINARIA",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 110
+      }, {
+        "id" : 114,
+        "code" : "1-102-1011-05",
+        "description" : "MOBILIARIO Y EQUIPO",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 110
+      }, {
+        "id" : 115,
+        "code" : "1-102-1011-06",
+        "description" : "VEHICULOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 110
+      }, {
+        "id" : 116,
+        "code" : "1-102-1011-07",
+        "description" : "EQUIPO DE TRANSPORTE",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 110
+      }, {
+        "id" : 117,
+        "code" : "1-102-1011-08",
+        "description" : "HERRAMIENTAS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 110
+      } ],
+      "parentId" : 106
+    }, {
+      "id" : 118,
+      "code" : "1-102-1012",
+      "description" : "INTANGIBLES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 119,
+        "code" : "1-102-1012-01",
+        "description" : "PROGRAMAS INFRORMATICOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 118
+      }, {
+        "id" : 120,
+        "code" : "1-102-1012-02",
+        "description" : "MARCAS Y PATENTES",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 118
+      }, {
+        "id" : 121,
+        "code" : "1-102-1012-03",
+        "description" : "DERECHOS DE AUTOR",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 118
+      } ],
+      "parentId" : 106
+    }, {
+      "id" : 122,
+      "code" : "1-102-1013",
+      "description" : "PROPIEDADES DE INVERSION",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 123,
+        "code" : "1-102-1013-01",
+        "description" : "TERRENOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 122
+      }, {
+        "id" : 124,
+        "code" : "1-102-1013-02",
+        "description" : "EDIFICIOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 122
+      } ],
+      "parentId" : 106
+    }, {
+      "id" : 125,
+      "code" : "1-102-1014",
+      "description" : "OTROS ACTIVOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 126,
+        "code" : "1-102-1014-01",
+        "description" : "BANCOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 125
+      }, {
+        "id" : 127,
+        "code" : "1-102-1014-02",
+        "description" : "DOCUMENTOS POR COBRAR A LARGO PLAZO",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 125
+      }, {
+        "id" : 128,
+        "code" : "1-102-1014-03",
+        "description" : "DEPOSITOS EN GARANTIA",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 1,
+          "name" : "Ingresos",
+          "description" : "Tipo de cuenta para ingresos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 125
+      } ],
+      "parentId" : 106
+    } ],
+    "parentId" : 90
+  } ],
+  "parentId" : null
+}, {
+  "id" : 129,
+  "code" : "2",
+  "description" : "PASIVO",
+  "typicalBalance" : "C",
+  "supportsRegistration" : false,
+  "status" : "ACTIVO",
+  "balances" : null,
+  "accountCategory" : {
+    "id" : 1,
+    "name" : "Balance General",
+    "description" : "Agrupa las cuentas de Balance General"
+  },
+  "accountType" : null,
+  "tenantId" : null,
+  "children" : [ {
+    "id" : 130,
+    "code" : "2-101",
+    "description" : "PASIVO CORRIENTE",
+    "typicalBalance" : "C",
+    "supportsRegistration" : false,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 1,
+      "name" : "Balance General",
+      "description" : "Agrupa las cuentas de Balance General"
     },
-    {
-        "code": "1-101-1011-01",
-        "description": "CAJA",
-        "parentId": 3,
-        "category": 1,
-        "typicalBalance": "D",
-        "accountType": 1,
-        "supportsRegistration": true,
-        "balances": [
-            {
-                "typicalBalance": "D",
-                "initialBalance": 100000.00,
-                "isCurrent": true
-            }
-        ]
-    }
-]
+    "accountType" : null,
+    "tenantId" : null,
+    "children" : [ {
+      "id" : 131,
+      "code" : "2-101-1010",
+      "description" : "CUENTAS Y DOCUMENTOS POR PAGAR",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 132,
+        "code" : "2-101-1010-01",
+        "description" : "PROVEEDORES",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 131
+      }, {
+        "id" : 134,
+        "code" : "2-101-1010-02",
+        "description" : "SUELDOS Y SALARIOS POR PAGAR",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 131
+      }, {
+        "id" : 135,
+        "code" : "2-101-1010-03",
+        "description" : "IMPUESTOS POR PAGAR",
+        "typicalBalance" : "C",
+        "supportsRegistration" : false,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : null,
+        "tenantId" : null,
+        "children" : [ {
+          "id" : 136,
+          "code" : "2-101-1010-03-01",
+          "description" : "IMPUESTO POR PAGAR 15%",
+          "typicalBalance" : "C",
+          "supportsRegistration" : true,
+          "status" : "ACTIVO",
+          "balances" : null,
+          "accountCategory" : {
+            "id" : 1,
+            "name" : "Balance General",
+            "description" : "Agrupa las cuentas de Balance General"
+          },
+          "accountType" : {
+            "id" : 2,
+            "name" : "Gastos",
+            "description" : "Tipo de cuenta para gastos."
+          },
+          "tenantId" : null,
+          "children" : [ ],
+          "parentId" : 135
+        }, {
+          "id" : 137,
+          "code" : "2-101-1010-03-02",
+          "description" : "IMPUESTO POR PAGAR 18%",
+          "typicalBalance" : "C",
+          "supportsRegistration" : true,
+          "status" : "ACTIVO",
+          "balances" : null,
+          "accountCategory" : {
+            "id" : 1,
+            "name" : "Balance General",
+            "description" : "Agrupa las cuentas de Balance General"
+          },
+          "accountType" : {
+            "id" : 2,
+            "name" : "Gastos",
+            "description" : "Tipo de cuenta para gastos."
+          },
+          "tenantId" : null,
+          "children" : [ ],
+          "parentId" : 135
+        }, {
+          "id" : 138,
+          "code" : "2-101-1010-03-03",
+          "description" : "IMPUESTOS POR PAGAR 4%",
+          "typicalBalance" : "C",
+          "supportsRegistration" : true,
+          "status" : "ACTIVO",
+          "balances" : null,
+          "accountCategory" : {
+            "id" : 1,
+            "name" : "Balance General",
+            "description" : "Agrupa las cuentas de Balance General"
+          },
+          "accountType" : {
+            "id" : 2,
+            "name" : "Gastos",
+            "description" : "Tipo de cuenta para gastos."
+          },
+          "tenantId" : null,
+          "children" : [ ],
+          "parentId" : 135
+        } ],
+        "parentId" : 131
+      }, {
+        "id" : 139,
+        "code" : "2-101-1010-04",
+        "description" : "INTERESES POR PAGAR",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 131
+      }, {
+        "id" : 140,
+        "code" : "2-101-1010-05",
+        "description" : "ACREEDORES VARIOS",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 131
+      }, {
+        "id" : 141,
+        "code" : "2-101-1010-06",
+        "description" : "DOCUMENTOS POR PAGAR",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 131
+      } ],
+      "parentId" : 130
+    }, {
+      "id" : 142,
+      "code" : "2-101-1011",
+      "description" : "PRESTAMOS",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 143,
+        "code" : "2-101-1011-01",
+        "description" : "PRESTAMOS BANCARIOS",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 142
+      }, {
+        "id" : 144,
+        "code" : "2-101-1011-02",
+        "description" : "PRESTAMOS HIPOTECARIOS",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 142
+      } ],
+      "parentId" : 130
+    }, {
+      "id" : 145,
+      "code" : "2-101-1012",
+      "description" : "PROVISIONES",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 146,
+        "code" : "2-101-1012-01",
+        "description" : "PROVISIONES PARA COMPENSACIONES EMPLEADOS",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 145
+      }, {
+        "id" : 147,
+        "code" : "2-101-1012-02",
+        "description" : "PROVISIONES PARA CUBRIR GARANTIAS A CLIENTES",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 145
+      }, {
+        "id" : 148,
+        "code" : "2-101-1012-03",
+        "description" : "PROVISIONES PARA CUBRIR RECLAMOS LEGALES",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 145
+      } ],
+      "parentId" : 130
+    }, {
+      "id" : 149,
+      "code" : "2-101-1013",
+      "description" : "COBROS ANTICIPADOS",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 150,
+        "code" : "2-101-1013-01",
+        "description" : "RENTAS COBRADAS POR ANTICIPADO",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 149
+      }, {
+        "id" : 151,
+        "code" : "2-101-1013-02",
+        "description" : "INTERESES COBRADOS POR ANTICIPADO",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 149
+      }, {
+        "id" : 152,
+        "code" : "2-101-1013-03",
+        "description" : "SERVICIOS COBRADOS POR ANTICIPADO",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 149
+      }, {
+        "id" : 153,
+        "code" : "2-101-1013-04",
+        "description" : "SUSCRIPCIONES COBRADAS POR ANTICIPADO",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 149
+      }, {
+        "id" : 154,
+        "code" : "2-101-1013-05",
+        "description" : "ANTICIPOS A CLIENTES",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 149
+      } ],
+      "parentId" : 130
+    } ],
+    "parentId" : 129
+  }, {
+    "id" : 155,
+    "code" : "2-102",
+    "description" : "PASIVO NO CORRIENTE",
+    "typicalBalance" : "C",
+    "supportsRegistration" : false,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 1,
+      "name" : "Balance General",
+      "description" : "Agrupa las cuentas de Balance General"
+    },
+    "accountType" : null,
+    "tenantId" : null,
+    "children" : [ {
+      "id" : 156,
+      "code" : "2-102-1010",
+      "description" : "CUENTAS Y DOCUMENTOS POR PAGAR",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 157,
+        "code" : "2-102-1010-01",
+        "description" : "ACREEDORES VARIOS",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 156
+      }, {
+        "id" : 158,
+        "code" : "2-102-1010-02",
+        "description" : "DOCUMENTOS POR PAGAR",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 156
+      } ],
+      "parentId" : 155
+    }, {
+      "id" : 159,
+      "code" : "2-102-1011",
+      "description" : "PRESTAMOS",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 160,
+        "code" : "2-102-1011-01",
+        "description" : "PRESTAMOS BANCARIOS",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 159
+      }, {
+        "id" : 161,
+        "code" : "2-102-1011-02",
+        "description" : "PRESTAMOS HIPOTECARIOS",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 159
+      } ],
+      "parentId" : 155
+    }, {
+      "id" : 162,
+      "code" : "2-102-1012",
+      "description" : "PROVISIONES",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 163,
+        "code" : "2-102-1012-01",
+        "description" : "PROVISIONES PARA COMPENSACIONES A EMPLEADOS",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 162
+      }, {
+        "id" : 164,
+        "code" : "2-102-1012-02",
+        "description" : "PROVISIONES PARA CUBRIR GARANTIAS A CLIENTES",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 162
+      }, {
+        "id" : 165,
+        "code" : "2-102-1012-03",
+        "description" : "PROVISIONES PARA CUBRIR RECLAMOS LEGALES",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 162
+      } ],
+      "parentId" : 155
+    }, {
+      "id" : 166,
+      "code" : "2-102-1013",
+      "description" : "COBROS ANTICIPADOS",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 167,
+        "code" : "2-102-1013-01",
+        "description" : "RENTAS COBRADAS POR ANTICIPADO",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 166
+      }, {
+        "id" : 168,
+        "code" : "2-102-1013-02",
+        "description" : "INTERESES COBRADOS POR ANTICIPADOS",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 166
+      }, {
+        "id" : 169,
+        "code" : "2-102-1013-03",
+        "description" : "SERVICIOS COBRADOS POR ANTICIPADO",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 166
+      } ],
+      "parentId" : 155
+    } ],
+    "parentId" : 129
+  } ],
+  "parentId" : null
+}, {
+  "id" : 170,
+  "code" : "3",
+  "description" : "PATRIMONIO NETO",
+  "typicalBalance" : "C",
+  "supportsRegistration" : false,
+  "status" : "ACTIVO",
+  "balances" : null,
+  "accountCategory" : {
+    "id" : 1,
+    "name" : "Balance General",
+    "description" : "Agrupa las cuentas de Balance General"
+  },
+  "accountType" : null,
+  "tenantId" : null,
+  "children" : [ {
+    "id" : 171,
+    "code" : "3-103",
+    "description" : "COMERCIANTE INDIVIDUAL",
+    "typicalBalance" : "C",
+    "supportsRegistration" : false,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 1,
+      "name" : "Balance General",
+      "description" : "Agrupa las cuentas de Balance General"
+    },
+    "accountType" : null,
+    "tenantId" : null,
+    "children" : [ {
+      "id" : 172,
+      "code" : "3-103-1010",
+      "description" : "CAPITAL",
+      "typicalBalance" : "C",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 171
+    }, {
+      "id" : 173,
+      "code" : "3-103-1011",
+      "description" : "RESULTADOS ACUMULADOS",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 174,
+        "code" : "3-103-1011-01",
+        "description" : "UTILIDADES O PERDIDAS DE ANIOS ANTERIORES",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 6,
+          "name" : "Patrimonio",
+          "description" : "Tipo de cuenta para patrimonio."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 173
+      }, {
+        "id" : 175,
+        "code" : "3-103-1011-02",
+        "description" : "UTILIDAD POR PERDIDA NETA DEL PERIODO",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 6,
+          "name" : "Patrimonio",
+          "description" : "Tipo de cuenta para patrimonio."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 173
+      } ],
+      "parentId" : 171
+    } ],
+    "parentId" : 170
+  }, {
+    "id" : 176,
+    "code" : "3-104",
+    "description" : "EMPRESA JURIDICA",
+    "typicalBalance" : "C",
+    "supportsRegistration" : false,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 1,
+      "name" : "Balance General",
+      "description" : "Agrupa las cuentas de Balance General"
+    },
+    "accountType" : null,
+    "tenantId" : null,
+    "children" : [ {
+      "id" : 177,
+      "code" : "3-104-1010",
+      "description" : "CAPITAL SOCIAL",
+      "typicalBalance" : "C",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : {
+        "id" : 6,
+        "name" : "Patrimonio",
+        "description" : "Tipo de cuenta para patrimonio."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 176
+    }, {
+      "id" : 178,
+      "code" : "3-104-1011",
+      "description" : "RESERVAS",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : {
+        "id" : 6,
+        "name" : "Patrimonio",
+        "description" : "Tipo de cuenta para patrimonio."
+      },
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 179,
+        "code" : "3-104-1011-01",
+        "description" : "RESERVA LEGAL",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 6,
+          "name" : "Patrimonio",
+          "description" : "Tipo de cuenta para patrimonio."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 178
+      } ],
+      "parentId" : 176
+    }, {
+      "id" : 180,
+      "code" : "3-104-1012",
+      "description" : "RESULTADOS ACUMULADOS",
+      "typicalBalance" : "C",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 1,
+        "name" : "Balance General",
+        "description" : "Agrupa las cuentas de Balance General"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 181,
+        "code" : "3-104-1012-01",
+        "description" : "UTILIDAD O PERDIDA DE ANIOS ANTERIORES",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 6,
+          "name" : "Patrimonio",
+          "description" : "Tipo de cuenta para patrimonio."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 180
+      }, {
+        "id" : 182,
+        "code" : "3-104-1012-02",
+        "description" : "UTILIDAD O PERDIDA NETA DEL EJERCICIO",
+        "typicalBalance" : "C",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 1,
+          "name" : "Balance General",
+          "description" : "Agrupa las cuentas de Balance General"
+        },
+        "accountType" : {
+          "id" : 6,
+          "name" : "Patrimonio",
+          "description" : "Tipo de cuenta para patrimonio."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 180
+      } ],
+      "parentId" : 176
+    } ],
+    "parentId" : 170
+  } ],
+  "parentId" : null
+}, {
+  "id" : 183,
+  "code" : "4",
+  "description" : "VENTAS",
+  "typicalBalance" : "C",
+  "supportsRegistration" : false,
+  "status" : "ACTIVO",
+  "balances" : null,
+  "accountCategory" : {
+    "id" : 2,
+    "name" : "Estado de Resultados",
+    "description" : "Agrupa las cuentas de resultados"
+  },
+  "accountType" : null,
+  "tenantId" : null,
+  "children" : [ {
+    "id" : 184,
+    "code" : "4-01",
+    "description" : "VENTAS EXENTAS",
+    "typicalBalance" : "C",
+    "supportsRegistration" : true,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : {
+      "id" : 1,
+      "name" : "Ingresos",
+      "description" : "Tipo de cuenta para ingresos."
+    },
+    "tenantId" : null,
+    "children" : [ ],
+    "parentId" : 183
+  }, {
+    "id" : 185,
+    "code" : "4-02",
+    "description" : "VENTAS GRAVADAS AL 15%",
+    "typicalBalance" : "C",
+    "supportsRegistration" : true,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : {
+      "id" : 1,
+      "name" : "Ingresos",
+      "description" : "Tipo de cuenta para ingresos."
+    },
+    "tenantId" : null,
+    "children" : [ ],
+    "parentId" : 183
+  }, {
+    "id" : 186,
+    "code" : "4-03",
+    "description" : "VENTAS GRAVADAS AL 18%",
+    "typicalBalance" : "C",
+    "supportsRegistration" : true,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : {
+      "id" : 1,
+      "name" : "Ingresos",
+      "description" : "Tipo de cuenta para ingresos."
+    },
+    "tenantId" : null,
+    "children" : [ ],
+    "parentId" : 183
+  }, {
+    "id" : 187,
+    "code" : "4-04",
+    "description" : "VENTAS EXONERADAS",
+    "typicalBalance" : "C",
+    "supportsRegistration" : true,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : {
+      "id" : 1,
+      "name" : "Ingresos",
+      "description" : "Tipo de cuenta para ingresos."
+    },
+    "tenantId" : null,
+    "children" : [ ],
+    "parentId" : 183
+  } ],
+  "parentId" : null
+}, {
+  "id" : 188,
+  "code" : "5",
+  "description" : "COMPRAS",
+  "typicalBalance" : "D",
+  "supportsRegistration" : false,
+  "status" : "ACTIVO",
+  "balances" : null,
+  "accountCategory" : {
+    "id" : 2,
+    "name" : "Estado de Resultados",
+    "description" : "Agrupa las cuentas de resultados"
+  },
+  "accountType" : null,
+  "tenantId" : null,
+  "children" : [ {
+    "id" : 189,
+    "code" : "5-01",
+    "description" : "COMPRAS EXENTAS",
+    "typicalBalance" : "D",
+    "supportsRegistration" : true,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : {
+      "id" : 7,
+      "name" : "Compras",
+      "description" : "Tipo de cuenta para compras."
+    },
+    "tenantId" : null,
+    "children" : [ ],
+    "parentId" : 188
+  }, {
+    "id" : 190,
+    "code" : "5-02",
+    "description" : "COMPRAS GRAVADAS AL 15%",
+    "typicalBalance" : "D",
+    "supportsRegistration" : true,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : {
+      "id" : 7,
+      "name" : "Compras",
+      "description" : "Tipo de cuenta para compras."
+    },
+    "tenantId" : null,
+    "children" : [ ],
+    "parentId" : 188
+  }, {
+    "id" : 191,
+    "code" : "5-03",
+    "description" : "COMPRAS GRAVADAS AL 18%",
+    "typicalBalance" : "D",
+    "supportsRegistration" : true,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : {
+      "id" : 7,
+      "name" : "Compras",
+      "description" : "Tipo de cuenta para compras."
+    },
+    "tenantId" : null,
+    "children" : [ ],
+    "parentId" : 188
+  }, {
+    "id" : 192,
+    "code" : "5-04",
+    "description" : "IMPORTACIONES",
+    "typicalBalance" : "D",
+    "supportsRegistration" : false,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : {
+      "id" : 7,
+      "name" : "Compras",
+      "description" : "Tipo de cuenta para compras."
+    },
+    "tenantId" : null,
+    "children" : [ {
+      "id" : 193,
+      "code" : "5-04-01",
+      "description" : "IMPORTACIONES EXENTAS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 7,
+        "name" : "Compras",
+        "description" : "Tipo de cuenta para compras."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 192
+    }, {
+      "id" : 194,
+      "code" : "5-04-02",
+      "description" : "IMPORTACIONES GRAVADAS AL 15%",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 7,
+        "name" : "Compras",
+        "description" : "Tipo de cuenta para compras."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 192
+    }, {
+      "id" : 195,
+      "code" : "5-04-03",
+      "description" : "IMPORTACIONES GRAVADAS AL 18%",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 7,
+        "name" : "Compras",
+        "description" : "Tipo de cuenta para compras."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 192
+    } ],
+    "parentId" : 188
+  } ],
+  "parentId" : null
+}, {
+  "id" : 196,
+  "code" : "6",
+  "description" : "GASTOS",
+  "typicalBalance" : "D",
+  "supportsRegistration" : false,
+  "status" : "ACTIVO",
+  "balances" : null,
+  "accountCategory" : {
+    "id" : 2,
+    "name" : "Estado de Resultados",
+    "description" : "Agrupa las cuentas de resultados"
+  },
+  "accountType" : null,
+  "tenantId" : null,
+  "children" : [ {
+    "id" : 197,
+    "code" : "6-01",
+    "description" : "GASTOS ADMINISTRATIVOS",
+    "typicalBalance" : "D",
+    "supportsRegistration" : false,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : null,
+    "tenantId" : null,
+    "children" : [ {
+      "id" : 198,
+      "code" : "6-01-01",
+      "description" : "SUELDOS Y SALARIOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 199,
+        "code" : "6-01-01-01",
+        "description" : "SUELDOS Y SALARIOS PERMANENTES",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 198
+      }, {
+        "id" : 200,
+        "code" : "6-01-01-02",
+        "description" : "SUELDOS Y SALARIOS TEMPORALES",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 198
+      }, {
+        "id" : 201,
+        "code" : "6-01-01-03",
+        "description" : "SUELDOS Y SALARIOS SOCIOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 198
+      } ],
+      "parentId" : 197
+    }, {
+      "id" : 202,
+      "code" : "6-01-02",
+      "description" : "HORAS EXTRAS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 203,
+      "code" : "6-01-03",
+      "description" : "VACACIONES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 204,
+      "code" : "6-01-04",
+      "description" : "DERECHOS LABORALES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 205,
+      "code" : "6-01-05",
+      "description" : "BONIFICACIONES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 206,
+      "code" : "6-01-06",
+      "description" : "COMISIONES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 207,
+      "code" : "6-01-07",
+      "description" : "DECIMO TERCERO",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 208,
+      "code" : "6-01-08",
+      "description" : "DECIMO CUARTO",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 209,
+      "code" : "6-01-09",
+      "description" : "RAP",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 210,
+      "code" : "6-01-10",
+      "description" : "IHSS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 211,
+      "code" : "6-01-11",
+      "description" : "INFOP",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 212,
+      "code" : "6-01-12",
+      "description" : "CAMARA DE COMERCIO",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 213,
+      "code" : "6-01-13",
+      "description" : "PAGO DE SEGUROS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 215,
+        "code" : "6-01-13-01",
+        "description" : "SEGUROS DE EMPLEADOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 213
+      }, {
+        "id" : 216,
+        "code" : "6-01-13-02",
+        "description" : "SEGUROS INCENDIOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 213
+      }, {
+        "id" : 217,
+        "code" : "6-01-13-03",
+        "description" : "SEGURO DE VEHICULOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 213
+      }, {
+        "id" : 218,
+        "code" : "6-01-13-04",
+        "description" : "OTROS SEGUROS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 213
+      } ],
+      "parentId" : 197
+    }, {
+      "id" : 219,
+      "code" : "6-01-14",
+      "description" : "ALQUILERES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 220,
+        "code" : "6-01-14-01",
+        "description" : "ALQUILERE PRINCIPAL",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 219
+      }, {
+        "id" : 221,
+        "code" : "6-01-14-02",
+        "description" : "ALQUILER SUCURSAL",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 219
+      } ],
+      "parentId" : 197
+    }, {
+      "id" : 222,
+      "code" : "6-01-15",
+      "description" : "HONORARIOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 223,
+        "code" : "6-01-15-01",
+        "description" : "HONORARIOS CONTABLES",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 222
+      }, {
+        "id" : 224,
+        "code" : "6-01-15-02",
+        "description" : "OTROS HONORARIOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 222
+      } ],
+      "parentId" : 197
+    }, {
+      "id" : 225,
+      "code" : "6-01-16",
+      "description" : "SERVICIOS PUBLICOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 226,
+        "code" : "6-01-16-01",
+        "description" : "ENERGIA",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 225
+      }, {
+        "id" : 227,
+        "code" : "6-01-16-02",
+        "description" : "AGUA POTABLE",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 225
+      }, {
+        "id" : 228,
+        "code" : "6-01-16-03",
+        "description" : "HONDUTEL",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 225
+      }, {
+        "id" : 229,
+        "code" : "6-01-16-04",
+        "description" : "TELEFONIA CELULAR",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 225
+      }, {
+        "id" : 230,
+        "code" : "6-01-16-05",
+        "description" : "SERVICIOS DE INTERNET",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 225
+      }, {
+        "id" : 231,
+        "code" : "6-01-16-06",
+        "description" : "CABLE",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 225
+      }, {
+        "id" : 232,
+        "code" : "6-01-16-07",
+        "description" : "INDUSTRIA COMERCIO Y SERVICIO",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 225
+      }, {
+        "id" : 233,
+        "code" : "6-01-16-08",
+        "description" : "SERVICIOS PUBLICOS MUNICIPALES",
+        "typicalBalance" : "D",
+        "supportsRegistration" : false,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ {
+          "id" : 234,
+          "code" : "6-01-16-08-01",
+          "description" : "BIENES INMUEBLES",
+          "typicalBalance" : "D",
+          "supportsRegistration" : true,
+          "status" : "ACTIVO",
+          "balances" : null,
+          "accountCategory" : {
+            "id" : 2,
+            "name" : "Estado de Resultados",
+            "description" : "Agrupa las cuentas de resultados"
+          },
+          "accountType" : {
+            "id" : 2,
+            "name" : "Gastos",
+            "description" : "Tipo de cuenta para gastos."
+          },
+          "tenantId" : null,
+          "children" : [ ],
+          "parentId" : 233
+        }, {
+          "id" : 235,
+          "code" : "6-01-16-08-02",
+          "description" : "IMPUESTO VECINAL",
+          "typicalBalance" : "D",
+          "supportsRegistration" : true,
+          "status" : "ACTIVO",
+          "balances" : null,
+          "accountCategory" : {
+            "id" : 2,
+            "name" : "Estado de Resultados",
+            "description" : "Agrupa las cuentas de resultados"
+          },
+          "accountType" : {
+            "id" : 2,
+            "name" : "Gastos",
+            "description" : "Tipo de cuenta para gastos."
+          },
+          "tenantId" : null,
+          "children" : [ ],
+          "parentId" : 233
+        }, {
+          "id" : 236,
+          "code" : "6-01-16-08-03",
+          "description" : "ROTULOS/ MUNICIPALIDAD",
+          "typicalBalance" : "D",
+          "supportsRegistration" : true,
+          "status" : "ACTIVO",
+          "balances" : null,
+          "accountCategory" : {
+            "id" : 2,
+            "name" : "Estado de Resultados",
+            "description" : "Agrupa las cuentas de resultados"
+          },
+          "accountType" : {
+            "id" : 2,
+            "name" : "Gastos",
+            "description" : "Tipo de cuenta para gastos."
+          },
+          "tenantId" : null,
+          "children" : [ ],
+          "parentId" : 233
+        }, {
+          "id" : 237,
+          "code" : "6-01-16-08-04",
+          "description" : "PERMISOS DE CONSTRUCCION",
+          "typicalBalance" : "D",
+          "supportsRegistration" : true,
+          "status" : "ACTIVO",
+          "balances" : null,
+          "accountCategory" : {
+            "id" : 2,
+            "name" : "Estado de Resultados",
+            "description" : "Agrupa las cuentas de resultados"
+          },
+          "accountType" : {
+            "id" : 2,
+            "name" : "Gastos",
+            "description" : "Tipo de cuenta para gastos."
+          },
+          "tenantId" : null,
+          "children" : [ ],
+          "parentId" : 233
+        } ],
+        "parentId" : 225
+      } ],
+      "parentId" : 197
+    }, {
+      "id" : 238,
+      "code" : "6-01-17",
+      "description" : "IMPUESTOS SAR",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 239,
+        "code" : "6-01-17-01",
+        "description" : "IMPUESTO SOBRE VENTAS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 238
+      }, {
+        "id" : 240,
+        "code" : "6-01-17-02",
+        "description" : "IMPUESTO SOBRE LA RENTA",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 238
+      }, {
+        "id" : 241,
+        "code" : "6-01-17-03",
+        "description" : "PAGOS A CUENTA",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 238
+      }, {
+        "id" : 242,
+        "code" : "6-01-17-04",
+        "description" : "RETENCION DEL 1%",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 238
+      }, {
+        "id" : 243,
+        "code" : "6-01-17-05",
+        "description" : "RETENCION 12.5%",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 238
+      }, {
+        "id" : 244,
+        "code" : "6-01-17-06",
+        "description" : "RETENCION SUELDOS Y SALARIOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 238
+      }, {
+        "id" : 245,
+        "code" : "6-01-17-07",
+        "description" : "RETENCION GANANCIA DE CAPITAL",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 238
+      }, {
+        "id" : 246,
+        "code" : "6-01-17-08",
+        "description" : "RETENCION DE DIVIDENDOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 238
+      } ],
+      "parentId" : 197
+    }, {
+      "id" : 247,
+      "code" : "6-01-18",
+      "description" : "MANTENIMIENTO Y REPARACION",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 248,
+        "code" : "6-01-18-01",
+        "description" : "EDIFICIOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 247
+      }, {
+        "id" : 249,
+        "code" : "6-01-18-02",
+        "description" : "VEHICULOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 247
+      }, {
+        "id" : 250,
+        "code" : "6-01-18-03",
+        "description" : "MAQUINARIA Y EQUIPO",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 247
+      }, {
+        "id" : 251,
+        "code" : "6-01-18-04",
+        "description" : "MOBILIARIO",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 247
+      }, {
+        "id" : 252,
+        "code" : "6-01-18-05",
+        "description" : "MANTENIMIENTO DE APLICACIONES INFORMATICAS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 247
+      }, {
+        "id" : 253,
+        "code" : "6-01-18-06",
+        "description" : "MEJORAS EN AREA ARREDADAS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 247
+      } ],
+      "parentId" : 197
+    }, {
+      "id" : 278,
+      "code" : "6-01-19",
+      "description" : "MATRICULA DE VEHICULOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 197
+    }, {
+      "id" : 279,
+      "code" : "6-01-20",
+      "description" : "GASTOS POR DEPRECIACION",
+      "typicalBalance" : "D",
+      "supportsRegistration" : false,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : null,
+      "tenantId" : null,
+      "children" : [ {
+        "id" : 280,
+        "code" : "6-01-20-01",
+        "description" : "DEPRECIACION MAQUINARIA Y EQUIPO",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 279
+      }, {
+        "id" : 281,
+        "code" : "6-01-20-02",
+        "description" : "DEPRECIACION DE MOBILIARIO",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 279
+      }, {
+        "id" : 282,
+        "code" : "6-01-20-03",
+        "description" : "DEPRECIACION  DE VEHICULOS",
+        "typicalBalance" : "D",
+        "supportsRegistration" : true,
+        "status" : "ACTIVO",
+        "balances" : null,
+        "accountCategory" : {
+          "id" : 2,
+          "name" : "Estado de Resultados",
+          "description" : "Agrupa las cuentas de resultados"
+        },
+        "accountType" : {
+          "id" : 2,
+          "name" : "Gastos",
+          "description" : "Tipo de cuenta para gastos."
+        },
+        "tenantId" : null,
+        "children" : [ ],
+        "parentId" : 279
+      } ],
+      "parentId" : 197
+    } ],
+    "parentId" : 196
+  }, {
+    "id" : 254,
+    "code" : "6-02",
+    "description" : "GASTOS FINANCIEROS",
+    "typicalBalance" : "D",
+    "supportsRegistration" : false,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : null,
+    "tenantId" : null,
+    "children" : [ {
+      "id" : 255,
+      "code" : "6-02-01",
+      "description" : "TASA DE SEGURIDAD",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 254
+    }, {
+      "id" : 256,
+      "code" : "6-02-02",
+      "description" : "INTERESES BANCARIOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 254
+    }, {
+      "id" : 257,
+      "code" : "6-02-03",
+      "description" : "RECOLECCION DE DEPOSITOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 254
+    }, {
+      "id" : 258,
+      "code" : "6-02-04",
+      "description" : "TOKEN",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 254
+    }, {
+      "id" : 259,
+      "code" : "6-02-05",
+      "description" : "CHEQUERAS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 254
+    }, {
+      "id" : 260,
+      "code" : "6-02-06",
+      "description" : "COMISIONES BANCARIAS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 254
+    } ],
+    "parentId" : 196
+  }, {
+    "id" : 261,
+    "code" : "6-03",
+    "description" : "GASTOS GENERALES",
+    "typicalBalance" : "D",
+    "supportsRegistration" : false,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 2,
+      "name" : "Estado de Resultados",
+      "description" : "Agrupa las cuentas de resultados"
+    },
+    "accountType" : null,
+    "tenantId" : null,
+    "children" : [ {
+      "id" : 262,
+      "code" : "6-03-01",
+      "description" : "RECARGAS DE EXTINTORES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 263,
+      "code" : "6-03-02",
+      "description" : "PAPELERIA Y UTILES DE OFICINA",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 264,
+      "code" : "6-03-03",
+      "description" : "ANTENCION CLIENTES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 265,
+      "code" : "6-03-04",
+      "description" : "ATENCION EMPLEADOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 266,
+      "code" : "6-03-05",
+      "description" : "UNIFORMES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 267,
+      "code" : "6-03-06",
+      "description" : "ALIMENTACION",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 268,
+      "code" : "6-03-07",
+      "description" : "PUBLICIDAD",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 269,
+      "code" : "6-03-08",
+      "description" : "COMBUSTIBLES Y LUBRICANTES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 270,
+      "code" : "6-03-09",
+      "description" : "ENCOMIENDAS / ENVIOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 271,
+      "code" : "6-03-10",
+      "description" : "PEAJES Y PARQUEOS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 272,
+      "code" : "6-03-11",
+      "description" : "TRANSPORTE",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 273,
+      "code" : "6-03-12",
+      "description" : "GASTOS ADUANEROS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 274,
+      "code" : "6-03-13",
+      "description" : "GASTOS MEDICOS / FARMACIAS",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 275,
+      "code" : "6-03-14",
+      "description" : "GASTOS DE HOSPEDAJE",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 276,
+      "code" : "6-03-15",
+      "description" : "SEGURIDAD Y VIGILANCIA",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    }, {
+      "id" : 277,
+      "code" : "6-03-16",
+      "description" : "GASTOS PERSONALES",
+      "typicalBalance" : "D",
+      "supportsRegistration" : true,
+      "status" : "ACTIVO",
+      "balances" : null,
+      "accountCategory" : {
+        "id" : 2,
+        "name" : "Estado de Resultados",
+        "description" : "Agrupa las cuentas de resultados"
+      },
+      "accountType" : {
+        "id" : 2,
+        "name" : "Gastos",
+        "description" : "Tipo de cuenta para gastos."
+      },
+      "tenantId" : null,
+      "children" : [ ],
+      "parentId" : 261
+    } ],
+    "parentId" : 196
+  } ],
+  "parentId" : null
+}, {
+  "id" : 284,
+  "code" : "06",
+  "description" : "IMPUESTOS SOBRE COMPRAS",
+  "typicalBalance" : "D",
+  "supportsRegistration" : false,
+  "status" : "ACTIVO",
+  "balances" : null,
+  "accountCategory" : {
+    "id" : 3,
+    "name" : "Impuestos",
+    "description" : "Agrupa las cuentas de impuesto"
+  },
+  "accountType" : null,
+  "tenantId" : null,
+  "children" : [ {
+    "id" : 285,
+    "code" : "06-01",
+    "description" : "IMPUESTOS SOBRE COMPRAS 15%",
+    "typicalBalance" : "D",
+    "supportsRegistration" : true,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 3,
+      "name" : "Impuestos",
+      "description" : "Agrupa las cuentas de impuesto"
+    },
+    "accountType" : {
+      "id" : 7,
+      "name" : "Compras",
+      "description" : "Tipo de cuenta para compras."
+    },
+    "tenantId" : null,
+    "children" : [ ],
+    "parentId" : 284
+  }, {
+    "id" : 286,
+    "code" : "06-02",
+    "description" : "IMPUESTO SOBRE COMPRAS 18%",
+    "typicalBalance" : "D",
+    "supportsRegistration" : true,
+    "status" : "ACTIVO",
+    "balances" : null,
+    "accountCategory" : {
+      "id" : 3,
+      "name" : "Impuestos",
+      "description" : "Agrupa las cuentas de impuesto"
+    },
+    "accountType" : {
+      "id" : 7,
+      "name" : "Compras",
+      "description" : "Tipo de cuenta para compras."
+    },
+    "tenantId" : null,
+    "children" : [ ],
+    "parentId" : 284
+  } ],
+  "parentId" : null
+} ]

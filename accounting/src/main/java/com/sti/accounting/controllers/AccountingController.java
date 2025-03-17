@@ -1,6 +1,7 @@
 package com.sti.accounting.controllers;
 
 
+import com.sti.accounting.entities.AccountEntity;
 import com.sti.accounting.models.AccountCategory;
 import com.sti.accounting.models.AccountRequest;
 import com.sti.accounting.models.AccountResponse;
@@ -60,6 +61,5 @@ public class AccountingController {
     public void cloneCatalog(@RequestParam(required = false) String sourceTenantId) {
         accountService.cloneCatalog(sourceTenantId);
     }
-
 
 }
