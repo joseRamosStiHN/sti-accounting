@@ -87,10 +87,10 @@ public class AccountingJournalService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No accounting journal found with ID: %d", id)));
 
-        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantIdAndStatus(accountingJournalRequest.getAccountType(), tenantId,true);
-        if (existsAccountType) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account type already exists.");
-        }
+//        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantIdAndStatus(accountingJournalRequest.getAccountType(), tenantId,false);
+//        if (existsAccountType) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account type already exists.");
+//        }
 
 
         existingAccountingJournal.setDiaryName(accountingJournalRequest.getDiaryName());
