@@ -71,28 +71,6 @@ public class AccountingApplication {
                 accountType.saveAll(accountsType);
             }
 
-            long accountingPeriod = accountingPeriodRepository.count();
-            LocalDateTime startOfYear = LocalDateTime.of(Year.now().getValue(), 1, 1, 0, 0);
-            LocalDateTime endOfYear = LocalDateTime.of(Year.now().getValue(), 12, 31, 23, 59, 59);
-            String tenantId = TenantContext.getCurrentTenant();
-            if (accountingPeriod == 0) {
-                List<AccountingPeriodEntity> accountingPeriods = List.of(
-                        new AccountingPeriodEntity(
-                                null,
-                                "Periodo Contable Anual",
-                                "Anual",
-                                startOfYear,
-                                endOfYear,
-                                365,
-                                INACTIVE,
-                                0,
-                                true,
-                                tenantId
-                        )
-                );
-                accountingPeriodRepository.saveAll(accountingPeriods);
-            }
-
             createNumberPdaTrigger(dataSource);
 
         };

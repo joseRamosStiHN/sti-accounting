@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class AccountService {
@@ -218,60 +217,6 @@ public class AccountService {
         return entity;
     }
 
-//    public void cloneCatalog(String sourceTenantId) {
-//        String tenantId = authService.getTenantId();
-//
-//        // Verificar si ya existen cuentas en el tenant actual
-//        List<AccountEntity> existingAccounts = iAccountRepository.findAllByTenantId(tenantId);
-//        if (!existingAccounts.isEmpty()) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The catalog cannot be cloned because accounts already exist for the tenant.");
-//        }
-//
-//        List<AccountEntity> sourceAccounts;
-//
-//        // Si sourceTenantId es null o no se proporciona, obtener cuentas sin tenantId
-//        if (sourceTenantId == null || sourceTenantId.isEmpty()) {
-//            sourceAccounts = iAccountRepository.findAllByTenantIdIsNull();
-//        } else {
-//            // Obtener todas las cuentas del tenant original
-//            sourceAccounts = iAccountRepository.findAllByTenantId(sourceTenantId);
-//        }
-//
-//        for (AccountEntity sourceAccount : sourceAccounts) {
-//            // Clonar la cuenta
-//            AccountEntity clonedAccount = new AccountEntity();
-//            clonedAccount.setCode(sourceAccount.getCode());
-//            clonedAccount.setDescription(sourceAccount.getDescription());
-//            clonedAccount.setStatus(sourceAccount.getStatus());
-//            clonedAccount.setTypicalBalance(sourceAccount.getTypicalBalance());
-//            clonedAccount.setSupportsRegistration(sourceAccount.isSupportsRegistration());
-//            clonedAccount.setTenantId(tenantId);
-//
-//            // Clonar el tipo de cuenta
-//            if (sourceAccount.getAccountType() != null) {
-//                AccountTypeEntity accountTypeEntity = accountTypeRepository.findById(sourceAccount.getAccountType().getId())
-//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Account Type"));
-//                clonedAccount.setAccountType(accountTypeEntity);
-//            }
-//
-//            // Clonar la categoría de cuenta
-//            if (sourceAccount.getAccountCategory() != null) {
-//                AccountCategoryEntity accountCategoryEntity = categoryRepository.findById(sourceAccount.getAccountCategory().getId())
-//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Category"));
-//                clonedAccount.setAccountCategory(accountCategoryEntity);
-//            }
-//
-//            if (sourceAccount.getParent() != null) {
-//                AccountEntity parentAccount = iAccountRepository.findById(sourceAccount.getParent().getId())
-//                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Parent Account"));
-//                clonedAccount.setParent(parentAccount);
-//            }
-//
-//            // Guardar la cuenta clonada
-//            iAccountRepository.save(clonedAccount);
-//        }
-//    }
-
     public void cloneCatalog(String sourceTenantId) {
         String tenantId = authService.getTenantId();
 
@@ -287,8 +232,10 @@ public class AccountService {
             ObjectMapper objectMapper = new ObjectMapper();
             try {
                 // Leer el archivo JSON
-                File jsonFile = new File("src/main/java/com/sti/accounting/utils/accounting_catalog.json");
-                System.out.println("Ruta absoluta: " + jsonFile.getAbsolutePath());
+                String catalogPath = getClass().getClassLoader().getResource("accounting_catalog.json").getPath();
+
+                File jsonFile = new File(catalogPath);
+
                 List<CloneAccountDTO>  cloneAccountDto = objectMapper.readValue(jsonFile, new TypeReference<>() {});
                 for(CloneAccountDTO cloneDto : cloneAccountDto) {
                     processData(cloneDto, null, tenantId);

@@ -194,6 +194,8 @@ public class AccountingClosingService {
 
     //ToDo: Revisar la generacion del PDF generado
     private void saveAccountingClosing(AccountingPeriodEntity activePeriod) {
+        String tenantId = authService.getTenantId();
+
         AccountingClosingResponse closingDetails = getDetailAccountingClosing();
 
         AccountingClosingEntity closingEntity = new AccountingClosingEntity();
@@ -206,6 +208,7 @@ public class AccountingClosingService {
         closingEntity.setTotalIncome(closingDetails.getTotalIncome());
         closingEntity.setTotalExpenses(closingDetails.getTotalExpenses());
         closingEntity.setNetIncome(closingDetails.getNetIncome());
+        closingEntity.setTenantId(tenantId);
 
         // Generar el PDF y guardar su contenido como byte[]
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
