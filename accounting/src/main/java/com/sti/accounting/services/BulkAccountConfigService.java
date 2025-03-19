@@ -40,17 +40,19 @@ public class BulkAccountConfigService {
     private final IAccountRepository iAccountRepository;
     private final IAccountingJournalRepository accountingJournalRepository;
     private final AccountingPeriodService accountingPeriodService;
+    private final AuthService authService;
 
 
     public BulkAccountConfigService(IBulkAccountConfigRepository bulkAccountConfigRepository, ITransactionRepository transactionRepository, IDocumentRepository document,
                                     IAccountRepository accountRepository, IAccountingJournalRepository iAccountingJournalRepository,
-                                    AccountingPeriodService accountingPeriodService) {
+                                    AccountingPeriodService accountingPeriodService, AuthService authService) {
         this.bulkAccountConfigRepository = bulkAccountConfigRepository;
         this.transactionRepository = transactionRepository;
         this.document = document;
         this.iAccountRepository = accountRepository;
         this.accountingJournalRepository = iAccountingJournalRepository;
         this.accountingPeriodService = accountingPeriodService;
+        this.authService = authService;
     }
 
     public UploadBulkTransactionResponse ExcelToObject(MultipartFile file, Long id) {
@@ -233,15 +235,17 @@ public class BulkAccountConfigService {
 
     public List<BulkTransactionResponse> getAllBulk() {
 
-        List<BulkAccountConfig> bulkAccountConfig = this.bulkAccountConfigRepository.findAll();
-
+        List<BulkAccountConfig> bulkAccountConfig = this.bulkAccountConfigRepository.findByTenantId(authService.getTenantId());
         return getAllBulkAccountsConfigResponse(bulkAccountConfig);
     }
 
     public BulkTransactionResponse getByIdBulkTransaction(Long id) {
 
-        BulkAccountConfig bulkAccountConfig = this.bulkAccountConfigRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No exist bulk transaction"));
+        BulkAccountConfig bulkAccountConfig = this.bulkAccountConfigRepository.findByIdAndTenantId(id,authService.getTenantId());
+
+        if (bulkAccountConfig == null){
+            throw  new ResponseStatusException(HttpStatus.NOT_FOUND, "No exist bulk transaction");
+        }
 
         return getBulkAccountsConfigResponse(bulkAccountConfig);
     }
@@ -408,6 +412,8 @@ public class BulkAccountConfigService {
 
                 entity.setTransactionDetail(transactionDetailEntities);
 
+                entity.setTenantId(authService.getTenantId());
+
                 if (save) {
                     entityList.add(entity);
                     uploadBulkTransactionsData.add(transaction);
@@ -495,7 +501,7 @@ public class BulkAccountConfigService {
         bulkAccountConfigRequest.setIsActive(true);
         bulkAccountConfigRequest.setName(request.getName());
         bulkAccountConfigRequest.setRowStart(request.getRowInit());
-        bulkAccountConfigRequest.setTenantId("123456");
+        bulkAccountConfigRequest.setTenantId(this.authService.getTenantId());
         bulkAccountConfigRequest.setType(request.getType());
 
         return bulkAccountConfigRequest;

@@ -287,7 +287,8 @@ public class AccountService {
             ObjectMapper objectMapper = new ObjectMapper();
             try {
                 // Leer el archivo JSON
-                File jsonFile = new File("D:\\STI-ACCOUNTING\\accounting\\src\\main\\java\\com\\sti\\accounting\\utils\\accounting_catalog.json");
+                File jsonFile = new File("src/main/java/com/sti/accounting/utils/accounting_catalog.json");
+                System.out.println("Ruta absoluta: " + jsonFile.getAbsolutePath());
                 List<CloneAccountDTO>  cloneAccountDto = objectMapper.readValue(jsonFile, new TypeReference<>() {});
                 for(CloneAccountDTO cloneDto : cloneAccountDto) {
                     processData(cloneDto, null, tenantId);
