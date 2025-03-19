@@ -7,4 +7,5 @@ public class AccountType {
 
     private Long id;
     private String name;
+    private String description;
 }

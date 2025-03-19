@@ -220,8 +220,10 @@ public class CreditNotesService {
             detailResponse.setAccountCode(detail.getAccount().getCode());
             detailResponse.setAccountName(detail.getAccount().getDescription());
             detailResponse.setAccountId(detail.getAccount().getId());
-            detailResponse.setTypicalBalance(detail.getAccount().getBalances().getFirst().getTypicalBalance());
-            detailResponse.setInitialBalance(detail.getAccount().getBalances().getFirst().getInitialBalance());
+//            if (detail.getAccount().getBalances().getFirst() != null) {
+//                detailResponse.setTypicalBalance(detail.getAccount().getBalances().getFirst().getTypicalBalance());
+//                detailResponse.setInitialBalance(detail.getAccount().getBalances().getFirst().getInitialBalance());
+//            }
             detailResponse.setShortEntryType(detail.getMotion().toString());
             detailResponse.setEntryType(detail.getMotion().equals(Motion.C) ? "Credito" : "Debito");
             detailResponseSet.add(detailResponse);

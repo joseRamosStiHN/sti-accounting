@@ -14,6 +14,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.Arrays;
@@ -31,7 +35,7 @@ public class AccountingApplication {
     }
 
     @Bean
-    CommandLineRunner seedCategories(IAccountCategoryRepository repository, IDocumentRepository document, IAccountTypeRepository accountType, IAccountingPeriodRepository accountingPeriodRepository) {
+    CommandLineRunner seedCategories(IAccountCategoryRepository repository, IDocumentRepository document, IAccountTypeRepository accountType, IAccountingPeriodRepository accountingPeriodRepository, DataSource dataSource) {
         return args -> {
             long count = repository.count();
             if (count == 0) {
@@ -61,34 +65,35 @@ public class AccountingApplication {
                         new AccountTypeEntity(3L, "Efectivo", "Tipo de cuenta para efectivo.", new HashSet<>()),
                         new AccountTypeEntity(4L, "Bancos", "Tipo de cuenta para bancos.", new HashSet<>()),
                         new AccountTypeEntity(5L, "Varios", "Tipo de cuenta para varios.", new HashSet<>()),
-                        new AccountTypeEntity(6L, "Patrimonio", "Tipo de cuenta para patrimonio.", new HashSet<>())
-
+                        new AccountTypeEntity(6L, "Patrimonio", "Tipo de cuenta para patrimonio.", new HashSet<>()),
+                        new AccountTypeEntity(7L, "Compras", "Tipo de cuenta para compras.", new HashSet<>())
                 );
                 accountType.saveAll(accountsType);
             }
 
-            long accountingPeriod = accountingPeriodRepository.count();
-            LocalDateTime startOfYear = LocalDateTime.of(Year.now().getValue(), 1, 1, 0, 0);
-            LocalDateTime endOfYear = LocalDateTime.of(Year.now().getValue(), 12, 31, 23, 59, 59);
-            String tenantId = TenantContext.getCurrentTenant();
-            if (accountingPeriod == 0) {
-                List<AccountingPeriodEntity> accountingPeriods = List.of(
-                        new AccountingPeriodEntity(
-                                null,
-                                "Periodo Contable Anual",
-                                "Anual",
-                                startOfYear,
-                                endOfYear,
-                                365,
-                                INACTIVE,
-                                0,
-                                true,
-                                tenantId
-                        )
-                );
-                accountingPeriodRepository.saveAll(accountingPeriods);
-            }
+            createNumberPdaTrigger(dataSource);
+
         };
     }
 
+    private void createNumberPdaTrigger(DataSource dataSource) {
+        String triggerCheckQuery = "SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_name = 'INSERT_NUMBER_PDA'";
+        String createTriggerQuery = "CREATE TRIGGER INSERT_NUMBER_PDA " +
+                "BEFORE INSERT ON TRANSACTIONS " +
+                "FOR EACH ROW " +
+                "BEGIN " +
+                "SET NEW.NUMBER_PDA = (SELECT COALESCE(MAX(NUMBER_PDA), 0) + 1 FROM TRANSACTIONS); " +
+                "END;";
+
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+
+            var resultSet = statement.executeQuery(triggerCheckQuery);
+            if (resultSet.next() && resultSet.getInt(1) == 0) {
+                statement.execute(createTriggerQuery);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

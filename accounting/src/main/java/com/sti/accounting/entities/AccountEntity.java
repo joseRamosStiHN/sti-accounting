@@ -11,7 +11,8 @@ import java.util.List;
 @Table(name = "accounts")
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@Getter
+@Setter
 public class AccountEntity {
 
     @Id
