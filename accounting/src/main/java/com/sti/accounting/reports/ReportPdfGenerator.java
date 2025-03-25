@@ -11,6 +11,7 @@ import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.*;
 import com.sti.accounting.entities.AccountingPeriodEntity;
+import com.sti.accounting.entities.CompanyEntity;
 import com.sti.accounting.models.GeneralBalanceResponse;
 import com.sti.accounting.models.IncomeStatementResponse;
 import com.sti.accounting.models.TrialBalanceResponse;
@@ -51,25 +52,25 @@ public class ReportPdfGenerator {
     /**
      * Método principal que genera el PDF completo con todas las secciones del reporte.
      */
-    public void generateReportPdf(OutputStream outputStream) throws MalformedURLException {
+    public void generateReportPdf(OutputStream outputStream, CompanyEntity company) throws MalformedURLException {
         PdfWriter writer = new PdfWriter(outputStream);
         PdfDocument pdfDoc = new PdfDocument(writer);
         pdfDoc.setDefaultPageSize(PageSize.A4.rotate());
         Document document = new Document(pdfDoc);
 
         // 1. Sección de "Reportes Financieros"
-        addFinancialReportHeader(document, "Reportes Financieros",false);
+        addFinancialReportHeader(document, "Reportes Financieros",false, company);
 
         // 2. Sección de "Balanza de Comprobación"
         generateTrialBalanceSection(document);
 
         // 3. Sección de "Balance General"
         document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        generateBalanceSection(document);
+        generateBalanceSection(document,company);
 
         // 4. Sección de "Estado de Resultados"
         document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        generateIncomeStatementSection(document);
+        generateIncomeStatementSection(document,company);
 
         document.close();
     }
@@ -77,7 +78,7 @@ public class ReportPdfGenerator {
     /**
      * Agrega el encabezado principal reutilizable con texto personalizado.
      */
-    private void addFinancialReportHeader(Document document, String reportTitle, boolean isAnnual) throws MalformedURLException {
+    private void addFinancialReportHeader(Document document, String reportTitle, boolean isAnnual, CompanyEntity company) throws MalformedURLException {
         String periodRange;
 
         if (isAnnual) {
@@ -87,9 +88,15 @@ public class ReportPdfGenerator {
             periodRange = accountingPeriodService.getActivePeriod().getStartPeriod().toLocalDate() +
                     " al " + accountingPeriodService.getActivePeriod().getEndPeriod().toLocalDate();
         }
-        // Cargar el recurso desde el directorio src/main/resources
-        String logoPath = getClass().getClassLoader().getResource("logo.jpg").getPath();
-        Image logo = new Image(ImageDataFactory.create(logoPath)).setWidth(150).setHeight(70);
+        // Crear la imagen a partir del logo en bytes
+        Image logo = null;
+        if (company.getCompanyLogo() != null) {
+            logo = new Image(ImageDataFactory.create(company.getCompanyLogo())).setWidth(150).setHeight(70);
+        } else {
+            // Si no hay logo, puedes optar por usar un logo por defecto o dejarlo vacío
+            String logoPath = getClass().getClassLoader().getResource("logo.jpg").getPath();
+            logo = new Image(ImageDataFactory.create(logoPath)).setWidth(150).setHeight(70);
+        }
 
         // Crear un contenedor de tabla con proporciones ajustadas (balances iguales)
         Table headerTable = new Table(UnitValue.createPercentArray(new float[]{1, 2, 1})).useAllAvailableWidth();
@@ -99,7 +106,7 @@ public class ReportPdfGenerator {
 
         // Celda para los textos (centrados)
         Cell textCell = new Cell().setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.CENTER);
-        textCell.add(new Paragraph("Empresa S.A. de C.V.")
+        textCell.add(new Paragraph(company.getCompanyName())
                 .setTextAlignment(TextAlignment.CENTER)
                 .setBold()
                 .setFontSize(20));
@@ -206,9 +213,9 @@ public class ReportPdfGenerator {
     /**
      * Genera la sección del "Balance General".
      */
-    private void generateBalanceSection(Document document) throws MalformedURLException {
+    private void generateBalanceSection(Document document, CompanyEntity company) throws MalformedURLException {
         // Agregar encabezado reutilizando addFinancialReportHeader con texto personalizado
-        addFinancialReportHeader(document, "Balance General",false);
+        addFinancialReportHeader(document, "Balance General",false,company);
 
         // Definir colores
         Color headerColor = new DeviceRgb(7, 43, 84); // Azul oscuro para encabezados
@@ -297,8 +304,8 @@ public class ReportPdfGenerator {
         document.add(layoutTable);
     }
 
-    private void generateIncomeStatementSection(Document document) throws MalformedURLException {
-        addFinancialReportHeader(document, "Estado de Resultados", false);
+    private void generateIncomeStatementSection(Document document, CompanyEntity company) throws MalformedURLException {
+        addFinancialReportHeader(document, "Estado de Resultados", false, company);
 
         Color headerColor = new DeviceRgb(7, 43, 84);
         Color totalColor = new DeviceRgb(240, 248, 255);
@@ -485,25 +492,25 @@ public class ReportPdfGenerator {
     }
 
     //CIERRE ANUAL
-    public void generateAnnualReportPdf(OutputStream outputStream, List<AccountingPeriodEntity> yearPeriods) throws MalformedURLException {
+    public void generateAnnualReportPdf(OutputStream outputStream, List<AccountingPeriodEntity> yearPeriods, CompanyEntity company) throws MalformedURLException {
         PdfWriter writer = new PdfWriter(outputStream);
         PdfDocument pdfDoc = new PdfDocument(writer);
         pdfDoc.setDefaultPageSize(PageSize.A4.rotate());
         Document document = new Document(pdfDoc);
 
         // Agregar encabezado
-        addFinancialReportHeader(document, "Resumen Anual", true);
+        addFinancialReportHeader(document, "Resumen Anual", true,company);
 
         // Generar la sección de Balanza de Comprobación
         generateTrialBalanceSectionAnnual(document);
 
         // Generar la sección de Balance General
         document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        generateBalanceSectionAnnual(document);
+        generateBalanceSectionAnnual(document,company);
 
         // Generar la sección de Estado de Resultados
         document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        generateIncomeStatementSectionAnnual(document);
+        generateIncomeStatementSectionAnnual(document,company);
 
         document.close();
     }
@@ -587,9 +594,9 @@ public class ReportPdfGenerator {
         document.add(table);
     }
 
-    private void generateBalanceSectionAnnual(Document document) throws MalformedURLException {
+    private void generateBalanceSectionAnnual(Document document, CompanyEntity company) throws MalformedURLException {
         // Agregar encabezado reutilizando addFinancialReportHeader con texto personalizado
-        addFinancialReportHeader(document, "Balance General", true);
+        addFinancialReportHeader(document, "Balance General", true,company);
 
         // Obtener datos del Balance General para el año completo
         List<GeneralBalanceResponse> balances = generalBalanceService.getBalanceGeneral(accountingPeriodService.getAnnualPeriod().getId());
@@ -678,8 +685,8 @@ public class ReportPdfGenerator {
         document.add(layoutTable);
     }
 
-    private void generateIncomeStatementSectionAnnual(Document document) throws MalformedURLException {
-        addFinancialReportHeader(document, "Estado de Resultados", true);
+    private void generateIncomeStatementSectionAnnual(Document document, CompanyEntity company) throws MalformedURLException {
+        addFinancialReportHeader(document, "Estado de Resultados", true,company);
 
         Color headerColor = new DeviceRgb(7, 43, 84);
         Color totalColor = new DeviceRgb(240, 248, 255);

@@ -1,15 +1,9 @@
 package com.sti.accounting.services;
 
-import com.sti.accounting.entities.AccountingClosingEntity;
-import com.sti.accounting.entities.AccountingPeriodEntity;
-import com.sti.accounting.entities.BalancesEntity;
-import com.sti.accounting.entities.ControlAccountBalancesEntity;
+import com.sti.accounting.entities.*;
 import com.sti.accounting.models.*;
 import com.sti.accounting.reports.ReportPdfGenerator;
-import com.sti.accounting.repositories.IAccountingClosingRepository;
-import com.sti.accounting.repositories.IAccountingPeriodRepository;
-import com.sti.accounting.repositories.IBalancesRepository;
-import com.sti.accounting.repositories.IControlAccountBalancesRepository;
+import com.sti.accounting.repositories.*;
 import com.sti.accounting.utils.PeriodStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +37,9 @@ public class AccountingClosingService {
     private final IControlAccountBalancesRepository controlAccountBalancesRepository;
     private final ReportPdfGenerator reportPdfGenerator;
     private final AuthService authService;
+    private final ICompanyRepository companyRepository;
 
-    public AccountingClosingService(IAccountingClosingRepository accountingClosingRepository, AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository, BalancesService balancesService, IBalancesRepository iBalancesRepository, IControlAccountBalancesRepository controlAccountBalancesRepository, ReportPdfGenerator reportPdfGenerator, AuthService authService) {
+    public AccountingClosingService(IAccountingClosingRepository accountingClosingRepository, AccountingPeriodService accountingPeriodService, GeneralBalanceService generalBalanceService, IncomeStatementService incomeStatementService, IAccountingPeriodRepository accountingPeriodRepository, BalancesService balancesService, IBalancesRepository iBalancesRepository, IControlAccountBalancesRepository controlAccountBalancesRepository, ReportPdfGenerator reportPdfGenerator, AuthService authService, ICompanyRepository companyRepository) {
         this.accountingClosingRepository = accountingClosingRepository;
         this.accountingPeriodService = accountingPeriodService;
         this.generalBalanceService = generalBalanceService;
@@ -55,6 +50,7 @@ public class AccountingClosingService {
         this.controlAccountBalancesRepository = controlAccountBalancesRepository;
         this.reportPdfGenerator = reportPdfGenerator;
         this.authService = authService;
+        this.companyRepository = companyRepository;
     }
 
     public List<AccountingClosingResponse> getAllAccountingClosing() {
@@ -196,6 +192,8 @@ public class AccountingClosingService {
     private void saveAccountingClosing(AccountingPeriodEntity activePeriod) {
         String tenantId = authService.getTenantId();
 
+        CompanyEntity company = companyRepository.findByTenantId(tenantId);
+
         AccountingClosingResponse closingDetails = getDetailAccountingClosing();
 
         AccountingClosingEntity closingEntity = new AccountingClosingEntity();
@@ -213,7 +211,7 @@ public class AccountingClosingService {
         // Generar el PDF y guardar su contenido como byte[]
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             // Genera el PDF usando el generador
-            reportPdfGenerator.generateReportPdf(outputStream);
+            reportPdfGenerator.generateReportPdf(outputStream,company);
 
             // Guarda los bytes del PDF en la entidad
             closingEntity.setClosureReportPdf(outputStream.toByteArray());
@@ -456,6 +454,10 @@ public class AccountingClosingService {
     }
 
     private void generateAnnualReport(OutputStream outputStream, List<AccountingPeriodEntity> yearPeriods) throws MalformedURLException {
-        reportPdfGenerator.generateAnnualReportPdf(outputStream, yearPeriods);
+        String tenantId = authService.getTenantId();
+
+        CompanyEntity company = companyRepository.findByTenantId(tenantId);
+
+        reportPdfGenerator.generateAnnualReportPdf(outputStream, yearPeriods,company);
     }
 }
