@@ -2,13 +2,11 @@ package com.sti.accounting;
 
 import com.sti.accounting.entities.AccountCategoryEntity;
 import com.sti.accounting.entities.AccountTypeEntity;
-import com.sti.accounting.entities.AccountingPeriodEntity;
 import com.sti.accounting.entities.DocumentEntity;
 import com.sti.accounting.repositories.IAccountCategoryRepository;
 import com.sti.accounting.repositories.IAccountTypeRepository;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.repositories.IDocumentRepository;
-import com.sti.accounting.utils.TenantContext;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,14 +16,9 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.LocalDateTime;
-import java.time.Year;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-
-import static com.sti.accounting.utils.PeriodStatus.INACTIVE;
-
 
 @SpringBootApplication()
 public class AccountingApplication {
@@ -57,8 +50,7 @@ public class AccountingApplication {
                 );
                 document.saveAll(documents);
             }
-            long accountTypeCount = accountType.count();
-            if (accountTypeCount == 0) {
+
                 List<AccountTypeEntity> accountsType = Arrays.asList(
                         new AccountTypeEntity(1L, "Ingresos", "Tipo de cuenta para ingresos.", new HashSet<>()),
                         new AccountTypeEntity(2L, "Gastos", "Tipo de cuenta para gastos.", new HashSet<>()),
@@ -69,7 +61,7 @@ public class AccountingApplication {
                         new AccountTypeEntity(7L, "Compras", "Tipo de cuenta para compras.", new HashSet<>())
                 );
                 accountType.saveAll(accountsType);
-            }
+
 
             createNumberPdaTrigger(dataSource);
 
