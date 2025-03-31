@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -232,12 +233,13 @@ public class AccountService {
             ObjectMapper objectMapper = new ObjectMapper();
             try {
                 // Leer el archivo JSON
-                String catalogPath = getClass().getClassLoader().getResource("accounting_catalog.json").getPath();
+                InputStream inputStream = getClass().getClassLoader().getResourceAsStream("accounting_catalog.json");
+                List<CloneAccountDTO> cloneAccountDTOs = objectMapper.readValue(
+                        inputStream,
+                        new TypeReference<List<CloneAccountDTO>>() {}
+                );
 
-                File jsonFile = new File(catalogPath);
-
-                List<CloneAccountDTO>  cloneAccountDto = objectMapper.readValue(jsonFile, new TypeReference<>() {});
-                for(CloneAccountDTO cloneDto : cloneAccountDto) {
+                for(CloneAccountDTO cloneDto : cloneAccountDTOs) {
                     processData(cloneDto, null, tenantId);
                 }
             } catch (IOException e) {
