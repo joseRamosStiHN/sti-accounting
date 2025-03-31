@@ -7,6 +7,8 @@ import com.sti.accounting.repositories.IAccountCategoryRepository;
 import com.sti.accounting.repositories.IAccountTypeRepository;
 import com.sti.accounting.repositories.IAccountingPeriodRepository;
 import com.sti.accounting.repositories.IDocumentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -22,6 +25,8 @@ import java.util.List;
 
 @SpringBootApplication()
 public class AccountingApplication {
+
+    private static final Logger logger = LoggerFactory.getLogger(AccountingApplication.class);
 
     public static void main(String[] args) {
         SpringApplication.run(AccountingApplication.class, args);
@@ -70,22 +75,44 @@ public class AccountingApplication {
 
     private void createNumberPdaTrigger(DataSource dataSource) {
         String triggerCheckQuery = "SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_name = 'INSERT_NUMBER_PDA'";
-        String createTriggerQuery = "CREATE TRIGGER INSERT_NUMBER_PDA " +
-                "BEFORE INSERT ON TRANSACTIONS " +
-                "FOR EACH ROW " +
-                "BEGIN " +
-                "SET NEW.NUMBER_PDA = (SELECT COALESCE(MAX(NUMBER_PDA), 0) + 1 FROM TRANSACTIONS); " +
-                "END;";
+
+        String createTriggerQuery =
+                "CREATE TRIGGER INSERT_NUMBER_PDA " +
+                        "BEFORE INSERT ON transactions " +
+                        "FOR EACH ROW " +
+                        "BEGIN " +
+                        "   DECLARE next_number INT; " +
+
+                        "   IF EXISTS (SELECT 1 FROM pda_sequence WHERE tenant_id = NEW.tenant_id) THEN " +
+                        "       SELECT last_number + 1 INTO next_number " +
+                        "       FROM pda_sequence " +
+                        "       WHERE tenant_id = NEW.tenant_id FOR UPDATE; " +
+
+                        "       SET NEW.number_pda = next_number; " +
+
+                        "       UPDATE pda_sequence " +
+                        "       SET last_number = next_number " +
+                        "       WHERE tenant_id = NEW.tenant_id; " +
+
+                        "   ELSE " +
+                        "       SET NEW.number_pda = 1; " +
+
+                        "       INSERT INTO pda_sequence (tenant_id, last_number) " +
+                        "       VALUES (NEW.tenant_id, 1); " +
+                        "   END IF; " +
+                        "END";
 
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
 
-            var resultSet = statement.executeQuery(triggerCheckQuery);
+            ResultSet resultSet = statement.executeQuery(triggerCheckQuery);
             if (resultSet.next() && resultSet.getInt(1) == 0) {
+                statement.execute("DROP TRIGGER IF EXISTS INSERT_NUMBER_PDA"); //  por si hubo un intento fallido antes
                 statement.execute(createTriggerQuery);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("error generated createNumberPdaTrigger:", e);
         }
     }
+
 }
