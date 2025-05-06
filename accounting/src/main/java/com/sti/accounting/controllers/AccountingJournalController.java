@@ -6,6 +6,7 @@ import com.sti.accounting.services.AccountingJournalService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -26,6 +27,11 @@ public class AccountingJournalController {
     @GetMapping("/{id}")
     public AccountingJournalResponse getAccountingJournalById(@PathVariable Long id) {
         return accountingJournalService.getAccountingJournalById(id);
+    }
+
+    @GetMapping("/by-account-type/{accountTypeId}")
+    public AccountingJournalResponse getAccountingJournalByAccountType(@PathVariable BigDecimal accountTypeId) {
+        return accountingJournalService.getAccountingJournalByAccountTypeAndTenant(accountTypeId);
     }
 
     @PostMapping

@@ -22,7 +22,6 @@ public class TaxSettingsRequest {
     @NotNull(message = "From value is required")
     private BigDecimal fromValue;
 
-    @NotNull(message = "To value is required")
     private BigDecimal toValue;
 
     private Boolean isCurrent;

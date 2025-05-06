@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -47,11 +48,22 @@ public class AccountingJournalService {
         return toResponse(accountingJournalEntity);
     }
 
+    public AccountingJournalResponse getAccountingJournalByAccountTypeAndTenant(BigDecimal accountTypeId) {
+        String tenantId = authService.getTenantId();
+        AccountingJournalEntity journal = accountingJournalRepository.findByAccountType_IdAndTenantId(accountTypeId, tenantId);
+
+        if (journal == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No accounting journal found for the given account type and tenant.");
+        }
+
+        return toResponse(journal);
+    }
+
     public AccountingJournalResponse createAccountingJournal(AccountingJournalRequest accountingJournalRequest) {
         AccountingJournalEntity entity = new AccountingJournalEntity();
         String tenantId = authService.getTenantId();
 
-        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantIdAndStatus(accountingJournalRequest.getAccountType(), tenantId,true);
+        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantId(accountingJournalRequest.getAccountType(), tenantId);
         if (existsAccountType) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account type already exists.");
         }
@@ -86,12 +98,6 @@ public class AccountingJournalService {
         AccountingJournalEntity existingAccountingJournal = accountingJournalRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No accounting journal found with ID: %d", id)));
-
-//        boolean existsAccountType= this.accountingJournalRepository.existsByAccountType_IdAndTenantIdAndStatus(accountingJournalRequest.getAccountType(), tenantId,false);
-//        if (existsAccountType) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The account type already exists.");
-//        }
-
 
         existingAccountingJournal.setDiaryName(accountingJournalRequest.getDiaryName());
         Long accountTypeId = accountingJournalRequest.getAccountType().longValue();

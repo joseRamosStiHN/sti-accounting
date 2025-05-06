@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 @Repository
 public interface IAccountingJournalRepository extends ListCrudRepository<AccountingJournalEntity, Long> {
 
-    boolean existsByAccountType_IdAndTenantIdAndStatus(BigDecimal accountTypeId, String tenantId,boolean status);
+    AccountingJournalEntity findByAccountType_IdAndTenantId(BigDecimal accountTypeId, String tenantId);
+
+    boolean existsByAccountType_IdAndTenantId(BigDecimal accountTypeId, String tenantId);
 
 }
