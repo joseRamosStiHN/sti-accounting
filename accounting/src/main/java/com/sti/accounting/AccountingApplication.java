@@ -52,7 +52,7 @@ public class AccountingApplication {
                         new DocumentEntity(2L, "Factura de Proveedores", "Factura de proveedores", new HashSet<>()),
                         new DocumentEntity(3L, "Notas de Credito", "Notas de Credito", new HashSet<>()),
                         new DocumentEntity(4L, "Notas de Debito", "Notas de Debito", new HashSet<>()),
-                        new DocumentEntity(5L, "Otros", "Otros", new HashSet<>())
+                        new DocumentEntity(5L, "Operaciones Varias", "Operaciones Varias", new HashSet<>())
                 );
                 document.saveAll(documents);
             }
