@@ -57,6 +57,23 @@ public class TrialBalanceService {
         return trialBalanceResponse;
     }
 
+    public TrialBalanceResponse getTrialBalancePdf() {
+        TrialBalanceResponse trialBalanceResponse = new TrialBalanceResponse();
+        List<TrialBalanceResponse.PeriodBalanceResponse> periodBalances = new ArrayList<>();
+        List<AccountResponse> allAccounts = accountService.getAllAccount();
+
+        // Obtener el período activo
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+        if (activePeriod != null && activePeriod.getStartPeriod() != null) {
+            // Crear la respuesta del balance del período activo
+            TrialBalanceResponse.PeriodBalanceResponse activePeriodBalanceResponse = createPeriodBalanceResponse(activePeriod, allAccounts, false);
+            periodBalances.add(activePeriodBalanceResponse);
+        }
+
+        trialBalanceResponse.setPeriods(periodBalances);
+        return trialBalanceResponse;
+    }
+
 
     public TrialBalanceResponse getAllTrialBalances() {
         TrialBalanceResponse trialBalanceResponse = new TrialBalanceResponse();

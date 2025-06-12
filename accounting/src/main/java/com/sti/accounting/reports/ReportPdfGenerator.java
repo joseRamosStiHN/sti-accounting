@@ -15,16 +15,14 @@ import com.sti.accounting.entities.CompanyEntity;
 import com.sti.accounting.models.GeneralBalanceResponse;
 import com.sti.accounting.models.IncomeStatementResponse;
 import com.sti.accounting.models.TrialBalanceResponse;
-import com.sti.accounting.services.AccountingPeriodService;
-import com.sti.accounting.services.GeneralBalanceService;
-import com.sti.accounting.services.IncomeStatementService;
-import com.sti.accounting.services.TrialBalanceService;
+import com.sti.accounting.services.*;
 import com.sti.accounting.utils.IncomeStatementCalculator;
 import com.sti.accounting.utils.IncomeStatementFormatter;
 import org.springframework.stereotype.Component;
 
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.MalformedURLException;
 import java.text.NumberFormat;
 import java.util.List;
@@ -38,15 +36,17 @@ public class ReportPdfGenerator {
     private final IncomeStatementService incomeStatementService;
     private final TrialBalanceService trialBalanceService;
     private final AccountingPeriodService accountingPeriodService;
+    private final TaxSettingsService taxSettingsService;
 
     public ReportPdfGenerator(GeneralBalanceService generalBalanceService,
                               IncomeStatementService incomeStatementService,
                               TrialBalanceService trialBalanceService,
-                              AccountingPeriodService accountingPeriodService) {
+                              AccountingPeriodService accountingPeriodService, TaxSettingsService taxSettingsService) {
         this.generalBalanceService = generalBalanceService;
         this.incomeStatementService = incomeStatementService;
         this.trialBalanceService = trialBalanceService;
         this.accountingPeriodService = accountingPeriodService;
+        this.taxSettingsService = taxSettingsService;
     }
 
     /**
@@ -59,18 +59,18 @@ public class ReportPdfGenerator {
         Document document = new Document(pdfDoc);
 
         // 1. Sección de "Reportes Financieros"
-        addFinancialReportHeader(document, "Reportes Financieros",false, company);
+        addFinancialReportHeader(document, "Reportes Financieros", false, company);
 
         // 2. Sección de "Balanza de Comprobación"
         generateTrialBalanceSection(document);
 
         // 3. Sección de "Balance General"
         document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        generateBalanceSection(document,company);
+        generateBalanceSection(document, company);
 
         // 4. Sección de "Estado de Resultados"
         document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        generateIncomeStatementSection(document,company);
+        generateIncomeStatementSection(document, company);
 
         document.close();
     }
@@ -145,7 +145,7 @@ public class ReportPdfGenerator {
                 " al " + accountingPeriodService.getActivePeriod().getEndPeriod().toLocalDate();
 
         // Obtener los datos de la balanza de comprobación
-        TrialBalanceResponse trialBalance = trialBalanceService.getTrialBalance();
+        TrialBalanceResponse trialBalance = trialBalanceService.getTrialBalancePdf();
 
         // Usar contenedores mutables para los totales
         BigDecimal[] totalInitialDebit = {BigDecimal.ZERO};
@@ -215,7 +215,7 @@ public class ReportPdfGenerator {
      */
     private void generateBalanceSection(Document document, CompanyEntity company) throws MalformedURLException {
         // Agregar encabezado reutilizando addFinancialReportHeader con texto personalizado
-        addFinancialReportHeader(document, "Balance General",false,company);
+        addFinancialReportHeader(document, "Balance General", false, company);
 
         // Definir colores
         Color headerColor = new DeviceRgb(7, 43, 84); // Azul oscuro para encabezados
@@ -390,15 +390,19 @@ public class ReportPdfGenerator {
         formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS OPERATIVOS", totalGastosOperativos, totalColor);
 
         // Utilidad antes de impuestos
-        BigDecimal utilidadAntesImpuestos = mercaderiaDisponible.subtract(totalGastosOperativos);
-        formatter.addSummaryRow(incomeStatementTable, "UTILIDAD ANTES DE IMPUESTOS", utilidadAntesImpuestos, totalColor);
+        BigDecimal utilityBeforeIsv = mercaderiaDisponible.subtract(totalGastosOperativos);
+        formatter.addSummaryRow(incomeStatementTable, "UTILIDAD ANTES DE IMPUESTOS", utilityBeforeIsv, totalColor);
 
-        // Impuesto sobre la renta (25%)
-        BigDecimal impuestoRenta = utilidadAntesImpuestos.multiply(new BigDecimal("0.25"));
-        formatter.addSummaryRow(incomeStatementTable, "Impuesto Sobre la Renta (25%)", impuestoRenta, null);
+        // Impuesto sobre la renta
+        BigDecimal taxRate = taxSettingsService.getTaxRateForUtility(utilityBeforeIsv, "Renta Gravable Mensual");
+        BigDecimal incomeTax = utilityBeforeIsv.multiply(taxRate);
+
+        // Formatear el valor de taxRateAnnual como porcentaje
+        String taxRateString = taxRate.multiply(BigDecimal.valueOf(100)).stripTrailingZeros().toPlainString() + "%";
+        formatter.addSummaryRow(incomeStatementTable, "Impuesto Sobre la Renta (" + taxRateString + ")", incomeTax, null);
 
         // Utilidad neta
-        BigDecimal utilidadNeta = utilidadAntesImpuestos.subtract(impuestoRenta);
+        BigDecimal utilidadNeta = utilityBeforeIsv.add(incomeTax);
         formatter.addSummaryRow(incomeStatementTable, "UTILIDAD O PERDIDA NETA DEL EJERCICIO", utilidadNeta, totalColor);
 
         document.add(incomeStatementTable);
@@ -499,18 +503,18 @@ public class ReportPdfGenerator {
         Document document = new Document(pdfDoc);
 
         // Agregar encabezado
-        addFinancialReportHeader(document, "Resumen Anual", true,company);
+        addFinancialReportHeader(document, "Resumen Anual", true, company);
 
         // Generar la sección de Balanza de Comprobación
         generateTrialBalanceSectionAnnual(document);
 
         // Generar la sección de Balance General
         document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        generateBalanceSectionAnnual(document,company);
+        generateBalanceSectionAnnual(document, company);
 
         // Generar la sección de Estado de Resultados
         document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-        generateIncomeStatementSectionAnnual(document,company);
+        generateIncomeStatementSectionAnnual(document, company);
 
         document.close();
     }
@@ -596,7 +600,7 @@ public class ReportPdfGenerator {
 
     private void generateBalanceSectionAnnual(Document document, CompanyEntity company) throws MalformedURLException {
         // Agregar encabezado reutilizando addFinancialReportHeader con texto personalizado
-        addFinancialReportHeader(document, "Balance General", true,company);
+        addFinancialReportHeader(document, "Balance General", true, company);
 
         // Obtener datos del Balance General para el año completo
         List<GeneralBalanceResponse> balances = generalBalanceService.getBalanceGeneral(accountingPeriodService.getAnnualPeriod().getId());
@@ -686,7 +690,7 @@ public class ReportPdfGenerator {
     }
 
     private void generateIncomeStatementSectionAnnual(Document document, CompanyEntity company) throws MalformedURLException {
-        addFinancialReportHeader(document, "Estado de Resultados", true,company);
+        addFinancialReportHeader(document, "Estado de Resultados", true, company);
 
         Color headerColor = new DeviceRgb(7, 43, 84);
         Color totalColor = new DeviceRgb(240, 248, 255);
@@ -705,8 +709,8 @@ public class ReportPdfGenerator {
         // 1. Sección de Ventas
         formatter.addGroupHeader(incomeStatementTable, "VENTAS");
         formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("VENTAS"));
-        BigDecimal totalVentas = calculator.calculateTotalForGroup(groupedAccounts.get("VENTAS"));
-        formatter.addSummaryRow(incomeStatementTable, "TOTAL VENTAS", totalVentas, totalColor);
+        BigDecimal totalSales = calculator.calculateTotalForGroup(groupedAccounts.get("VENTAS"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL VENTAS", totalSales, totalColor);
 
         // Devoluciones sobre ventas
         formatter.addSubGroupHeader(incomeStatementTable, "(-) Devoluciones sobre Ventas");
@@ -717,69 +721,74 @@ public class ReportPdfGenerator {
         formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("DESCUENTOS SOBRE VENTAS"));
 
         // Ventas Netas
-        BigDecimal ventasNetas = calculator.calculateNetSales(groupedAccounts);
-        formatter.addSummaryRow(incomeStatementTable, "VENTAS NETAS", ventasNetas, totalColor);
+        BigDecimal netSales = calculator.calculateNetSales(groupedAccounts);
+        formatter.addSummaryRow(incomeStatementTable, "VENTAS NETAS", netSales, totalColor);
 
         // 2. Sección de Compras
         formatter.addGroupHeader(incomeStatementTable, "COMPRAS");
         formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("COMPRAS"));
-        BigDecimal totalCompras = calculator.calculateTotalForGroup(groupedAccounts.get("COMPRAS"));
+        BigDecimal totalPurchases = calculator.calculateTotalForGroup(groupedAccounts.get("COMPRAS"));
 
         // Importaciones
         if (groupedAccounts.containsKey("IMPORTACIONES")) {
             formatter.addGroupHeader(incomeStatementTable, "IMPORTACIONES");
             formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("IMPORTACIONES"));
-            BigDecimal totalImportaciones = calculator.calculateTotalForGroup(groupedAccounts.get("IMPORTACIONES"));
-            totalCompras = totalCompras.add(totalImportaciones);
+            BigDecimal totalImports = calculator.calculateTotalForGroup(groupedAccounts.get("IMPORTACIONES"));
+            totalPurchases = totalPurchases.add(totalImports);
         }
 
-        formatter.addSummaryRow(incomeStatementTable, "TOTAL COMPRAS", totalCompras, totalColor);
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL COMPRAS", totalPurchases, totalColor);
 
         // Mercadería disponible
-        BigDecimal mercaderiaDisponible = ventasNetas.add(totalCompras);
-        formatter.addSummaryRow(incomeStatementTable, "MERCADERÍA DISPONIBLE PARA LA VENTA", mercaderiaDisponible, totalColor);
+        BigDecimal availableMerchandise = netSales.add(totalPurchases);
+        formatter.addSummaryRow(incomeStatementTable, "MERCADERÍA DISPONIBLE PARA LA VENTA", availableMerchandise, totalColor);
 
         // 3. Sección de Gastos
 
         // Gastos Administrativos
         formatter.addGroupHeader(incomeStatementTable, "GASTOS ADMINISTRATIVOS");
         formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS ADMINISTRATIVOS"));
-        BigDecimal totalGastonAdmin = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS ADMINISTRATIVOS"));
-        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS ADMINISTRATIVOS", totalGastonAdmin, totalColor);
+        BigDecimal totalAdminExpenses = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS ADMINISTRATIVOS"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS ADMINISTRATIVOS", totalAdminExpenses, totalColor);
 
         // Gastos Financieros
         formatter.addGroupHeader(incomeStatementTable, "GASTOS FINANCIEROS");
         formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS FINANCIEROS"));
-        BigDecimal totalGastosFinancieros = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS FINANCIEROS"));
-        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS FINANCIEROS", totalGastosFinancieros, totalColor);
+        BigDecimal totalFinancialExpenses = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS FINANCIEROS"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS FINANCIEROS", totalFinancialExpenses, totalColor);
 
         // Gastos Generales
         formatter.addGroupHeader(incomeStatementTable, "GASTOS GENERALES");
         formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS GENERALES"));
-        BigDecimal totalGastosGenerales = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS GENERALES"));
-        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS GENERALES", totalGastosGenerales, totalColor);
+        BigDecimal totalGeneralExpenses = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS GENERALES"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS GENERALES", totalGeneralExpenses, totalColor);
 
         // Gastos por Depreciación
         formatter.addGroupHeader(incomeStatementTable, "GASTOS POR DEPRECIACION");
         formatter.addDetailRows(incomeStatementTable, groupedAccounts.get("GASTOS POR DEPRECIACION"));
-        BigDecimal totalGastosDepreciacion = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS POR DEPRECIACION"));
-        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS POR DEPRECIACION", totalGastosDepreciacion, totalColor);
+        BigDecimal totalDepreciationExpenses = calculator.calculateTotalForGroup(groupedAccounts.get("GASTOS POR DEPRECIACION"));
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS POR DEPRECIACION", totalDepreciationExpenses, totalColor);
 
         // Total Gastos Operativos
-        BigDecimal totalGastosOperativos = calculator.calculateOperatingExpenses(groupedAccounts);
-        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS OPERATIVOS", totalGastosOperativos, totalColor);
+        BigDecimal totalOperatingExpenses = calculator.calculateOperatingExpenses(groupedAccounts);
+        formatter.addSummaryRow(incomeStatementTable, "TOTAL GASTOS OPERATIVOS", totalOperatingExpenses, totalColor);
 
         // Utilidad antes de impuestos
-        BigDecimal utilidadAntesImpuestos = mercaderiaDisponible.subtract(totalGastosOperativos);
-        formatter.addSummaryRow(incomeStatementTable, "UTILIDAD ANTES DE IMPUESTOS", utilidadAntesImpuestos, totalColor);
+        BigDecimal utilityBeforeIsvAnnual = availableMerchandise.subtract(totalOperatingExpenses);
+        formatter.addSummaryRow(incomeStatementTable, "UTILIDAD ANTES DE IMPUESTOS", utilityBeforeIsvAnnual, totalColor);
 
-        // Impuesto sobre la renta (25%)
-        BigDecimal impuestoRenta = utilidadAntesImpuestos.multiply(new BigDecimal("0.25"));
-        formatter.addSummaryRow(incomeStatementTable, "Impuesto Sobre la Renta (25%)", impuestoRenta, null);
+        // Impuesto sobre la renta
+        BigDecimal taxRateAnnual = taxSettingsService.getTaxRateForUtility(utilityBeforeIsvAnnual, "Renta Gravable Anual");
+        BigDecimal incomeTaxAnnual = utilityBeforeIsvAnnual.multiply(taxRateAnnual);
+
+        // Formatear el valor de taxRateAnnual como porcentaje
+        String taxRateString = taxRateAnnual.multiply(BigDecimal.valueOf(100)).stripTrailingZeros().toPlainString() + "%";
+
+        formatter.addSummaryRow(incomeStatementTable, "Impuesto Sobre la Renta (" + taxRateString + ")", incomeTaxAnnual, null);
 
         // Utilidad neta
-        BigDecimal utilidadNeta = utilidadAntesImpuestos.subtract(impuestoRenta);
-        formatter.addSummaryRow(incomeStatementTable, "UTILIDAD O PERDIDA NETA DEL EJERCICIO", utilidadNeta, totalColor);
+        BigDecimal netIncome = utilityBeforeIsvAnnual.add(incomeTaxAnnual);
+        formatter.addSummaryRow(incomeStatementTable, "UTILIDAD O PERDIDA NETA DEL EJERCICIO", netIncome, totalColor);
 
         document.add(incomeStatementTable);
     }
