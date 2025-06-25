@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -119,16 +118,29 @@ public class AccountService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         String.format("No account found with ID: %d", id)));
 
+        // Guardar el código antiguo para comparación
+        String oldCode = existingAccount.getCode();
+
         // Verificar si el código de cuenta ya existe para otra cuenta
         if (iAccountRepository.existsByCodeAndNotId(accountRequest.getCode(), id, tenantId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Account with code %s already exists.", accountRequest.getCode()));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("Account with code %s already exists.", accountRequest.getCode()));
         }
+
+        // Validar integridad jerárquica
+        validateHierarchyIntegrity(existingAccount, accountRequest, tenantId);
 
         // Establecer el padre de la cuenta si se proporciona
         AccountEntity parent = null;
         if (accountRequest.getParentId() != null) {
             parent = iAccountRepository.findById(accountRequest.getParentId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ParentID"));
+
+            // Validar que el nuevo código mantenga la jerarquía
+            if (!accountRequest.getCode().startsWith(parent.getCode())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Child account code must start with parent account code");
+            }
         }
         existingAccount.setParent(parent);
 
@@ -140,6 +152,7 @@ public class AccountService {
         existingAccount.setStatus(accountRequest.getStatus());
         existingAccount.setTenantId(tenantId);
 
+        // Actualizar tipo de cuenta si se proporciona
         if (accountRequest.getAccountType() != null) {
             Long accountTypeId = accountRequest.getAccountType().longValue();
             AccountTypeEntity accountTypeEntity = accountTypeRepository.findById(accountTypeId)
@@ -147,12 +160,10 @@ public class AccountService {
             existingAccount.setAccountType(accountTypeEntity);
         }
 
-        // Si se soporta el registro, actualizar los balances
+        // Actualizar balances si soporta registros
         if (accountRequest.isSupportsRegistration()) {
             validateBalances(accountRequest.getBalances());
-
             existingAccount.getBalances().clear();
-
             List<BalancesEntity> balancesList = accountRequest.getBalances().stream()
                     .map(balance -> {
                         BalancesEntity balancesEntity = toBalancesEntity(balance);
@@ -160,15 +171,74 @@ public class AccountService {
                         return balancesEntity;
                     })
                     .toList();
-
             existingAccount.getBalances().addAll(balancesList);
         }
 
-        iAccountRepository.save(existingAccount);
+        // Guardar la cuenta actualizada
+        AccountEntity updatedAccount = iAccountRepository.save(existingAccount);
 
-        return toResponse(existingAccount);
+        // Si el código ha cambiado y esta cuenta tiene hijos, actualizar sus códigos
+        if (!oldCode.equals(accountRequest.getCode()) &&
+                iAccountRepository.countByParentIdAndTenantId(updatedAccount.getId(), tenantId) > 0) {
+            updateChildAccountCodes(updatedAccount, oldCode, accountRequest.getCode());
+        }
+
+        return toResponse(updatedAccount);
     }
 
+    private void validateHierarchyIntegrity(AccountEntity existingAccount, AccountRequest accountRequest, String tenantId) {
+        // Validar que si es cuenta hija, no se pueda quitar la referencia al padre
+        if (existingAccount.getParent() != null && accountRequest.getParentId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cannot remove parent reference from a child account");
+        }
+
+        // Validar que el nuevo padre no sea uno de sus hijos
+        if (accountRequest.getParentId() != null) {
+            if (isChildAccount(existingAccount, accountRequest.getParentId(), tenantId)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Cannot set a child account as parent (would create a circular reference)");
+            }
+        }
+    }
+
+    private boolean isChildAccount(AccountEntity account, Long potentialChildId, String tenantId) {
+        List<AccountEntity> children = iAccountRepository.findByParentIdAndTenantId(account.getId(), tenantId);
+
+        // Verificar si el ID potencial está entre los hijos directos
+        if (children.stream().anyMatch(child -> child.getId().equals(potentialChildId))) {
+            return true;
+        }
+
+        // Verificar recursivamente en los nietos
+        for (AccountEntity child : children) {
+            if (isChildAccount(child, potentialChildId, tenantId)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void updateChildAccountCodes(AccountEntity parentAccount, String oldParentCode, String newParentCode) {
+        String tenantId = authService.getTenantId();
+        List<AccountEntity> childAccounts = iAccountRepository.findByParentIdAndTenantId(parentAccount.getId(), tenantId);
+
+        for (AccountEntity child : childAccounts) {
+            // Obtener la parte del código después del código del padre
+            String childSuffix = child.getCode().substring(child.getCode().indexOf('-'));
+
+            // Construir el nuevo código combinando el nuevo código del padre y el sufijo del hijo
+            String newChildCode = newParentCode + childSuffix;
+            child.setCode(newChildCode);
+            iAccountRepository.save(child);
+
+            // Si este hijo tiene sus propios hijos, actualizarlos también
+            if (iAccountRepository.countByParentIdAndTenantId(child.getId(), tenantId) > 0) {
+                updateChildAccountCodes(child, oldParentCode + childSuffix, newChildCode);
+            }
+        }
+    }
 
     /*Return All Categories of Accounts*/
     public List<AccountCategory> getAllCategories() {
