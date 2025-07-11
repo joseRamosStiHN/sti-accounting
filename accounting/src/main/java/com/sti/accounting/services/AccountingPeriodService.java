@@ -29,6 +29,8 @@ public class AccountingPeriodService {
     private static final String CLOSURE_TYPE_TRIMESTRAL = "trimestral";
     private static final String CLOSURE_TYPE_SEMESTRAL = "semestral";
     private static final String CLOSURE_TYPE_ANUAL = "anual";
+    private static final String CLOSURE_TYPE_PERSONALIZADO = "personalizado";
+
 
     private static final Logger logger = LoggerFactory.getLogger(AccountingPeriodService.class);
     private final IAccountingPeriodRepository accountingPeriodRepository;
@@ -69,7 +71,7 @@ public class AccountingPeriodService {
                     String.format("Invalid date range: start date %s cannot be after end date", startDate));
         }
 
-        return accountingPeriodRepository.findByStartPeriodBetweenAndTenantId(startDate, endDate, tenantId)
+        return accountingPeriodRepository.findOverlappingPeriods(startDate, endDate, tenantId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -78,6 +80,29 @@ public class AccountingPeriodService {
     public AccountingPeriodResponse createAccountingPeriod(AccountingPeriodRequest accountingPeriodRequest) {
 
         String tenantId = authService.getTenantId();
+
+        // Validar si es un periodo personalizado y ya existe uno activo
+        if (CLOSURE_TYPE_PERSONALIZADO.equalsIgnoreCase(accountingPeriodRequest.getClosureType())) {
+            List<AccountingPeriodEntity> activeCustomPeriods = accountingPeriodRepository
+                    .findByClosureTypeAndPeriodStatusAndTenantId(
+                            CLOSURE_TYPE_PERSONALIZADO,
+                            PeriodStatus.ACTIVE,
+                            tenantId
+                    );
+
+            if (!activeCustomPeriods.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "No se puede crear un periodo personalizado, ya existe uno activo.");
+            }
+        }
+
+        // Validar solapamiento
+        if (hasOverlappingPeriods(accountingPeriodRequest.getStartPeriod(),
+                accountingPeriodRequest.getEndPeriod() != null ? accountingPeriodRequest.getEndPeriod()
+                        : accountingPeriodRequest.getStartPeriod().plusYears(1))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Ya existe un periodo con la fecha ingresada.");
+        }
 
         if (isAccountingPeriodExists(accountingPeriodRequest)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is already an equal accounting period.");
@@ -107,6 +132,23 @@ public class AccountingPeriodService {
 
     public List<AccountingPeriodEntity> generatePeriods(AccountingPeriodRequest request) {
         List<AccountingPeriodEntity> periods = new ArrayList<>();
+
+        // Validar que las fechas no se solapen con periodos existentes
+        if (hasOverlappingPeriods(request.getStartPeriod(), request.getEndPeriod())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Ya existe un periodo con la fecha ingresada.");
+        }
+
+        if (CLOSURE_TYPE_PERSONALIZADO.equalsIgnoreCase(request.getClosureType())) {
+            if (request.getEndPeriod() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "For custom periods you must specify end date");
+            }
+
+            AccountingPeriodEntity period = createSinglePeriod(request);
+            periods.add(period);
+            return periods;
+        }
 
         LocalDateTime startDate = request.getStartPeriod();
         LocalDate endOfYear = startDate.toLocalDate().with(TemporalAdjusters.lastDayOfYear());
@@ -147,7 +189,7 @@ public class AccountingPeriodService {
                     break;
 
                 default:
-                    throw new IllegalArgumentException("Tipo de cierre no soportado: " + request.getClosureType());
+                    throw new IllegalArgumentException("Closure type not supported: " + request.getClosureType());
             }
 
             period.setEndPeriod(endPeriod.atTime(23, 59, 59));
@@ -162,6 +204,34 @@ public class AccountingPeriodService {
         }
 
         return periods;
+    }
+
+    private AccountingPeriodEntity createSinglePeriod(AccountingPeriodRequest request) {
+        AccountingPeriodEntity period = new AccountingPeriodEntity();
+        period.setPeriodName(request.getPeriodName());
+        period.setClosureType(request.getClosureType());
+        period.setStartPeriod(request.getStartPeriod());
+        period.setEndPeriod(request.getEndPeriod());
+        period.setDaysPeriod((int) Duration.between(request.getStartPeriod(), request.getEndPeriod()).toDays() + 1);
+        period.setPeriodStatus(PeriodStatus.ACTIVE);
+        period.setPeriodOrder(1);
+        period.setIsAnnual(false);
+        return period;
+    }
+
+    // Método para verificar solapamiento de periodos
+    private boolean hasOverlappingPeriods(LocalDateTime startDate, LocalDateTime endDate) {
+        String tenantId = authService.getTenantId();
+        List<AccountingPeriodEntity> overlapping = accountingPeriodRepository.findOverlappingPeriods(
+                startDate, endDate, tenantId);
+
+        // Filtrar para excluir periodos anuales
+        overlapping = overlapping.stream()
+                .filter(period -> !CLOSURE_TYPE_ANUAL.equalsIgnoreCase(period.getClosureType()))
+                .filter(period -> period.getIsAnnual() == null || !period.getIsAnnual())
+                .toList();
+
+        return !overlapping.isEmpty();
     }
 
     public AccountingPeriodResponse updateAccountingPeriod(Long id, AccountingPeriodRequest accountingPeriodRequest) {

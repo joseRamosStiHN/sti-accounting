@@ -1,6 +1,7 @@
 package com.sti.accounting.repositories;
 
 import com.sti.accounting.entities.AccountingPeriodEntity;
+import com.sti.accounting.utils.PeriodStatus;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -15,8 +16,15 @@ public interface IAccountingPeriodRepository extends ListCrudRepository<Accounti
     @Query(value = "SELECT * FROM accounting_period WHERE period_status = 'ACTIVE' AND tenant_id = :tenantId", nativeQuery = true)
     List<AccountingPeriodEntity> findActivePeriods(@Param("tenantId") String tenantId);
 
-    List<AccountingPeriodEntity> findByStartPeriodBetweenAndTenantId(LocalDateTime startDate, LocalDateTime endDate, String tenantId);
-
+    @Query("SELECT a FROM AccountingPeriodEntity a " +
+            "WHERE a.tenantId = :tenantId " +
+            "AND (a.startPeriod <= :endDate AND a.endPeriod >= :startDate)")
+    List<AccountingPeriodEntity> findOverlappingPeriods(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("tenantId") String tenantId
+    );
+    
     @Query(value = "SELECT * FROM accounting_period WHERE period_status = 'CLOSED' AND tenant_id = :tenantId", nativeQuery = true)
     List<AccountingPeriodEntity> findByPeriodStatus(@Param("tenantId") String tenantId);
 
@@ -53,4 +61,10 @@ public interface IAccountingPeriodRepository extends ListCrudRepository<Accounti
     );
 
     List<AccountingPeriodEntity> findByTenantIdAndStartPeriodBetween(String tenantId, LocalDateTime startDate, LocalDateTime endDate);
+
+    List<AccountingPeriodEntity> findByClosureTypeAndPeriodStatusAndTenantId(
+            String closureType,
+            PeriodStatus periodStatus,
+            String tenantId
+    );
 }
