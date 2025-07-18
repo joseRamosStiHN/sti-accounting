@@ -96,6 +96,7 @@ public class TaxSettingsService {
     private TaxSettingsResponse toResponse(TaxSettingsEntity entity) {
         TaxSettingsResponse response = new TaxSettingsResponse();
 
+        response.setId(entity.getId());
         response.setTaxRate(entity.getTaxRate());
         response.setType(entity.getType());
         response.setFromValue(entity.getFromValue());

@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class TaxSettingsResponse {
 
+    private Long id;
+
     private String taxRate;
 
     private String type;
