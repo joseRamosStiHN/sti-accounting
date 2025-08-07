@@ -4,8 +4,7 @@ import com.sti.accounting.models.BulkTransactionRequest;
 import com.sti.accounting.models.BulkTransactionResponse;
 import com.sti.accounting.models.UploadBulkTransactionResponse;
 import com.sti.accounting.services.BulkAccountConfigService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/upload-bulk-transaction")
 public class UploadBulkTransactionController {
-    private static final Logger logger = LoggerFactory.getLogger(UploadBulkTransactionController.class);
+
     private final BulkAccountConfigService bulkAccountConfigService;
 
     public UploadBulkTransactionController(BulkAccountConfigService bulkAccountConfigService) {
@@ -24,7 +23,7 @@ public class UploadBulkTransactionController {
 
     @PostMapping
     public UploadBulkTransactionResponse uploadBulkTransaction(@RequestPart("file") MultipartFile file, @RequestParam Long idConfig ) {
-       return this.bulkAccountConfigService.ExcelToObject(file, idConfig);
+       return this.bulkAccountConfigService.excelToObject(file, idConfig);
     }
 
     @PostMapping("config")
@@ -50,7 +49,7 @@ public class UploadBulkTransactionController {
 
     @PostMapping("transactions")
     public UploadBulkTransactionResponse saveTransacions(@RequestBody UploadBulkTransactionResponse request) {
-        return this.bulkAccountConfigService.saveTransacionsUpload(request);
+        return this.bulkAccountConfigService.saveTransactionsUpload(request);
     }
 
 }

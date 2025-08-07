@@ -134,7 +134,12 @@ public class TransactionService {
         TransactionEntity entity = new TransactionEntity();
         String tenantId = authService.getTenantId();
 
-        // Get Document
+        // Validar que la referencia no exista
+        if (transactionRepository.existsByReferenceAndTenantId(transactionRequest.getReference(), tenantId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("El Número de Factura / Referencia '%s' ya existe en el sistema.", transactionRequest.getReference()));
+        }
+
         DocumentEntity documentType = document.findById(transactionRequest.getDocumentType())
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -179,11 +184,17 @@ public class TransactionService {
 
     }
 
-
     @Transactional
     public TransactionResponse updateTransaction(Long id, TransactionRequest transactionRequest) {
         logger.info("Updating transaction with ID: {}", id);
         String tenantId = authService.getTenantId();
+
+        // Validar que la referencia no exista en otras transacciones
+        if (transactionRepository.existsByReferenceAndTenantIdAndIdNot(
+                transactionRequest.getReference(), tenantId, id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("El Número de Factura / Referencia '%s' ya existe en el sistema.", transactionRequest.getReference()));
+        }
 
         TransactionEntity existingTransaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,

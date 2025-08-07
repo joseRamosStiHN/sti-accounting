@@ -92,4 +92,10 @@ public interface ITransactionRepository extends ListCrudRepository<TransactionEn
             """, nativeQuery = true)
     List<Object[]> getAccountTransactionSummary();
 
+    boolean existsByReferenceAndTenantId(String reference, String tenantId);
+
+    @Query("SELECT COUNT(t) > 0 FROM TransactionEntity t WHERE t.reference = :reference AND t.tenantId = :tenantId AND t.id != :id")
+    boolean existsByReferenceAndTenantIdAndIdNot(@Param("reference") String reference,
+                                                 @Param("tenantId") String tenantId,
+                                                 @Param("id") Long id);
 }

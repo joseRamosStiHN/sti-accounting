@@ -4,8 +4,7 @@ import com.sti.accounting.utils.Status;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -27,7 +26,7 @@ public class UploadBulkTransaction {
     private String supplierName;
 
 
-    private List<UploadBulkAccountsListResponse> accounts;
+    private List<UploadBulkAccountsListResponse> accounts = new ArrayList<>();
 
-    private List<UploadBulkOthersFieldsList> otherFields;
+    private List<UploadBulkOthersFieldsList> otherFields = new ArrayList<>();
 }

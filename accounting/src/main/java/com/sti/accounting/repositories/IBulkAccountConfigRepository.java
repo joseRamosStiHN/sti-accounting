@@ -15,8 +15,7 @@ public interface IBulkAccountConfigRepository extends ListCrudRepository<BulkAcc
 
     List<BulkAccountConfig> findByTenantId(String tenantId);
 
-
-    BulkAccountConfig findByIdAndTenantId(Long id,  String tenantId);
+    BulkAccountConfig findByIdAndTenantId(Long id, String tenantId);
 
 
 }

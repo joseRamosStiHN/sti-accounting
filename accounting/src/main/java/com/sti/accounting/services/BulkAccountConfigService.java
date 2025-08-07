@@ -10,8 +10,6 @@ import com.sti.accounting.utils.Motion;
 import com.sti.accounting.utils.Status;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,9 +26,6 @@ import java.util.*;
 
 @Service
 public class BulkAccountConfigService {
-
-    //TODO: revisar esta clase de Bulk Account Service
-    private static final Logger logger = LoggerFactory.getLogger(BulkAccountConfigService.class);
 
     private final IBulkAccountConfigRepository bulkAccountConfigRepository;
     private final ITransactionRepository transactionRepository;
@@ -53,157 +48,182 @@ public class BulkAccountConfigService {
         this.authService = authService;
     }
 
-    public UploadBulkTransactionResponse ExcelToObject(MultipartFile file, Long id) {
+    public UploadBulkTransactionResponse excelToObject(MultipartFile file, Long id) {
+        if (id == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad request");
 
-
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad request");
-        }
-        // get configuration        /// Id y tenant ID
-        BulkAccountConfig configs = this.bulkAccountConfigRepository.findById(id)
+        BulkAccountConfig config = bulkAccountConfigRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        //start row
-        int startRow = configs.getRowStart() - 1;
+        AccountingPeriodEntity activePeriod = getActivePeriodOrThrow();
+        int startRow = config.getRowStart() - 1;
 
         try (InputStream inputStream = file.getInputStream()) {
             Workbook workbook = new XSSFWorkbook(inputStream);
-            Sheet sheet = workbook.getSheetAt(0); // get first book
+            Sheet sheet = workbook.getSheetAt(0);
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
 
-            UploadBulkTransactionResponse uploadBulkTransactionResponse = new UploadBulkTransactionResponse();
-            uploadBulkTransactionResponse.setTypetransaction(configs.getType());
+            UploadBulkTransactionResponse response = new UploadBulkTransactionResponse();
+            response.setTypeTransaction(config.getType());
 
             List<UploadBulkTransaction> data = new ArrayList<>();
             List<UploadBulkTransaction> errors = new ArrayList<>();
+            Set<String> references = new HashSet<>();
 
-            outerLoop:
             for (int i = startRow; i < sheet.getLastRowNum(); i++) {
-                //get cell value
-                boolean error = false;
-                UploadBulkTransaction uploadBulkTransactionData = new UploadBulkTransaction();
+                UploadBulkTransaction records = new UploadBulkTransaction();
+                records.setRow(i + 1);
+                boolean hasError = processRow(sheet.getRow(i), config, evaluator, records, activePeriod, references);
 
-                uploadBulkTransactionData.setRow(i + 1);
-                for (BulkAccountConfigDetail detail : configs.getDetails()) {
-                    DataFormatter formatter = new DataFormatter();
+                if (!validateBalance(records)) hasError = true;
 
-                    CellType cellType = sheet.getRow(i).getCell(detail.getColIndex()).getCellType();
-                    String strValue = "";
-                    if (cellType == CellType.FORMULA) {
-                        strValue = String.valueOf(evaluator.evaluate(sheet.getRow(i).getCell(detail.getColIndex())).getNumberValue());
-                    } else {
-                        strValue = formatter.formatCellValue(sheet.getRow(i).getCell(detail.getColIndex()));
-                    }
-                    String field = detail.getTitle();
-                    switch (field) {
-                        case "CURRENCY":
-                            uploadBulkTransactionData.setCurrency(strValue);
-                            break;
-                        case "FECHA":
-                            if (esFechaValida(strValue)) {
-                                uploadBulkTransactionData.setDate(strValue);
-                            } else {
-                                String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(), "Fecha con formato incorrecto ");
-                                uploadBulkTransactionData.setErrors(errorMessage);
-                                error = true;
-                            }
-                            break;
-                        case "DETALLE":
-
-                            if (strValue.equalsIgnoreCase("NULO")) {
-                                continue outerLoop;
-                            }
-                            uploadBulkTransactionData.setDescription(strValue);
-                            break;
-                        case "TIPO_CAMBIO":
-                            if (esNumeroValido(strValue)) {
-                                uploadBulkTransactionData.setExchangeRate(new BigDecimal(strValue).setScale(4, RoundingMode.HALF_UP));
-                            } else {
-                                String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(), "Tipo de Cambio debería ser numérico");
-                                uploadBulkTransactionData.setErrors(errorMessage);
-                                error = true;
-                            }
-                            break;
-                        case "FACTURA":
-                            uploadBulkTransactionData.setReference(strValue);
-                            break;
-                        case "CON-RTN":
-                            uploadBulkTransactionData.setRtn(strValue);
-                            break;
-                        case "SUPPLIER_value":
-                            uploadBulkTransactionData.setSupplierName(strValue);
-                            break;
-                        case "TIPO-VENTA":
-
-                            uploadBulkTransactionData.setTypePayment(strValue);
-                            break;
-                        case "TIPO-PAGO":
-                            uploadBulkTransactionData.setTypeSale(strValue);
-                            break;
-                        default:
-                            if (BulkDetailType.ACC.equals(detail.getDetailType())) {
-
-                                UploadBulkAccountsListResponse uploadAccounts = getAccountsListResponse(detail, strValue);
-                                List<UploadBulkAccountsListResponse> accountsList = uploadBulkTransactionData.getAccounts();
-                                if (accountsList == null || accountsList.isEmpty()) {
-                                    accountsList = new ArrayList<>();
-                                }
-                                accountsList.add(uploadAccounts);
-                                uploadBulkTransactionData.setAccounts(accountsList);
-
-                            } else {
-                                UploadBulkOthersFieldsList uploadOthersFields = getAnotherFields(detail.getTitle(), strValue);
-                                List<UploadBulkOthersFieldsList> uploadOthersFieldsList = uploadBulkTransactionData.getOtherFields();
-                                if (uploadOthersFieldsList == null || uploadOthersFieldsList.isEmpty()) {
-                                    uploadOthersFieldsList = new ArrayList<>();
-                                }
-                                uploadOthersFieldsList.add(uploadOthersFields);
-                                uploadBulkTransactionData.setOtherFields(uploadOthersFieldsList);
-                            }
-                    }
-                }
-
-
-                if (uploadBulkTransactionData.getAccounts() != null) {
-                    BigDecimal totalDebit = BigDecimal.ZERO;
-                    BigDecimal totalCredit = BigDecimal.ZERO;
-
-                    for (UploadBulkAccountsListResponse account : uploadBulkTransactionData.getAccounts()) {
-                        totalDebit = totalDebit.add(account.getDebit());
-                        totalCredit = totalCredit.add(account.getCredit());
-                    }
-                    if (totalDebit.compareTo(totalCredit) != 0) {
-
-                        String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(), "Partida No cuadra");
-                        uploadBulkTransactionData.setErrors(errorMessage);
-                        error = true;
-                    }
-
-                } else {
-                    String errorMessage = errorMessage(uploadBulkTransactionData.getErrors(), "No se encontraron cuentas para la partida");
-                    uploadBulkTransactionData.setErrors(errorMessage);
-                    error = true;
-                }
-
-                uploadBulkTransactionData.setStatus(Status.DRAFT);
-
-                if (error) {
-                    errors.add(uploadBulkTransactionData);
-                } else {
-                    data.add(uploadBulkTransactionData);
-                }
-
-                uploadBulkTransactionResponse.setData(data);
-                uploadBulkTransactionResponse.setErrors(errors);
-
+                records.setStatus(Status.DRAFT);
+                (hasError ? errors : data).add(records);
             }
 
-
-            return uploadBulkTransactionResponse;
-
+            response.setData(data);
+            response.setErrors(errors);
+            return response;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private AccountingPeriodEntity getActivePeriodOrThrow() {
+        try {
+            return accountingPeriodService.getActivePeriod();
+        } catch (ResponseStatusException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay un periodo contable activo");
+        }
+    }
+
+    private boolean processRow(Row row, BulkAccountConfig config, FormulaEvaluator evaluator,
+                               UploadBulkTransaction transaction, AccountingPeriodEntity activePeriod,
+                               Set<String> references) {
+        boolean error = false;
+
+        for (BulkAccountConfigDetail detail : config.getDetails()) {
+            String strValue = getCellValue(row.getCell(detail.getColIndex()), evaluator);
+            error |= processField(detail, strValue, transaction, activePeriod, references);
+            if ("DETALLE".equalsIgnoreCase(detail.getTitle()) && "NULO".equalsIgnoreCase(strValue)) return true;
+        }
+
+        if (transaction.getAccounts() == null || transaction.getAccounts().isEmpty()) {
+            transaction.setErrors(errorMessage(transaction.getErrors(), "No se encontraron cuentas para la partida"));
+            return true;
+        }
+
+        return error;
+    }
+
+    private String getCellValue(Cell cell, FormulaEvaluator evaluator) {
+        DataFormatter formatter = new DataFormatter();
+        if (cell == null) return "";
+        return cell.getCellType() == CellType.FORMULA
+                ? String.valueOf(evaluator.evaluate(cell).getNumberValue())
+                : formatter.formatCellValue(cell);
+    }
+
+    private boolean processField(BulkAccountConfigDetail detail, String strValue,
+                                 UploadBulkTransaction transaction, AccountingPeriodEntity activePeriod,
+                                 Set<String> references) {
+        String field = detail.getTitle();
+        boolean error = false;
+        switch (field) {
+            case "CURRENCY":
+                transaction.setCurrency((strValue == null || strValue.trim().isEmpty()) ? "L" : strValue.trim().toUpperCase());
+                break;
+            case "FECHA":
+                error |= processDateField(strValue, transaction, activePeriod);
+                break;
+            case "FACTURA":
+                error |= processReferenceField(strValue, transaction, references);
+                break;
+            case "CON-RTN": transaction.setRtn(strValue); break;
+            case "SUPPLIER_value": transaction.setSupplierName(strValue); break;
+
+            case "TIPO-VENTA":
+                transaction.setTypeSale((strValue == null || strValue.trim().isEmpty()) ? "CONTADO" : strValue.trim()); break;
+            case "TIPO-PAGO": transaction.setTypePayment(strValue); break;
+            case "DETALLE": transaction.setDescription(strValue); break;
+            case "TIPO_CAMBIO":
+                transaction.setExchangeRate(isValidNumber(strValue) ? new BigDecimal(strValue).setScale(4, RoundingMode.HALF_UP) : new BigDecimal("24.70"));
+                break;
+            default:
+                if (BulkDetailType.ACC.equals(detail.getDetailType())) {
+                    addAccountField(detail, strValue, transaction);
+                } else {
+                    addOtherField(detail, strValue, transaction);
+                }
+        }
+        return error;
+    }
+
+    private boolean processDateField(String strValue, UploadBulkTransaction transaction, AccountingPeriodEntity period) {
+        if (!isValidDate(strValue)) {
+            transaction.setErrors(errorMessage(transaction.getErrors(), "Fecha '" + strValue + "' con formato incorrecto"));
+            return true;
+        }
+
+        try {
+            LocalDate date = LocalDate.parse(strValue, DateTimeFormatter.ofPattern("M/d/yyyy"));
+            if (date.isBefore(period.getStartPeriod().toLocalDate())) {
+                transaction.setErrors(errorMessage(transaction.getErrors(), "La fecha '" + strValue + "' proporcionada es anterior al periodo contable activo."));
+                return true;
+            } else if (period.getEndPeriod() != null && date.isAfter(period.getEndPeriod().toLocalDate())) {
+                transaction.setErrors(errorMessage(transaction.getErrors(), "La fecha '" + strValue + "' proporcionada no corresponde al periodo contable activo."));
+                return true;
+            }
+            transaction.setDate(strValue);
+        } catch (Exception e) {
+            transaction.setErrors(errorMessage(transaction.getErrors(), "Fecha '" + strValue + "' con formato incorrecto"));
+            return true;
+        }
+        return false;
+    }
+
+    private boolean processReferenceField(String strValue, UploadBulkTransaction transaction, Set<String> references) {
+        if (strValue == null || strValue.isEmpty()) {
+            transaction.setReference(strValue);
+            return false;
+        }
+
+        if (references.contains(strValue)) {
+            transaction.setErrors(errorMessage(transaction.getErrors(), "La factura ingresada '" + strValue + "' ya existe en el sistema."));
+            return true;
+        }
+
+        if (transactionRepository.existsByReferenceAndTenantId(strValue, authService.getTenantId())) {
+            transaction.setErrors(errorMessage(transaction.getErrors(), "La factura ingresada '" + strValue + "' ya existe en el sistema."));
+            return true;
+        }
+
+        references.add(strValue);
+        transaction.setReference(strValue);
+        return false;
+    }
+
+
+    private void addAccountField(BulkAccountConfigDetail detail, String strValue, UploadBulkTransaction transaction) {
+        UploadBulkAccountsListResponse account = getAccountsListResponse(detail, strValue);
+        transaction.getAccounts().add(account);
+    }
+
+    private void addOtherField(BulkAccountConfigDetail detail, String strValue, UploadBulkTransaction transaction) {
+        UploadBulkOthersFieldsList field = getAnotherFields(detail.getTitle(), strValue);
+        transaction.getOtherFields().add(field);
+    }
+
+    private boolean validateBalance(UploadBulkTransaction transaction) {
+        if (transaction.getAccounts() == null || transaction.getAccounts().isEmpty()) return false;
+
+        BigDecimal debit = transaction.getAccounts().stream().map(UploadBulkAccountsListResponse::getDebit).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal credit = transaction.getAccounts().stream().map(UploadBulkAccountsListResponse::getCredit).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (debit.compareTo(credit) != 0) {
+            transaction.setErrors(errorMessage(transaction.getErrors(), "Los valores de débito y crédito no están balanceados."));
+            return false;
+        }
+        return true;
     }
 
     private static UploadBulkAccountsListResponse getAccountsListResponse(BulkAccountConfigDetail detail, String strValue) {
@@ -239,10 +259,10 @@ public class BulkAccountConfigService {
 
     public BulkTransactionResponse getByIdBulkTransaction(Long id) {
 
-        BulkAccountConfig bulkAccountConfig = this.bulkAccountConfigRepository.findByIdAndTenantId(id,authService.getTenantId());
+        BulkAccountConfig bulkAccountConfig = this.bulkAccountConfigRepository.findByIdAndTenantId(id, authService.getTenantId());
 
-        if (bulkAccountConfig == null){
-            throw  new ResponseStatusException(HttpStatus.NOT_FOUND, "No exist bulk transaction");
+        if (bulkAccountConfig == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No exist bulk transaction");
         }
 
         return getBulkAccountsConfigResponse(bulkAccountConfig);
@@ -283,158 +303,139 @@ public class BulkAccountConfigService {
         }
     }
 
-    public UploadBulkTransactionResponse saveTransacionsUpload(UploadBulkTransactionResponse request) {
-
-
+    public UploadBulkTransactionResponse saveTransactionsUpload(UploadBulkTransactionResponse request) {
         try {
-
-            List<UploadBulkTransaction> merged = new ArrayList<>();
-            merged.addAll(request.getData());
-            merged.addAll(request.getErrors());
-
-            List<TransactionEntity> entityList = new ArrayList<>();
-            // Get Document
-            DocumentEntity documentType = document.findById(request.getTypetransaction())
-                    .orElseThrow(
-                            () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                    String.format("Document type %d not valid ", request.getTypetransaction())
-                            )
-                    );
-
-            AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(request.getTypetransaction()).orElseThrow(
-                    () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            String.format("Diary type %d not valid ", request.getTypetransaction())
-                    )
-            );
-
+            List<UploadBulkTransaction> merged = mergeRequests(request);
+            DocumentEntity documentType = getDocumentEntity(request.getTypeTransaction());
+            AccountingJournalEntity accountingJournal = getAccountingJournal(request.getTypeTransaction());
             AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
 
-            UploadBulkTransactionResponse uploadBulkTransactionResponse = new UploadBulkTransactionResponse();
-            uploadBulkTransactionResponse.setTypetransaction(request.getTypetransaction());
-            List<UploadBulkTransaction> uploadBulkTransactionsError = new ArrayList<>();
-            List<UploadBulkTransaction> uploadBulkTransactionsData = new ArrayList<>();
+            UploadBulkTransactionResponse response = new UploadBulkTransactionResponse();
+            response.setTypeTransaction(request.getTypeTransaction());
+
+            List<TransactionEntity> entitiesToSave = new ArrayList<>();
+            List<UploadBulkTransaction> successTransactions = new ArrayList<>();
+            List<UploadBulkTransaction> errorTransactions = new ArrayList<>();
+
             for (UploadBulkTransaction transaction : merged) {
+                TransactionEntity entity = createTransactionEntity(transaction, documentType, accountingJournal, activePeriod);
 
-
-                transaction.setErrors(null);
-
-                boolean save = true;
-
-                TransactionEntity entity = new TransactionEntity();
-
-                entity.setDocument(documentType);
-                entity.setStatus(StatusTransaction.DRAFT);
-                if (transaction.getCurrency() != null && transaction.getCurrency().equalsIgnoreCase("L")) {
-                    entity.setCurrency(Currency.L);
-                } else if (transaction.getCurrency() != null && transaction.getCurrency().equalsIgnoreCase("USD")) {
-                    entity.setCurrency(Currency.USD);
+                if (validateTransaction(entity, transaction)) {
+                    entitiesToSave.add(entity);
+                    successTransactions.add(transaction);
                 } else {
-                    String errorMessage = errorMessage(transaction.getErrors(), "Fila: " + transaction.getRow() + " Tipo de moneda no existe guardado como lempiras");
-                    transaction.setErrors(errorMessage);
-                    entity.setCurrency(Currency.L);
+                    errorTransactions.add(transaction);
                 }
-
-                entity.setExchangeRate(transaction.getExchangeRate());
-
-                if (transaction.getReference() == null || transaction.getReference().isEmpty()) {
-                    save = false;
-                    String errorMessage = errorMessage(transaction.getErrors(), "Fila: " + transaction.getRow() + " Factura es obligatoria");
-                    transaction.setErrors(errorMessage);
-                } else {
-                    entity.setReference(transaction.getReference());
-                }
-
-                if (transaction.getDescription() == null || transaction.getDescription().isEmpty()) {
-                    save = false;
-                    String errorMessage = errorMessage(transaction.getErrors(), "Fila: " + transaction.getRow() + " Descripcion es obligatoria");
-                    transaction.setErrors(errorMessage);
-                } else {
-                    entity.setDescriptionPda(transaction.getDescription());
-                }
-
-                entity.setAccountingJournal(accountingJournal);
-                entity.setAccountingPeriod(activePeriod);
-
-                try {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
-                    LocalDate localDate = LocalDate.parse(transaction.getDate(), formatter);
-                    entity.setCreateAtDate(localDate);
-                } catch (Exception e) {
-                    String errorMessage = errorMessage(transaction.getErrors(), "Fila: " + transaction.getRow() + " Fecha es obligatoria");
-                    transaction.setErrors(errorMessage);
-                    entity.setCreateAtDate(null);
-                    save = false;
-                }
-
-                if (transaction.getTypeSale() == null || transaction.getTypeSale().isEmpty()) {
-                    save = false;
-                    String errorMessage = errorMessage(transaction.getErrors(), "Fila: " + transaction.getRow() + " Typo de venta es obligatoria");
-                    transaction.setErrors(errorMessage);
-                } else {
-                    entity.setTypeSale(transaction.getTypeSale());
-                }
-
-                entity.setTypePayment(transaction.getTypePayment());
-
-                if (transaction.getRtn() == null || transaction.getRtn().isEmpty()) {
-
-                    String errorMessage = errorMessage(transaction.getErrors(), "Fila: " + transaction.getRow() + " Rtn es obligatorio");
-                    transaction.setErrors(errorMessage);
-                    save = false;
-                } else {
-                    entity.setRtn(transaction.getRtn().toUpperCase());
-                }
-
-                entity.setSupplierName(transaction.getSupplierName());
-                List<TransactionDetailEntity> transactionDetailEntities = detailToEntity(entity, transaction.getAccounts());
-
-                BigDecimal totalDebit = transactionDetailEntities.stream()
-                        .filter(detail -> Motion.D.equals(detail.getMotion()))
-                        .map(TransactionDetailEntity::getAmount)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                BigDecimal totalCredit = transactionDetailEntities.stream()
-                        .filter(detail -> Motion.C.equals(detail.getMotion()))
-                        .map(TransactionDetailEntity::getAmount)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-
-                if (totalDebit.compareTo(totalCredit) != 0) {
-
-
-                    String errorMessage = errorMessage(transaction.getErrors(), "Fila: " + transaction.getRow() + " Movimientos no esta cuadrados correctamente");
-                    transaction.setErrors(errorMessage);
-                    save = false;
-                }
-
-
-                entity.setTransactionDetail(transactionDetailEntities);
-
-                entity.setTenantId(authService.getTenantId());
-
-                if (save) {
-                    entityList.add(entity);
-                    uploadBulkTransactionsData.add(transaction);
-
-                } else {
-                    uploadBulkTransactionsError.add(transaction);
-                }
-
             }
 
-            uploadBulkTransactionResponse.setTypetransaction(request.getTypetransaction());
-            uploadBulkTransactionResponse.setData(uploadBulkTransactionsData);
-            uploadBulkTransactionResponse.setErrors(uploadBulkTransactionsError);
+            transactionRepository.saveAll(entitiesToSave);
 
-
-            transactionRepository.saveAll(entityList);
-
-
-            return uploadBulkTransactionResponse;
-
+            response.setData(successTransactions);
+            response.setErrors(errorTransactions);
+            return response;
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    private List<UploadBulkTransaction> mergeRequests(UploadBulkTransactionResponse request) {
+        List<UploadBulkTransaction> merged = new ArrayList<>();
+        merged.addAll(request.getData());
+        merged.addAll(request.getErrors());
+        return merged;
+    }
+
+    private DocumentEntity getDocumentEntity(Long typeId) {
+        return document.findById(typeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        String.format("Document type %d not valid", typeId)));
+    }
+
+    private AccountingJournalEntity getAccountingJournal(Long typeId) {
+        return accountingJournalRepository.findById(typeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        String.format("Diary type %d not valid", typeId)));
+    }
+
+    private TransactionEntity createTransactionEntity(UploadBulkTransaction transaction,
+                                                      DocumentEntity documentType, AccountingJournalEntity accountingJournal,
+                                                      AccountingPeriodEntity activePeriod) {
+        TransactionEntity entity = new TransactionEntity();
+        entity.setDocument(documentType);
+        entity.setStatus(StatusTransaction.DRAFT);
+        entity.setCurrency("USD".equalsIgnoreCase(transaction.getCurrency()) ? Currency.USD : Currency.L);
+        entity.setExchangeRate(new BigDecimal("24.70"));
+        entity.setReference(transaction.getReference());
+        entity.setDescriptionPda(transaction.getDescription());
+        entity.setAccountingJournal(accountingJournal);
+        entity.setAccountingPeriod(activePeriod);
+        entity.setCreateAtDate(parseTransactionDate(transaction.getDate()));
+        entity.setTypeSale(transaction.getTypeSale() != null ? transaction.getTypeSale() : "CONTADO");
+        entity.setTypePayment(transaction.getTypePayment());
+        entity.setRtn(transaction.getRtn() != null ? transaction.getRtn().toUpperCase() : null);
+        entity.setSupplierName(transaction.getSupplierName());
+        entity.setTenantId(authService.getTenantId());
+
+        List<TransactionDetailEntity> details = detailToEntity(entity, transaction.getAccounts());
+        entity.setTransactionDetail(details);
+
+        return entity;
+    }
+
+    private LocalDate parseTransactionDate(String dateStr) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
+            return LocalDate.parse(dateStr, formatter);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private boolean validateTransaction(TransactionEntity entity, UploadBulkTransaction transaction) {
+        boolean isValid = true;
+
+        if (entity.getReference() == null || entity.getReference().isEmpty()) {
+            addError(transaction, "Factura es obligatoria");
+            isValid = false;
+        }
+
+        if (entity.getDescriptionPda() == null || entity.getDescriptionPda().isEmpty()) {
+            addError(transaction, "Descripción  es obligatoria");
+            isValid = false;
+        }
+
+        if (entity.getCreateAtDate() == null) {
+            addError(transaction, "Fecha es obligatoria");
+            isValid = false;
+        }
+
+        if (entity.getRtn() == null || entity.getRtn().isEmpty()) {
+            addError(transaction, "RTN es obligatorio");
+            isValid = false;
+        }
+
+        BigDecimal totalDebit = entity.getTransactionDetail().stream()
+                .filter(d -> Motion.D.equals(d.getMotion()))
+                .map(TransactionDetailEntity::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalCredit = entity.getTransactionDetail().stream()
+                .filter(d -> Motion.C.equals(d.getMotion()))
+                .map(TransactionDetailEntity::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalDebit.compareTo(totalCredit) != 0) {
+            addError(transaction, "Los valores de débito y crédito no están balanceados.");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    private void addError(UploadBulkTransaction transaction, String message) {
+        String errorMessage = errorMessage(transaction.getErrors(),
+                "Fila: " + transaction.getRow() + " " + message);
+        transaction.setErrors(errorMessage);
     }
 
 
@@ -461,11 +462,6 @@ public class BulkAccountConfigService {
                     entity.setTransaction(transactionEntity);
                     result.add(entity);
                 }
-//              else {
-//                  entity.setAmount(BigDecimal.ZERO);
-//                  entity.setMotion(null);
-//                  entity.setTransaction(transactionEntity);
-//              }
 
             }
             return result;
@@ -579,7 +575,7 @@ public class BulkAccountConfigService {
         }
     }
 
-    public static boolean esNumeroValido(String cadena) {
+    public static boolean isValidNumber(String cadena) {
         if (cadena == null || cadena.isEmpty()) {
             return false;
         }
@@ -587,7 +583,7 @@ public class BulkAccountConfigService {
         return cadena.matches(patron);
     }
 
-    public static boolean esFechaValida(String fechaStr) {
+    public static boolean isValidDate(String fechaStr) {
         if (fechaStr == null || fechaStr.isEmpty()) {
             return false;
         }
