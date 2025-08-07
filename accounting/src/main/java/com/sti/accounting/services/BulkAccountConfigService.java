@@ -288,7 +288,7 @@ public class BulkAccountConfigService {
         BulkAccountConfig bulkAccountConfigExist = bulkAccountConfigRepository.findByName(request.getName());
 
         if (bulkAccountConfigExist != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Config already exist");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Config already exist.");
         }
 
         try {
