@@ -53,4 +53,7 @@ public class DebitNotesEntity {
 
     @Column(name = "TENANT_ID")
     private String tenantId;
+
+    @Column(name = "CREATED_BY")
+    private String createdBy;
 }

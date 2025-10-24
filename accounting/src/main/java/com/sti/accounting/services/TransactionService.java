@@ -172,6 +172,8 @@ public class TransactionService {
         entity.setSupplierName(transactionRequest.getSupplierName());
         entity.setAccountingPeriod(activePeriod);
         entity.setTenantId(tenantId);
+        entity.setCreatedBy(authService.getUsername());
+
         //transaction detail validations
         validateTransactionDetail(transactionRequest.getDetail());
 
@@ -268,6 +270,8 @@ public class TransactionService {
         existingTransaction.setSupplierName(transactionRequest.getSupplierName());
         existingTransaction.setAccountingPeriod(activePeriod);
         existingTransaction.setTenantId(tenantId);
+        existingTransaction.setCreatedBy(authService.getUsername());
+
         //delete details that are not in list
         existingTransaction.getTransactionDetail().removeAll(existingDetailMap.values());
         // update list
@@ -375,7 +379,7 @@ public class TransactionService {
         response.setDocumentName(entity.getDocument().getName());
         response.setDiaryType(entity.getAccountingJournal().getId());
         response.setDiaryName(entity.getAccountingJournal().getDiaryName());
-        response.setUser("user.mock");
+        response.setUser(entity.getCreatedBy());
         response.setTypeSale(entity.getTypeSale());
         response.setCashValue(entity.getCashValue());
         response.setCreditValue(entity.getCreditValue());

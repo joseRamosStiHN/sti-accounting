@@ -42,6 +42,15 @@ public class DebitNotesController {
         return debitNotesService.createDebitNote(debitNotesRequest);
     }
 
+    @PutMapping("/{id}")
+    public DebitNotesResponse updateDebitNote(
+            @PathVariable Long id,
+            @Validated @RequestBody DebitNotesRequest debitNotesRequest
+    ) {
+        return debitNotesService.updateDebitNote(id, debitNotesRequest);
+    }
+
+
     @PutMapping("/confirm-debit-notes")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changeDebitNoteStatus(@RequestBody List<Long> debitNoteId) {

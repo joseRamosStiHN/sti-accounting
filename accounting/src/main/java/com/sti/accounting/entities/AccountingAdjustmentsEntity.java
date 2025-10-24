@@ -47,4 +47,7 @@ public class AccountingAdjustmentsEntity {
 
     @Column(name = "TENANT_ID")
     private String tenantId;
+
+    @Column(name = "CREATED_BY")
+    private String createdBy;
 }

@@ -95,6 +95,7 @@ public class AccountingAdjustmentService {
         entity.setStatus(StatusTransaction.DRAFT);
         entity.setAccountingPeriod(activePeriod);
         entity.setTenantId(tenantId);
+        entity.setCreatedBy(authService.getUsername());
 
         //Adjustment detail validations
         validateAdjustmentTranDetail(accountingAdjustmentRequest.getDetailAdjustment());
@@ -106,6 +107,100 @@ public class AccountingAdjustmentService {
 
         return entityToResponse(entity);
 
+    }
+
+    @Transactional
+    public AccountingAdjustmentResponse updateAdjustment(Long id, AccountingAdjustmentRequest request) {
+        logger.info("Updating adjustment id {}", id);
+
+        final String tenantId = authService.getTenantId();
+        AccountingAdjustmentsEntity entity = accountingAdjustmentsRepository.findByTenantIdAndId(tenantId, id);
+
+        if (entity == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("Accounting adjustment with ID %d not found", id));
+        }
+
+        // Solo se puede editar si está en DRAFT
+        if (entity.getStatus() != StatusTransaction.DRAFT) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only DRAFT adjustments can be updated");
+        }
+
+        // Validar que el período activo sea el mismo del ajuste
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+        if (entity.getAccountingPeriod() == null ||
+                !Objects.equals(entity.getAccountingPeriod().getId(), activePeriod.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "The adjustment cannot be updated because it is not in the active accounting period");
+        }
+
+        // (Opcional) No permitir cambiar la transacción relacionada
+        if (request.getTransactionId() != null &&
+                !Objects.equals(request.getTransactionId(), entity.getTransaction().getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Changing the related transaction is not allowed");
+        }
+
+        // Actualizar cabecera
+        if (request.getReference() != null) {
+            entity.setReference(request.getReference());
+        }
+        if (request.getDescriptionAdjustment() != null) {
+            entity.setDescriptionAdjustment(request.getDescriptionAdjustment());
+        }
+
+        if (request.getDetailAdjustment() != null) {
+            validateAdjustmentTranDetail(request.getDetailAdjustment());
+
+            List<AdjustmentDetailEntity> currentDetails = entity.getAdjustmentDetail();
+            if (currentDetails == null) {
+                currentDetails = new ArrayList<>();
+                entity.setAdjustmentDetail(currentDetails);
+            }
+
+            Map<Long, AdjustmentDetailEntity> currentById = currentDetails.stream()
+                    .filter(d -> d.getId() != null)
+                    .collect(Collectors.toMap(AdjustmentDetailEntity::getId, d -> d));
+
+
+            List<AdjustmentDetailEntity> updatedList = new ArrayList<>();
+
+            for (AdjustmentDetailRequest incoming : request.getDetailAdjustment()) {
+
+                AdjustmentDetailEntity detailEntity;
+
+                if (incoming.getId() != null && currentById.containsKey(incoming.getId())) {
+                    detailEntity = currentById.get(incoming.getId());
+                } else {
+                    detailEntity = new AdjustmentDetailEntity();
+                    detailEntity.setAdjustment(entity); // relación padre
+                }
+
+                String tenant = authService.getTenantId();
+                Optional<AccountEntity> accountOpt = iAccountRepository.findAll().stream()
+                        .filter(x -> x.getId().equals(incoming.getAccountId())
+                                && x.getTenantId().equals(tenant))
+                        .findFirst();
+
+                if (accountOpt.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "The account with id " + incoming.getAccountId() + " does not exist.");
+                }
+
+                detailEntity.setAccount(accountOpt.get());
+                detailEntity.setAmount(incoming.getAmount());
+                detailEntity.setMotion(incoming.getMotion());
+
+                updatedList.add(detailEntity);
+            }
+
+            currentDetails.clear();
+            currentDetails.addAll(updatedList);
+        }
+
+        accountingAdjustmentsRepository.save(entity);
+        return entityToResponse(entity);
     }
 
     @Transactional
@@ -202,7 +297,7 @@ public class AccountingAdjustmentService {
         response.setNumberPda(String.valueOf(entity.getTransaction().getNumberPda()));
         response.setStatus(entity.getStatus().toString());
         response.setCreationDate(entity.getCreationDate());
-        response.setUser("user.mock");
+        response.setUser(entity.getCreatedBy());
         response.setAccountingPeriodId(entity.getAccountingPeriod().getId());
 
         Set<AdjustmentDetailResponse> detailResponseSet = new HashSet<>();
@@ -213,10 +308,6 @@ public class AccountingAdjustmentService {
             detailResponse.setAccountCode(detail.getAccount().getCode());
             detailResponse.setAccountName(detail.getAccount().getDescription());
             detailResponse.setAccountId(detail.getAccount().getId());
-//            if (detail.getAccount().getBalances() != null) {
-//                detailResponse.setTypicalBalance(detail.getAccount().getBalances().getFirst().getTypicalBalance());
-//                detailResponse.setInitialBalance(detail.getAccount().getBalances().getFirst().getInitialBalance());
-//            }
             detailResponse.setShortEntryType(detail.getMotion().toString());
             detailResponse.setEntryType(detail.getMotion().equals(Motion.C) ? "Credito" : "Debito");
             detailResponseSet.add(detailResponse);

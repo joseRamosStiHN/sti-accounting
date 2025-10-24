@@ -40,6 +40,13 @@ public class AccountingAdjustmentController {
         return accountingAdjustmentService.createAdjustment(accountingAdjustmentRequest);
     }
 
+    @PutMapping("/{id}")
+    public AccountingAdjustmentResponse updateAdjustment(
+            @PathVariable Long id,
+            @Validated @RequestBody AccountingAdjustmentRequest request) {
+        return accountingAdjustmentService.updateAdjustment(id, request);
+    }
+
     @PutMapping("/confirm-adjustments")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changeAccountingAdjustmentStatus(@RequestBody List<Long> adjustmentId) {

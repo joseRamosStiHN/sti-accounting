@@ -42,6 +42,14 @@ public class CreditNotesController {
         return creditNotesService.createCreditNote(creditNotesRequest);
     }
 
+    @PutMapping("/{id}")
+    public CreditNotesResponse updateCreditNote(
+            @PathVariable Long id,
+            @Validated @RequestBody CreditNotesRequest creditNotesRequest
+    ) {
+        return creditNotesService.updateCreditNote(id, creditNotesRequest);
+    }
+
     @PutMapping("/confirm-credit-notes")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changeCreditNoteStatus(@RequestBody List<Long> debitNoteIds) {

@@ -102,6 +102,7 @@ public class CreditNotesService {
         entity.setStatus(StatusTransaction.DRAFT);
         entity.setAccountingPeriod(activePeriod);
         entity.setTenantId(tenantId);
+        entity.setCreatedBy(authService.getUsername());
 
         //Adjustment detail validations
         validateCreditNotesDetail(creditNotesRequest.getDetailNote());
@@ -113,6 +114,115 @@ public class CreditNotesService {
 
         return entityToResponse(entity);
 
+    }
+
+    @Transactional
+    public CreditNotesResponse updateCreditNote(Long id, CreditNotesRequest request) {
+        logger.info("Updating credit note id {}", id);
+
+        final String tenantId = authService.getTenantId();
+
+        CreditNotesEntity entity = creditNotesRepository.findById(id)
+                .filter(x -> tenantId.equals(x.getTenantId()))
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        String.format("Credit Note with ID %d not found", id)
+                ));
+
+        if (entity.getStatus() != StatusTransaction.DRAFT) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Only DRAFT credit notes can be updated"
+            );
+        }
+
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+        if (entity.getAccountingPeriod() == null ||
+                !Objects.equals(entity.getAccountingPeriod().getId(), activePeriod.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "The credit note cannot be updated because it is not in the active accounting period"
+            );
+        }
+
+        if (request.getTransactionId() != null &&
+                !Objects.equals(request.getTransactionId(), entity.getTransaction().getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Changing the related transaction is not allowed"
+            );
+        }
+
+        if (request.getDescriptionNote() != null) {
+            entity.setDescriptionNote(request.getDescriptionNote());
+        }
+
+        if (request.getCreateAtDate() != null) {
+            entity.setCreateAtDate(request.getCreateAtDate());
+        }
+
+        if (request.getDiaryType() != null) {
+            AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(request.getDiaryType())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            String.format("Diary type %d not valid ", request.getDiaryType())
+                    ));
+            entity.setAccountingJournal(accountingJournal);
+        }
+
+        if (request.getDetailNote() != null) {
+
+            validateCreditNotesDetail(request.getDetailNote());
+
+            List<CreditNotesDetailEntity> currentDetails = entity.getCreditNoteDetail();
+            if (currentDetails == null) {
+                currentDetails = new ArrayList<>();
+                entity.setCreditNoteDetail(currentDetails);
+            }
+
+            Map<Long, CreditNotesDetailEntity> currentById = currentDetails.stream()
+                    .filter(d -> d.getId() != null)
+                    .collect(Collectors.toMap(CreditNotesDetailEntity::getId, d -> d));
+
+            List<CreditNotesDetailEntity> updatedList = new ArrayList<>();
+
+            for (CreditNotesDetailRequest incoming : request.getDetailNote()) {
+
+                CreditNotesDetailEntity detailEntity;
+
+                if (incoming.getId() != null && currentById.containsKey(incoming.getId())) {
+                    detailEntity = currentById.get(incoming.getId());
+                } else {
+                    detailEntity = new CreditNotesDetailEntity();
+                    detailEntity.setCreditNote(entity);
+                }
+
+                Optional<AccountEntity> accountOpt = iAccountRepository.findAll().stream()
+                        .filter(x -> x.getId().equals(incoming.getAccountId())
+                                && tenantId.equals(x.getTenantId()))
+                        .findFirst();
+
+                if (accountOpt.isEmpty()) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "The account with id " + incoming.getAccountId() + " does not exist."
+                    );
+                }
+
+                detailEntity.setAccount(accountOpt.get());
+                detailEntity.setAmount(incoming.getAmount());
+                detailEntity.setMotion(incoming.getMotion());
+
+                updatedList.add(detailEntity);
+            }
+
+            currentDetails.clear();
+            currentDetails.addAll(updatedList);
+        }
+
+        creditNotesRepository.save(entity);
+
+        return entityToResponse(entity);
     }
 
     @Transactional
@@ -208,7 +318,7 @@ public class CreditNotesService {
         response.setStatus(entity.getStatus().toString());
         response.setDate(entity.getCreateAtDate());
         response.setCreationDate(entity.getCreateAtTime());
-        response.setUser("user.mock");
+        response.setUser(entity.getCreatedBy());
         response.setAccountingPeriodId(entity.getAccountingPeriod().getId());
 
         //fill up detail
@@ -220,10 +330,6 @@ public class CreditNotesService {
             detailResponse.setAccountCode(detail.getAccount().getCode());
             detailResponse.setAccountName(detail.getAccount().getDescription());
             detailResponse.setAccountId(detail.getAccount().getId());
-//            if (detail.getAccount().getBalances().getFirst() != null) {
-//                detailResponse.setTypicalBalance(detail.getAccount().getBalances().getFirst().getTypicalBalance());
-//                detailResponse.setInitialBalance(detail.getAccount().getBalances().getFirst().getInitialBalance());
-//            }
             detailResponse.setShortEntryType(detail.getMotion().toString());
             detailResponse.setEntryType(detail.getMotion().equals(Motion.C) ? "Credito" : "Debito");
             detailResponseSet.add(detailResponse);

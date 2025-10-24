@@ -101,6 +101,7 @@ public class DebitNotesService {
         entity.setStatus(StatusTransaction.DRAFT);
         entity.setAccountingPeriod(activePeriod);
         entity.setTenantId(tenantId);
+        entity.setCreatedBy(authService.getUsername());
 
         //Adjustment detail validations
         validateDebitNotesDetail(debitNotesRequest.getDetailNote());
@@ -113,6 +114,132 @@ public class DebitNotesService {
         return entityToResponse(entity);
 
     }
+
+    @Transactional
+    public DebitNotesResponse updateDebitNote(Long id, DebitNotesRequest request) {
+        logger.info("Updating debit note id {}", id);
+
+        final String tenantId = authService.getTenantId();
+
+        // 1. Buscar la nota
+        DebitNotesEntity entity = debitNotesRepository.findById(id)
+                .filter(x -> tenantId.equals(x.getTenantId()))
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        String.format("Debit Note with ID %d not found", id)
+                ));
+
+        // 2. Solo se puede editar si está en DRAFT
+        if (entity.getStatus() != StatusTransaction.DRAFT) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Only DRAFT debit notes can be updated"
+            );
+        }
+
+        // 3. Validar período contable activo
+        AccountingPeriodEntity activePeriod = accountingPeriodService.getActivePeriod();
+        if (entity.getAccountingPeriod() == null ||
+                !Objects.equals(entity.getAccountingPeriod().getId(), activePeriod.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "The debit note cannot be updated because it is not in the active accounting period"
+            );
+        }
+
+        // 4. (Opcional) Bloquear cambio de transacción origen
+        if (request.getTransactionId() != null &&
+                !Objects.equals(request.getTransactionId(), entity.getTransaction().getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Changing the related transaction is not allowed"
+            );
+        }
+
+        // 5. Actualizar cabecera editable:
+        if (request.getDescriptionNote() != null) {
+            entity.setDescriptionNote(request.getDescriptionNote());
+        }
+
+        if (request.getCreateAtDate() != null) {
+            entity.setCreateAtDate(request.getCreateAtDate());
+        }
+
+        // Permitir cambio de diario (journal) mientras esté en DRAFT
+        if (request.getDiaryType() != null) {
+            AccountingJournalEntity accountingJournal = accountingJournalRepository.findById(request.getDiaryType())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            String.format("Diary type %d not valid ", request.getDiaryType())
+                    ));
+            entity.setAccountingJournal(accountingJournal);
+        }
+
+        // 6. Actualizar el detalle si viene en el request
+        if (request.getDetailNote() != null) {
+
+            // Reutilizamos la misma validación de balance que create()
+            validateDebitNotesDetail(request.getDetailNote());
+
+            // Mapa actual de detalles existentes por id
+            List<DebitNotesDetailEntity> currentDetails = entity.getDebitNoteDetail();
+            if (currentDetails == null) {
+                currentDetails = new ArrayList<>();
+                entity.setDebitNoteDetail(currentDetails);
+            }
+
+            Map<Long, DebitNotesDetailEntity> currentById = currentDetails.stream()
+                    .filter(d -> d.getId() != null)
+                    .collect(Collectors.toMap(DebitNotesDetailEntity::getId, d -> d));
+
+            List<DebitNotesDetailEntity> updatedList = new ArrayList<>();
+
+            // Vamos recorriendo lo que viene del front
+            for (DebitNotesDetailRequest incoming : request.getDetailNote()) {
+
+                DebitNotesDetailEntity detailEntity;
+
+                // si viene id y existe en la nota → actualizar
+                if (incoming.getId() != null && currentById.containsKey(incoming.getId())) {
+                    detailEntity = currentById.get(incoming.getId());
+                } else {
+                    // si no existe → es nuevo detalle
+                    detailEntity = new DebitNotesDetailEntity();
+                    detailEntity.setDebitNote(entity); // relación padre
+                }
+
+                // validar cuenta pertenece al tenant
+                Optional<AccountEntity> accountOpt = iAccountRepository.findAll().stream()
+                        .filter(x -> x.getId().equals(incoming.getAccountId())
+                                && tenantId.equals(x.getTenantId()))
+                        .findFirst();
+
+                if (accountOpt.isEmpty()) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "The account with id " + incoming.getAccountId() + " does not exist."
+                    );
+                }
+
+                detailEntity.setAccount(accountOpt.get());
+                detailEntity.setAmount(incoming.getAmount());
+                detailEntity.setMotion(incoming.getMotion());
+
+                updatedList.add(detailEntity);
+            }
+
+            // Reemplazar completamente la lista actual por la nueva
+            currentDetails.clear();
+            currentDetails.addAll(updatedList);
+        }
+
+        // 7. Guardar
+        debitNotesRepository.save(entity);
+
+        // 8. Respuesta
+        return entityToResponse(entity);
+    }
+
 
     @Transactional
     public void changeDebitNoteStatus(List<Long> debitNoteIds) {
@@ -208,7 +335,7 @@ public class DebitNotesService {
         response.setStatus(entity.getStatus().toString());
         response.setDate(entity.getCreateAtDate());
         response.setCreationDate(entity.getCreateAtTime());
-        response.setUser("user.mock");
+        response.setUser(entity.getCreatedBy());
         response.setAccountingPeriodId(entity.getAccountingPeriod().getId());
 
         //fill up detail
@@ -220,11 +347,6 @@ public class DebitNotesService {
             detailResponse.setAccountCode(detail.getAccount().getCode());
             detailResponse.setAccountName(detail.getAccount().getDescription());
             detailResponse.setAccountId(detail.getAccount().getId());
-
-//            if (detail.getAccount().getBalances().getFirst() != null) {
-//                detailResponse.setTypicalBalance(detail.getAccount().getBalances().getFirst().getTypicalBalance());
-//                detailResponse.setInitialBalance(detail.getAccount().getBalances().getFirst().getInitialBalance());
-//            }
 
             detailResponse.setShortEntryType(detail.getMotion().toString());
             detailResponse.setEntryType(detail.getMotion().equals(Motion.C) ? "Credito" : "Debito");
