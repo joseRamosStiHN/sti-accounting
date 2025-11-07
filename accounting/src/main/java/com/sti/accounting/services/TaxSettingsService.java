@@ -76,22 +76,67 @@ public class TaxSettingsService {
 
     public BigDecimal getTaxRateForUtility(BigDecimal utilityBeforeIsv, String taxType) {
         String tenantId = authService.getTenantId();
+
         return taxSettingsRepository.findAll().stream()
-                .filter(tax -> tax.getTenantId().equals(tenantId) &&
-                        tax.getType().equals(taxType) &&
-                        utilityBeforeIsv.compareTo(tax.getFromValue()) >= 0 &&
-                        (tax.getToValue() == null || utilityBeforeIsv.compareTo(tax.getToValue()) <= 0))
-                .map(tax -> {
-                    try {
-                        return new BigDecimal(tax.getTaxRate())
-                                .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-                    } catch (NumberFormatException e) {
-                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Invalid tax rate format");
-                    }
-                })
+                .filter(tax ->
+                        tenantId.equals(tax.getTenantId()) &&
+                                taxType.equalsIgnoreCase(tax.getType()) &&
+                                utilityBeforeIsv.compareTo(nullSafe(tax.getFromValue())) >= 0 &&
+                                (tax.getToValue() == null || utilityBeforeIsv.compareTo(tax.getToValue()) <= 0)
+                )
+                .map(tax -> parseRateToDecimal(tax.getTaxRate()))
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No tax rate found for the given utility value"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No tax rate found for the given utility value and scope (" + taxType + ")"
+                ));
     }
+
+    private static BigDecimal parseRateToDecimal(String raw) {
+        if (raw == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tax rate is null");
+        }
+
+        String s = raw.trim();
+
+        // Exenciones
+        if (s.equalsIgnoreCase("exento") ||
+                s.equalsIgnoreCase("exentos") ||
+                s.equalsIgnoreCase("exenta")) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+
+        // Detectar y quitar el símbolo %
+        boolean hadPercent = s.endsWith("%");
+        if (hadPercent) {
+            s = s.substring(0, s.length() - 1).trim();
+        }
+
+        // Normalizar coma decimal a punto
+        s = s.replace(',', '.');
+
+        // Validar formato numérico
+        if (!s.matches("^[+-]?\\d+(\\.\\d+)?$")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Invalid tax rate format: '" + raw + "'. Use 25, 25%, 0.25 or 'Exentos'.");
+        }
+
+        BigDecimal val = new BigDecimal(s);
+
+        // Interpretar valor
+        BigDecimal rate = hadPercent
+                ? val.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)
+                : (val.compareTo(BigDecimal.ONE) > 0
+                ? val.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)
+                : val);
+
+        return rate.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private static BigDecimal nullSafe(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
+    }
+
 
     private TaxSettingsResponse toResponse(TaxSettingsEntity entity) {
         TaxSettingsResponse response = new TaxSettingsResponse();

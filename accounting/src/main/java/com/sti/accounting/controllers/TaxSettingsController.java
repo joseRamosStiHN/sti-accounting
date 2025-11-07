@@ -7,7 +7,9 @@ import com.sti.accounting.services.TaxSettingsService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -28,6 +30,19 @@ public class TaxSettingsController {
     @GetMapping("/{id}")
     public TaxSettingsResponse getTaxSettingsById(@PathVariable Long id) {
         return taxSettingsService.getTaxSettingsById(id);
+    }
+
+    @GetMapping("/rate")
+    public Map<String, BigDecimal> getRate(
+            @RequestParam(name = "scope", defaultValue = "Mensual") String scope,
+            @RequestParam(name = "uai") BigDecimal utilidadAntesImpuestos) {
+
+        final String type = "Anual".equalsIgnoreCase(scope)
+                ? "Renta Gravable Anual"
+                : "Renta Gravable Mensual";
+
+        BigDecimal rate = taxSettingsService.getTaxRateForUtility(utilidadAntesImpuestos, type);
+        return Map.of("rate", rate);
     }
 
     @PostMapping
