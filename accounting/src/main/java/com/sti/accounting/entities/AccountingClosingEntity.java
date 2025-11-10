@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
 
 import java.math.BigDecimal;
+import java.sql.Types;
 import java.time.LocalDateTime;
 
 @Entity
@@ -48,6 +50,7 @@ public class AccountingClosingEntity {
     private BigDecimal netIncome;
 
     @Lob
+    @JdbcTypeCode(Types.LONGVARBINARY)
     @Column(name = "CLOSURE_REPORT_PDF", columnDefinition = "LONGBLOB")
     private byte[] closureReportPdf;
 

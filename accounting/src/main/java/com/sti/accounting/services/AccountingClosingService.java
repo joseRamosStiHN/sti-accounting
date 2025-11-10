@@ -209,19 +209,21 @@ public class AccountingClosingService {
         closingEntity.setTenantId(tenantId);
 
         // Generar el PDF y guardar su contenido como byte[]
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            // Genera el PDF usando el generador
-            reportPdfGenerator.generateReportPdf(outputStream,company);
-
-            // Guarda los bytes del PDF en la entidad
-            closingEntity.setClosureReportPdf(outputStream.toByteArray());
-            logger.info("PDF generado y almacenado en la base de datos");
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            reportPdfGenerator.generateReportPdf(os, company);
+            byte[] pdf = os.toByteArray();
+            logger.info("PDF generado en memoria: {} bytes", (pdf != null ? pdf.length : 0));
+            closingEntity.setClosureReportPdf(pdf);
         } catch (Exception e) {
-            logger.info("Error al generar el PDF");
+            logger.error("Error al generar el PDF de cierre", e);
+            // Opcional: relanzar para hacer rollback:
+             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo generar el PDF", e);
         }
 
-        accountingClosingRepository.save(closingEntity);
-        logger.info("Accounting closing saved for period ID: {}", activePeriod.getId());
+        AccountingClosingEntity saved = accountingClosingRepository.save(closingEntity);
+        logger.info("Closing saved id={}, pdfBytes={}",
+                saved.getId(),
+                (saved.getClosureReportPdf() != null ? saved.getClosureReportPdf().length : 0));
     }
 
     private void closeActivePeriod(AccountingPeriodEntity activePeriod) {
