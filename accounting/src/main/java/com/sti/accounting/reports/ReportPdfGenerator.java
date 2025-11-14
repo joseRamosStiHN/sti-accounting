@@ -78,52 +78,71 @@ public class ReportPdfGenerator {
     /**
      * Agrega el encabezado principal reutilizable con texto personalizado.
      */
-    private void addFinancialReportHeader(Document document, String reportTitle, boolean isAnnual, CompanyEntity company) throws MalformedURLException {
+    private void addFinancialReportHeader(Document document, String reportTitle, boolean isAnnual, CompanyEntity company)
+            throws MalformedURLException {
+
         String periodRange;
-
         if (isAnnual) {
-            periodRange = accountingPeriodService.getAnnualPeriod().getStartPeriod().toLocalDate() +
-                    " al " + accountingPeriodService.getAnnualPeriod().getEndPeriod().toLocalDate();
+            periodRange = accountingPeriodService.getAnnualPeriod().getStartPeriod().toLocalDate()
+                    + " al " + accountingPeriodService.getAnnualPeriod().getEndPeriod().toLocalDate();
         } else {
-            periodRange = accountingPeriodService.getActivePeriod().getStartPeriod().toLocalDate() +
-                    " al " + accountingPeriodService.getActivePeriod().getEndPeriod().toLocalDate();
-        }
-        // Crear la imagen a partir del logo en bytes
-        Image logo = null;
-        if (company.getCompanyLogo() != null) {
-            logo = new Image(ImageDataFactory.create(company.getCompanyLogo())).setWidth(150).setHeight(70);
-        } else {
-            // Si no hay logo, puedes optar por usar un logo por defecto o dejarlo vacío
-            String logoPath = getClass().getClassLoader().getResource("logo.jpg").getPath();
-            logo = new Image(ImageDataFactory.create(logoPath)).setWidth(150).setHeight(70);
+            periodRange = accountingPeriodService.getActivePeriod().getStartPeriod().toLocalDate()
+                    + " al " + accountingPeriodService.getActivePeriod().getEndPeriod().toLocalDate();
         }
 
-        // Crear un contenedor de tabla con proporciones ajustadas (balances iguales)
-        Table headerTable = new Table(UnitValue.createPercentArray(new float[]{1, 2, 1})).useAllAvailableWidth();
+        Image logoImage = null;
 
-        // Celda para el logo (lado izquierdo)
-        headerTable.addCell(new Cell().add(logo).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.CENTER));
+        try {
+            if (company.getCompanyLogo() != null && company.getCompanyLogo().length > 0) {
 
-        // Celda para los textos (centrados)
+                // 🔹 OPCIONAL: si el logo es absurdo (> 2MB), no lo uso
+                if (company.getCompanyLogo().length < 2_000_000) {
+                    logoImage = new Image(ImageDataFactory.create(company.getCompanyLogo()))
+                            .setAutoScale(true); // solo ajuste visual
+                } else {
+                    // loggear y no usar logo
+                    System.out.println("Company logo too large: " + company.getCompanyLogo().length + " bytes");
+                }
+
+            } else {
+                // Logo por defecto desde resources (asegúrate que el archivo sea pequeño)
+                var logoUrl = getClass().getClassLoader().getResource("logo.jpg");
+                if (logoUrl != null) {
+                    logoImage = new Image(ImageDataFactory.create(logoUrl))
+                            .setAutoScale(true);
+                }
+            }
+        } catch (Exception ex) {
+            // Si algo falla con el logo, NO rompemos el PDF
+            System.err.println("Error loading logo image: " + ex.getMessage());
+        }
+
+        Table headerTable = new Table(UnitValue.createPercentArray(new float[]{1, 2, 1}))
+                .useAllAvailableWidth();
+
+        // Izquierda: logo (si existe)
+        Cell leftCell = new Cell().setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.CENTER);
+        if (logoImage != null) {
+            leftCell.add(logoImage);
+        }
+        headerTable.addCell(leftCell);
+
+        // Centro: textos
         Cell textCell = new Cell().setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.CENTER);
         textCell.add(new Paragraph(company.getCompanyName())
-                .setTextAlignment(TextAlignment.CENTER)
                 .setBold()
                 .setFontSize(20));
         textCell.add(new Paragraph(reportTitle)
-                .setTextAlignment(TextAlignment.CENTER)
                 .setBold()
                 .setFontSize(16));
         textCell.add(new Paragraph("Período: " + periodRange)
-                .setTextAlignment(TextAlignment.CENTER)
                 .setBold()
                 .setFontSize(12));
         headerTable.addCell(textCell);
 
-        // Celda vacía (lado derecho para equilibrar centrado)
+        // Derecha: vacío
         headerTable.addCell(new Cell().setBorder(Border.NO_BORDER));
 
-        // Agregar la tabla al documento
         document.add(headerTable);
         document.add(new Paragraph("\n"));
     }
